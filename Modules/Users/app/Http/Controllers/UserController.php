@@ -4,6 +4,8 @@ namespace Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Users\Models\User;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -12,7 +14,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        return view('users::index');
+        $users = User::with('roles')->get();
+        $roles = Role::all();
+        return view('users::index', compact('users', 'roles'));
     }
 
     /**
@@ -26,7 +30,9 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+    }
 
     /**
      * Show the specified resource.
@@ -47,10 +53,20 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+    }
+
+    public function showJson($id)
+    {
+        $user = User::with('roles')->findOrFail($id);
+        return response()->json($user);
+    }
 }
