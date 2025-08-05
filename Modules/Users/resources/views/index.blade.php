@@ -43,12 +43,21 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-2">
-                                    <button @click="edit(user.id)" class="text-blue-600 hover:underline">Editar</button>
-                                    <form :action="`/users/${user.id}`" method="POST" class="inline">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-500 hover:underline"
-                                            onclick="return confirm('¿Eliminar este usuario?')">Eliminar</button>
-                                    </form>
+                                    <div class="flex space-x-2">
+                                        {{-- Botón Editar --}}
+                                        <button @click="edit(user.id)" title="Editar"
+                                            class="p-3 w-5 h-5 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 rounded-sm transition"
+                                            aria-label="Editar">
+                                            <i class="fas fa-pen text-xs"></i>
+                                        </button>
+
+                                        {{-- Botón Eliminar --}}
+                                        <button @click="remove(user.id)" title="Eliminar"
+                                            class="p-3 w-5 h-5 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 rounded-sm transition"
+                                            aria-label="Eliminar">
+                                            <i class="fas fa-times text-sm"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -151,8 +160,6 @@
                         },
                         users: @json($users),
 
-                        init() {},
-
                         resetForm() {
                             this.form = {
                                 id: null,
@@ -166,7 +173,9 @@
                         showToast(message) {
                             this.toast.message = message;
                             this.toast.visible = true;
+
                             if (this.toast.timeout) clearTimeout(this.toast.timeout);
+
                             this.toast.timeout = setTimeout(() => {
                                 this.toast.visible = false;
                             }, 4000);
@@ -181,11 +190,10 @@
                                     role: this.form.role,
                                 });
 
-                                this.users.push(response.data.user); // Si devuelves el usuario creado
+                                this.users.push(response.data.user);
                                 this.open = false;
                                 this.resetForm();
                                 this.showToast('Usuario creado exitosamente.');
-
                             } catch (error) {
                                 console.error('Error al crear el usuario', error);
                                 alert('Error al crear usuario.');
@@ -194,18 +202,18 @@
 
                         edit(id) {
                             const user = this.users.find(u => u.id === id);
-                            if (user) {
-                                this.form.id = user.id;
-                                this.form.name = user.name;
-                                this.form.email = user.email;
-                                this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
-                                this.editModal = true;
-                            }
+                            if (!user) return;
+
+                            this.form.id = user.id;
+                            this.form.name = user.name;
+                            this.form.email = user.email;
+                            this.form.role = user.roles[0]?.name || '';
+                            this.editModal = true;
                         },
 
                         async update() {
                             try {
-                                const response = await axios.put(`${window.location.origin}/users/${this.form.id}`, {
+                                const response = await axios.put(`/users/${this.form.id}`, {
                                     name: this.form.name,
                                     email: this.form.email,
                                     role: this.form.role,
@@ -213,11 +221,14 @@
 
                                 const index = this.users.findIndex(u => u.id === this.form.id);
                                 if (index !== -1) {
-                                    this.users[index].name = this.form.name;
-                                    this.users[index].email = this.form.email;
-                                    this.users[index].roles = [{
-                                        name: this.form.role
-                                    }];
+                                    this.users[index] = {
+                                        ...this.users[index],
+                                        name: this.form.name,
+                                        email: this.form.email,
+                                        roles: [{
+                                            name: this.form.role
+                                        }],
+                                    };
                                 }
 
                                 this.editModal = false;
@@ -226,6 +237,19 @@
                             } catch (error) {
                                 console.error('Error al actualizar el usuario', error);
                                 alert('Error al actualizar usuario.');
+                            }
+                        },
+
+                        async remove(id) {
+                            if (!confirm('¿Eliminar este usuario?')) return;
+
+                            try {
+                                await axios.delete(`/users/${id}`);
+                                this.users = this.users.filter(u => u.id !== id);
+                                this.showToast('Usuario eliminado correctamente.');
+                            } catch (error) {
+                                console.error('Error al eliminar usuario', error);
+                                alert('Error al eliminar usuario.');
                             }
                         }
                     }

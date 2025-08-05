@@ -47,7 +47,7 @@ class UserController extends Controller
         ]);
 
         $user->assignRole($validated['role']);
-        
+
         return response()->json([
             'message' => 'Usuario creado exitosamente.',
             'user' => $user->load('roles'),
@@ -102,12 +102,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        try {
-            $user->delete();
-            return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
-        } catch (\Exception $e) {
-            return redirect()->route('users.index')->with('error', 'Error al eliminar el usuario: ' . $e->getMessage());
-        }
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Usuario eliminado correctamente.',
+        ]);
     }
 
     public function showJson($id)
