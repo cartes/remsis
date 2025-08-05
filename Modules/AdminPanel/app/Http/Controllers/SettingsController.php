@@ -1,0 +1,69 @@
+<?php
+
+namespace Modules\AdminPanel\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Modules\AdminPanel\Models\Afp;
+use Modules\AdminPanel\Models\Isapre;
+use Modules\AdminPanel\Models\Ccaf;
+
+class SettingsController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        return view('adminpanel::settings.index', [
+            'afps' => Afp::all(),
+            'isapres' => Isapre::all(),
+            'ccafs' => Ccaf::all(),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('adminpanel::create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+    }
+
+    /**
+     * Show the specified resource.
+     */
+    public function show($id)
+    {
+        return view('adminpanel::show');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        return view('adminpanel::edit');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+    }
+}
