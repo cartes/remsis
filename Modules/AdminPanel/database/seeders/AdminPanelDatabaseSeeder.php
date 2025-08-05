@@ -11,6 +11,10 @@ class AdminPanelDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            AfpSeeder::class,
+            IsapreSeeder::class,
+            CcafSeeder::class,
+        ]);
     }
 }

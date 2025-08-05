@@ -17,10 +17,38 @@
             <div class="p-4 font-bold text-xl border-b">Remsis</div>
             <nav class="mt-4">
                 <ul class="space-y-2 p-2">
-                    <li><a href="{{ route('users.index') }}" class="block p-2 rounded hover:bg-gray-200">Usuarios</a>
-                    <li><a href="{{ route('roles.index') }}" class="block p-2 rounded hover:bg-gray-200">Roles</a></li>
+                    <li>
+                        <a href="{{ route('users.index') }}"
+                            class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                            <i class="fas fa-users mr-2"></i> Usuarios
+                        </a>
                     </li>
-                    {{-- Agrega más ítems según el módulo --}}
+                    <li>
+                        <a href="{{ route('roles.index') }}"
+                            class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                            <i class="fas fa-user-tag mr-2"></i> Roles
+                        </a>
+                    </li>
+                    </li>
+                    @hasrole('super-admin')
+                        <li x-data="{ open: false }" class="mt-4">
+                            <button @click="open = !open"
+                                class="w-full flex items-center justify-between p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                <span><i class="fas fa-sliders-h mr-2"></i>Configuraciones</span>
+                                <i :class="open ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+                            </button>
+
+                            <ul x-show="open" x-transition class="pl-4 mt-2 space-y-1">
+                                <li>
+                                    <a href="{{ route('settings.index') }}"
+                                        class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                        <i class="fas fa-cogs mr-2 text-sm"></i> Entidades Base
+                                    </a>
+                                </li>
+                                {{-- Puedes agregar más subítems aquí si luego quieres separar AFP, Isapres, etc. --}}
+                            </ul>
+                        </li>
+                    @endhasrole
                 </ul>
             </nav>
         </aside>

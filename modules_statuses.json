@@ -3,5 +3,6 @@
     "AdminPanel": true,
     "Users": true,
     "Employees": true,
-    "Payroll": true
+    "Payroll": true,
+    "Companies": true
 }

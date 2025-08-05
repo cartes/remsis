@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\AdminPanelController;
 use Modules\AdminPanel\Http\Controllers\Auth\LogoutController;
+use Modules\AdminPanel\Http\Controllers\SettingsController;
 
 
 Route::middleware('guest')->group(function () {
@@ -15,3 +16,12 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'index'])->name('admin.dashboard');
     Route::post('logout', [LogoutController::class, 'destroy'])->name('logout');
 });
+
+Route::prefix('settings')
+    ->middleware(['web', 'auth', 'role:super-admin'])
+    ->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('/afps', [SettingsController::class, 'storeAfp'])->name('afps.store');
+        Route::post('/isapres', [SettingsController::class, 'storeIsapre'])->name('isapres.store');
+        Route::post('/ccafs', [SettingsController::class, 'storeCcaf'])->name('ccafs.store');
+    });
