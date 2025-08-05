@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -32,6 +33,22 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $user->assignRole($validated['role']);
+        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+
     }
 
     /**
@@ -55,13 +72,36 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'role' => 'nullable|string|exists:roles,name',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->save();
+
+        if ($validated['role']) {
+            $user->syncRoles([$validated['role']]);
+        }
+
+        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
+        try {
+            $user->delete();
+            return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('users.index')->with('error', 'Error al eliminar el usuario: ' . $e->getMessage());
+        }
     }
 
     public function showJson($id)

@@ -3,6 +3,14 @@
 
     @section('content')
         <div x-data="useEditor()" x-init="init()">
+
+            <div x-show="toast.visible" x-cloak x-transition
+                class="fixed top-5 right-5 bg-green-500 text-white px-4 py-3 rounded shadow-lg z-[9999] flex items-center space-x-2"
+                style="display: none;">
+                <span x-text="toast.message"></span>
+                <button @click="toast.visible = false" class="ml-2 text-white font-bold">&times;</button>
+            </div>
+
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">Usuarios del sistema</h2>
                 <button @click="open = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -38,8 +46,6 @@
                                 <td class="px-4 py-2">
                                     <button @click="edit({{ $user->id }})"
                                         class="text-blue-600 hover:underline">Editar</button>
-                                </td>
-                                <td class="px-4 py-2 space-x-2">
                                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
                                         <button class="text-red-500 hover:underline"
@@ -51,6 +57,7 @@
                     </tbody>
                 </table>
             </div>
+
             {{-- Modal de Crear Nuevo Usuario --}}
             <div x-show="open" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
                 <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
@@ -58,34 +65,35 @@
 
                     <h2 class="text-xl font-semibold mb-4">Nuevo usuario</h2>
 
-                    <form action="{{ route('users.store') }}" method="POST">
-                        @csrf
-
+                    {{-- NOTA: El form ya no usa action, porque usas Axios --}}
+                    <form @submit.prevent="store">
                         {{-- Nombre --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium">Nombre</label>
-                            <input type="text" name="name" required
+                            <input type="text" name="name" x-model="form.name" required
                                 class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
                         </div>
 
                         {{-- Email --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium">Correo electrónico</label>
-                            <input type="email" name="email" required
+                            <input type="email" name="email" x-model="form.email" required
                                 class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
                         </div>
 
                         {{-- Contraseña --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium">Contraseña</label>
-                            <input type="password" name="password" required
+                            <input type="password" name="password" x-model="form.password" required
                                 class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
                         </div>
 
-                        {{-- Rol (opcional si usas Spatie) --}}
+                        {{-- Rol --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium">Rol</label>
-                            <select name="role" class="w-full mt-1 border-gray-300 rounded px-3 py-2">
+                            <select name="role" x-model="form.role"
+                                class="w-full mt-1 border-gray-300 rounded px-3 py-2">
+                                <option value="">Selecciona un rol</option>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
                                 @endforeach
@@ -100,9 +108,10 @@
                     </form>
                 </div>
             </div>
+
             {{-- Modal de edición (AHORA DENTRO del x-data) --}}
             <div x-show="editModal" x-cloak x-transition
-                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" style="display: none;">
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
                 <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
                     <button @click="editModal = false"
                         class="absolute top-2 right-3 text-gray-500 text-2xl">&times;</button>
@@ -150,33 +159,76 @@
                     return {
                         open: false,
                         editModal: false,
+                        toast: {
+                            visible: false,
+                            message: '',
+                            timeout: null,
+                        },
                         form: {
                             id: null,
                             name: '',
                             email: '',
-                            role: ''
+                            role: '',
+                            password: '',
                         },
-                        init() {},
-                        async edit(id) {
-                            try {
-                                console.log('ANTES DE CAMBIAR MODAL', this.editModal);
-                                this.editModal = true;
-                                console.log('DESPUÉS DE CAMBIAR MODAL', this.editModal);
+                        users: @json($users), // <-- Incluimos los usuarios para buscarlos por ID
 
-                                const res = await axios.get(`/users/${id}/json`);
-                                this.form = {
-                                    id: res.data.id,
-                                    name: res.data.name,
-                                    email: res.data.email,
-                                    role: res.data.role
-                                };
+                        init() {},
+
+                        async store() {
+                            try {
+                                const response = await axios.post("{{ route('users.store') }}", {
+                                    name: this.form.name,
+                                    email: this.form.email,
+                                    password: this.form.password,
+                                    role: this.form.role,
+                                });
+
+                                this.open = false;
+                                this.resetForm();
+                                this.showToast('Usuario creado exitosamente.');
+                                window.location.reload();
+
                             } catch (error) {
-                                console.error('Error al cargar el usuario:', error);
+                                console.error('Error al crear el usuario', error);
+                                alert('Error al crear usuario.');
                             }
+                        },
+
+                        edit(id) {
+                            const user = this.users.find(u => u.id === id);
+                            if (user) {
+                                this.form.id = user.id;
+                                this.form.name = user.name;
+                                this.form.email = user.email;
+                                this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
+                                this.editModal = true;
+                            }
+                        },
+
+                        resetForm() {
+                            this.form = {
+                                id: null,
+                                name: '',
+                                email: '',
+                                role: '',
+                                password: '',
+                            };
+                        },
+
+                        showToast(message) {
+                            this.toast.message = message;
+                            this.toast.visible = true;
+
+                            if (this.toast.timeout) clearTimeout(this.toast.timeout);
+                            this.toast.timeout = setTimeout(() => {
+                                this.toast.visible = false;
+                            }, 8000);
                         }
                     }
                 }
             </script>
         @endpush
+
     @endsection
 </x-adminpanel::layouts.master>

@@ -5,9 +5,6 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Panel de Administración')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js']) {{-- Si usas Vite --}}
-
-    @stack('scripts')
-
 </head>
 
 <body class="bg-gray-100 text-gray-800">
@@ -33,6 +30,7 @@
         </main>
     </div>
 
+    @stack('scripts')
 </body>
 
 </html>
