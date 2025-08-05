@@ -33,13 +33,30 @@
                     <tbody class="divide-y divide-gray-200">
                         <template x-for="user in users" :key="user.id">
                             <tr>
-                                <td class="px-4 py-2" x-text="user.name"></td>
-                                <td class="px-4 py-2" x-text="user.email"></td>
-                                <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')"></td>
+                                <td class="px-4 py-2" x-text="user.name" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" x-text="user.email" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
                                 <td class="px-4 py-2">
-                                    <span :class="user.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                                        class="px-2 py-1 text-xs rounded" x-text="user.status ? 'Activo' : 'Inactivo'">
-                                    </span>
+                                    <!-- Si es super-admin, mostrar texto fijo -->
+                                    <template x-if="user.roles.some(r => r.name === 'super-admin')">
+                                        <span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">
+                                            Siempre activo
+                                        </span>
+                                    </template>
+
+                                    <!-- Si NO es super-admin, mostrar switch -->
+                                    <template x-if="!user.roles.some(r => r.name === 'super-admin')">
+                                        <button :title="user.status ? 'Desactivar' : 'Activar'"
+                                            @click="toggleStatus(user.id)"
+                                            class="p-3 w-5 h-5 flex items-center justify-center rounded-sm transition"
+                                            :class="user.status ?
+                                                'text-green-600 hover:text-green-800' :
+                                                'text-gray-400 hover:text-gray-900'">
+                                            <i
+                                                :class="[user.status ? 'fas fa-toggle-on' : 'fas fa-toggle-off', 'fa-2x']"></i>
+                                        </button>
+                                    </template>
+
                                 </td>
                                 <td class="px-4 py-2">
                                     <div class="flex space-x-2">
@@ -56,19 +73,6 @@
                                             aria-label="Eliminar">
                                             <i class="fas fa-times text-sm"></i>
                                         </button>
-
-                                        {{-- Botón Activar/Desactivar --}}
-                                        <template x-if="!user.roles.some(r => r.name === 'super-admin')">
-                                            <button :title="user.status ? 'Desactivar' : 'Activar'"
-                                                @click="toggleStatus(user.id)"
-                                                class="p-3 w-9 h-5 flex items-center justify-center rounded-sm transition"
-                                                :class="user.status ?
-                                                    'text-green-600 hover:text-green-800' :
-                                                    'text-gray-700 hover:text-gray-900'">
-                                                <i
-                                                    :class="[user.status ? 'fas fa-toggle-on' : 'fas fa-toggle-off', 'fa-2x']"></i>
-                                            </button>
-                                        </template>
                                     </div>
                                 </td>
                             </tr>
