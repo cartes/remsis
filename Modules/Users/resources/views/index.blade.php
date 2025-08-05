@@ -2,7 +2,7 @@
     @section('title', 'Gestión de Usuarios')
 
     @section('content')
-        <div x-data="useEditor()" x-init="init()">
+        <div x-data="useEditor()">
 
             {{-- Toast de éxito --}}
             <div x-show="toast.visible" x-cloak x-transition
@@ -37,9 +37,8 @@
                                 <td class="px-4 py-2" x-text="user.email"></td>
                                 <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')"></td>
                                 <td class="px-4 py-2">
-                                    <span
-                                        :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                                        class="px-2 py-1 text-xs rounded" x-text="user.is_active ? 'Activo' : 'Inactivo'">
+                                    <span :class="user.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                        class="px-2 py-1 text-xs rounded" x-text="user.status ? 'Activo' : 'Inactivo'">
                                     </span>
                                 </td>
                                 <td class="px-4 py-2">
@@ -57,6 +56,19 @@
                                             aria-label="Eliminar">
                                             <i class="fas fa-times text-sm"></i>
                                         </button>
+
+                                        {{-- Botón Activar/Desactivar --}}
+                                        <template x-if="!user.roles.some(r => r.name === 'super-admin')">
+                                            <button :title="user.status ? 'Desactivar' : 'Activar'"
+                                                @click="toggleStatus(user.id)"
+                                                class="p-3 w-9 h-5 flex items-center justify-center rounded-sm transition"
+                                                :class="user.status ?
+                                                    'text-green-600 hover:text-green-800' :
+                                                    'text-gray-700 hover:text-gray-900'">
+                                                <i
+                                                    :class="[user.status ? 'fas fa-toggle-on' : 'fas fa-toggle-off', 'fa-2x']"></i>
+                                            </button>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>
@@ -142,6 +154,13 @@
 
         @push('scripts')
             <script>
+                const routes = {
+                    store: "{{ route('users.store') }}",
+                    update: "{{ route('users.update', ':id') }}",
+                    destroy: "{{ route('users.destroy', ':id') }}",
+                    toggleStatus: "{{ route('users.toggleStatus', ':id') }}"
+                };
+
                 function useEditor() {
                     return {
                         open: false,
@@ -173,17 +192,29 @@
                         showToast(message) {
                             this.toast.message = message;
                             this.toast.visible = true;
-
                             if (this.toast.timeout) clearTimeout(this.toast.timeout);
-
                             this.toast.timeout = setTimeout(() => {
                                 this.toast.visible = false;
                             }, 4000);
                         },
 
+                        async toggleStatus(id) {
+                            try {
+                                const response = await axios.put(routes.toggleStatus.replace(':id', id));
+                                const index = this.users.findIndex(u => u.id === id);
+                                if (index !== -1) {
+                                    this.users[index].status = response.data.status;
+                                }
+                                this.showToast('Estado actualizado correctamente.');
+                            } catch (error) {
+                                console.error('Error al cambiar estado', error);
+                                alert('Error al cambiar estado del usuario.');
+                            }
+                        },
+
                         async store() {
                             try {
-                                const response = await axios.post("{{ route('users.store') }}", {
+                                const response = await axios.post(routes.store, {
                                     name: this.form.name,
                                     email: this.form.email,
                                     password: this.form.password,
@@ -202,18 +233,18 @@
 
                         edit(id) {
                             const user = this.users.find(u => u.id === id);
-                            if (!user) return;
-
-                            this.form.id = user.id;
-                            this.form.name = user.name;
-                            this.form.email = user.email;
-                            this.form.role = user.roles[0]?.name || '';
-                            this.editModal = true;
+                            if (user) {
+                                this.form.id = user.id;
+                                this.form.name = user.name;
+                                this.form.email = user.email;
+                                this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
+                                this.editModal = true;
+                            }
                         },
 
                         async update() {
                             try {
-                                const response = await axios.put(`/users/${this.form.id}`, {
+                                const response = await axios.put(routes.update.replace(':id', this.form.id), {
                                     name: this.form.name,
                                     email: this.form.email,
                                     role: this.form.role,
@@ -221,14 +252,11 @@
 
                                 const index = this.users.findIndex(u => u.id === this.form.id);
                                 if (index !== -1) {
-                                    this.users[index] = {
-                                        ...this.users[index],
-                                        name: this.form.name,
-                                        email: this.form.email,
-                                        roles: [{
-                                            name: this.form.role
-                                        }],
-                                    };
+                                    this.users[index].name = this.form.name;
+                                    this.users[index].email = this.form.email;
+                                    this.users[index].roles = [{
+                                        name: this.form.role
+                                    }];
                                 }
 
                                 this.editModal = false;
@@ -244,7 +272,7 @@
                             if (!confirm('¿Eliminar este usuario?')) return;
 
                             try {
-                                await axios.delete(`/users/${id}`);
+                                await axios.delete(routes.destroy.replace(':id', id));
                                 this.users = this.users.filter(u => u.id !== id);
                                 this.showToast('Usuario eliminado correctamente.');
                             } catch (error) {

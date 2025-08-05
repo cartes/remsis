@@ -114,4 +114,15 @@ class UserController extends Controller
         $user = User::with('roles')->findOrFail($id);
         return response()->json($user);
     }
+
+    public function toggleStatus(User $user)
+    {
+        $user->status = !$user->status;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Estado del usuario actualizado correctamente.',
+            'status' => $user->status,
+        ]);
+    }
 }

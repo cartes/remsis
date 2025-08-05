@@ -12,4 +12,6 @@ Route::middleware(['web', 'auth'])->prefix("users")->group(function () {
     Route::get('/{user}/json', [UserController::class, 'showJson'])->name('users.json');
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get("/roles", [RoleController::class, "index"])->name("roles.index");
+
+    Route::put('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 });
