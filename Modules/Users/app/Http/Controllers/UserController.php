@@ -47,8 +47,11 @@ class UserController extends Controller
         ]);
 
         $user->assignRole($validated['role']);
-        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
-
+        
+        return response()->json([
+            'message' => 'Usuario creado exitosamente.',
+            'user' => $user->load('roles'),
+        ]);
     }
 
     /**
@@ -88,7 +91,10 @@ class UserController extends Controller
             $user->syncRoles([$validated['role']]);
         }
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
+        return response()->json([
+            'message' => 'Usuario actualizado correctamente.',
+            'user' => $user->load('roles'),
+        ]);
     }
 
     /**
