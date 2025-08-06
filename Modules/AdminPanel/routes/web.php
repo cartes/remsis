@@ -24,4 +24,14 @@ Route::prefix('settings')
         Route::post('/afps', [SettingsController::class, 'storeAfp'])->name('afps.store');
         Route::post('/isapres', [SettingsController::class, 'storeIsapre'])->name('isapres.store');
         Route::post('/ccafs', [SettingsController::class, 'storeCcaf'])->name('ccafs.store');
+
+        Route::get('/afps/{afp}/edit', [SettingsController::class, 'editAfp'])->name('afps.edit');
+        Route::delete('/afps/{afp}', [SettingsController::class, 'destroyAfp'])->name('afps.destroy');
+
+        Route::get('/isapres/{isapre}/edit', [SettingsController::class, 'editIsapre'])->name('isapres.edit');
+        Route::delete('/isapres/{isapre}', [SettingsController::class, 'destroyIsapre'])->name('isapres.destroy');
+
+        //CCaf
+        Route::get('/ccafs/{ccaf}/edit', [SettingsController::class, 'editCcaf'])->name('ccafs.edit');
+        Route::delete('/ccafs/{ccaf}', [SettingsController::class, 'destroyCcaf'])->name('ccafs.destroy');
     });

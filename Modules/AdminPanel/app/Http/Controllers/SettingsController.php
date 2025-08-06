@@ -22,48 +22,48 @@ class SettingsController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function storeAfp(Request $request)
     {
-        return view('adminpanel::create');
+        $request->validate(['nombre' => 'required|string|max:255|unique:afps,nombre']);
+        Afp::create(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_afp', 'AFP agregada.');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function storeIsapre(Request $request)
     {
+        $request->validate(['nombre' => 'required|string|max:255|unique:isapres,nombre']);
+        Isapre::create(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_isapre', 'Isapre agregada.');
     }
 
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
+    public function storeCcaf(Request $request)
     {
-        return view('adminpanel::show');
+        $request->validate(['nombre' => 'required|string|max:255|unique:ccafs,nombre']);
+        Ccaf::create(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_ccaf', 'CCAF agregada.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
+    public function updateAfp(Request $request, $id)
     {
-        return view('adminpanel::edit');
+        $afp = Afp::findOrFail($id);
+        $request->validate(['nombre' => 'required|string|max:255|unique:afps,nombre,' . $afp->id]);
+        $afp->update(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_afp', 'AFP actualizada.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    public function updateIsapre(Request $request, $id)
     {
+        $isapre = Isapre::findOrFail($id);
+        $request->validate(['nombre' => 'required|string|max:255|unique:isapres,nombre,' . $isapre->id]);
+        $isapre->update(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_isapre', 'Isapre actualizada.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    public function updateCcaf(Request $request, $id)
     {
+        $ccaf = Ccaf::findOrFail($id);
+        $request->validate(['nombre' => 'required|string|max:255|unique:ccafs,nombre,' . $ccaf->id]);
+        $ccaf->update(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_ccaf', 'CCAF actualizada.');
     }
 }
