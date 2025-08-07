@@ -82,4 +82,28 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF actualizada correctamente.']);
     }
 
+    public function destroyAfp($id)
+    {
+        $afp = Afp::findOrFail($id);
+        $afp->delete();
+
+        return response()->json(['message' => 'AFP eliminada correctamente.']);
+    }
+
+    public function destroyIsapre($id)
+    {
+        $isapre = Isapre::findOrFail($id);
+        $isapre->delete();
+
+        return response()->json(['message' => 'Isapre eliminada correctamente.']);
+    }
+
+    public function destroyCcaf($id)
+    {
+        $ccaf = Ccaf::findOrFail($id);
+        $ccaf->delete();
+
+        return response()->json(['message' => 'CCAF eliminada correctamente.']);
+    }
+
 }

@@ -14,7 +14,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'index'])->name('admin.dashboard');
-    Route::post('logout', [LogoutController::class, 'destroy'])->name('logout');
+    Route::post('logout', [AdminPanelController::class, 'logout'])->name('logout');
 });
 
 Route::prefix('settings')

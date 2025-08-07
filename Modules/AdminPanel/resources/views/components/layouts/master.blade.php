@@ -13,7 +13,7 @@
 
     <div class="flex min-h-screen">
         {{-- Sidebar --}}
-        <aside class="w-64 bg-white shadow-md">
+        <aside class="w-64 bg-white shadow-md flex flex-col">
             <div class="p-4 font-bold text-xl border-b">Remsis</div>
             <nav class="mt-4">
                 <ul class="space-y-2 p-2">
@@ -51,6 +51,20 @@
                     @endhasrole
                 </ul>
             </nav>
+            <div class="mt-auto px-4 py-4 border-t border-gray-200">
+                <div class="text-sm text-gray-700 mb-2">
+                    {{ Auth::user()->name }}
+                </div>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="text-sm text-red-600 hover:text-red-800 font-medium flex items-center space-x-2">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Salir</span>
+                    </button>
+                </form>
+            </div>
         </aside>
 
         {{-- Contenido principal --}}

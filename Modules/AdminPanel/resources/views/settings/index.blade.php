@@ -88,7 +88,13 @@
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                     </td>
-                                                </tr>
+                                                    <td class="px-3">
+                                                        <button
+                                                            @click="deleteItem('{{ $item->id }}', '{{ $config['label'] }}', '{{ route($config['destroy'], $item->id) }}', '{{ $config['ref'] }}')"
+                                                            class="text-red-600 hover:underline text-xs">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
                                             </table>
                                         </td>
                                     </tr>
