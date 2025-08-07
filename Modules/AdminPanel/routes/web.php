@@ -34,4 +34,9 @@ Route::prefix('settings')
         //CCaf
         Route::get('/ccafs/{ccaf}/edit', [SettingsController::class, 'editCcaf'])->name('ccafs.edit');
         Route::delete('/ccafs/{ccaf}', [SettingsController::class, 'destroyCcaf'])->name('ccafs.destroy');
+
+        Route::put('/afps/{afp}', [SettingsController::class, 'updateAfp'])->name('afps.update');
+        Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
+        Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
+
     });

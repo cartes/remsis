@@ -45,25 +45,41 @@ class SettingsController extends Controller
 
     public function updateAfp(Request $request, $id)
     {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:afps,nombre,' . $id,
+        ]);
+
         $afp = Afp::findOrFail($id);
-        $request->validate(['nombre' => 'required|string|max:255|unique:afps,nombre,' . $afp->id]);
-        $afp->update(['nombre' => $request->nombre]);
-        return redirect()->route('settings.index')->with('success_afp', 'AFP actualizada.');
+        $afp->nombre = $request->nombre;
+        $afp->save();
+
+        return response()->json(['message' => 'AFP actualizada correctamente.']);
     }
 
     public function updateIsapre(Request $request, $id)
     {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:isapres,nombre,' . $id,
+        ]);
+
         $isapre = Isapre::findOrFail($id);
-        $request->validate(['nombre' => 'required|string|max:255|unique:isapres,nombre,' . $isapre->id]);
-        $isapre->update(['nombre' => $request->nombre]);
-        return redirect()->route('settings.index')->with('success_isapre', 'Isapre actualizada.');
+        $isapre->nombre = $request->nombre;
+        $isapre->save();
+
+        return response()->json(['message' => 'Isapre actualizada correctamente.']);
     }
 
     public function updateCcaf(Request $request, $id)
     {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:ccafs,nombre,' . $id,
+        ]);
+
         $ccaf = Ccaf::findOrFail($id);
-        $request->validate(['nombre' => 'required|string|max:255|unique:ccafs,nombre,' . $ccaf->id]);
-        $ccaf->update(['nombre' => $request->nombre]);
-        return redirect()->route('settings.index')->with('success_ccaf', 'CCAF actualizada.');
+        $ccaf->nombre = $request->nombre;
+        $ccaf->save();
+
+        return response()->json(['message' => 'CCAF actualizada correctamente.']);
     }
+
 }
