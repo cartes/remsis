@@ -7,8 +7,8 @@
                 'afps' => [
                     'label' => 'AFP',
                     'store' => 'afps.store',
-                    'edit' => 'afps.edit', // si usas formularios tradicionales
-                    'update' => 'afps.update', // 🔹 NECESARIO para Axios + PUT
+                    'edit' => 'afps.edit',
+                    'update' => 'afps.update',
                     'destroy' => 'afps.destroy',
                     'data' => $afps,
                     'session' => 'success_afp',
