@@ -23,12 +23,15 @@
                             <i class="fas fa-users mr-2"></i> Usuarios
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('roles.index') }}"
-                            class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
-                            <i class="fas fa-user-tag mr-2"></i> Roles
-                        </a>
-                    </li>
+                    @role('super-admin')
+                        <li>
+                            <a href="{{ route('companies.index') }}"
+                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                <i class="fas fa-building mr-2 text-sm text-gray-500"></i>
+                                Empresas
+                            </a>
+                        </li>
+                    @endrole
                     </li>
                     @hasrole('super-admin')
                         <li x-data="{ open: false }" class="mt-4">

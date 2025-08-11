@@ -4,6 +4,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Companies\Models\Company;
 
 class CompaniesController extends Controller
 {
@@ -12,7 +13,10 @@ class CompaniesController extends Controller
      */
     public function index()
     {
-        return view('companies::index');
+        $companies = Company::orderBy('name')->get();
+
+        // Envía los datos a la vista index del módulo Companies
+        return view('companies::index', compact('companies'));
     }
 
     /**
@@ -26,7 +30,9 @@ class CompaniesController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+    }
 
     /**
      * Show the specified resource.
@@ -47,10 +53,14 @@ class CompaniesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+    }
 }
