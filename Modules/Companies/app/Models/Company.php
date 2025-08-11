@@ -19,6 +19,10 @@ class Company extends Model
         'rut',
         'email',
         'phone',
+        'razon_social', 'nombre_fantasia', 'giro', 'direccion', 'comuna', 'region',
+        'tipo_contribuyente', 'ccaf', 'mutual', 'dia_pago', 'dia_pago_dia',
+        'banco', 'cuenta_bancaria',
+        'representante_nombre', 'representante_rut', 'representante_cargo', 'representante_email'
     ];
 
 
