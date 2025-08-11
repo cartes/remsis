@@ -1,8 +1,6 @@
 <x-adminpanel::layouts.master>
     @section('title', 'Crear empresa')
 
-    @section('title', 'Crear empresa')
-
     @section('content')
         <div x-data="companyCreate()" class="max-w-5xl">
 
