@@ -40,3 +40,9 @@ Route::prefix('settings')
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
 
     });
+
+Route::middleware(['auth'])->prefix('api/settings')->group(function () {
+    Route::get('/ccafs', [SettingsController::class, 'ccafJson'])->name('settings.ccafs.json');
+    Route::get('/isapres', [SettingsController::class, 'isapreJson'])->name('settings.isapres.json');
+    Route::get('/afps', [SettingsController::class, 'afpJson'])->name('settings.afps.json');
+});

@@ -5,6 +5,9 @@ namespace Modules\Companies\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Users\Models\User;
+use Modules\AdminPanel\Models\Afp;
+use Modules\AdminPanel\Models\Isapre;
+use Modules\AdminPanel\Models\Ccaf;
 // use Modules\Companies\Database\Factories\CompanyFactory;
 
 class Company extends Model
@@ -19,10 +22,24 @@ class Company extends Model
         'rut',
         'email',
         'phone',
-        'razon_social', 'nombre_fantasia', 'giro', 'direccion', 'comuna', 'region',
-        'tipo_contribuyente', 'ccaf', 'mutual', 'dia_pago', 'dia_pago_dia',
-        'banco', 'cuenta_bancaria',
-        'representante_nombre', 'representante_rut', 'representante_cargo', 'representante_email'
+        'razon_social',
+        'nombre_fantasia',
+        'giro',
+        'direccion',
+        'comuna',
+        'region',
+        'tipo_contribuyente',
+        'ccaf',
+        'mutual',
+        'dia_pago',
+        'dia_pago_dia',
+        'banco',
+        'ccaf_id',
+        'cuenta_bancaria',
+        'representante_nombre',
+        'representante_rut',
+        'representante_cargo',
+        'representante_email'
     ];
 
 
@@ -30,4 +47,18 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function ccaf()
+    {
+        return $this->belongsTo(Ccaf::class);
+    }
+    protected static function booted()
+    {
+        static::creating(function ($company) {
+            if (empty($company->name) && !empty($company->razon_social)) {
+                $company->name = $company->razon_social;
+            }
+        });
+    }
+
 }

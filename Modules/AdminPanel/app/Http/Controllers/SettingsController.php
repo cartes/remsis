@@ -106,4 +106,19 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF eliminada correctamente.']);
     }
 
+    public function ccafJson()
+    {
+        return Ccaf::orderBy('nombre')->get(['id', 'nombre']); 
+    }
+
+    public function afpJson()
+    {
+        return Afp::orderBy('name')->get(['id', 'name']);
+    }
+
+    public function isapreJson()
+    {
+        return Isapre::orderBy('name')->get(['id', 'name']);
+    }
+
 }

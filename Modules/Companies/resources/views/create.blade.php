@@ -2,7 +2,7 @@
     @section('title', 'Crear empresa')
 
     @section('content')
-        <div x-data="companyCreate()" class="max-w-5xl">
+        <div x-data="companyCreate()" x-init="init()" class="max-w-5xl">
 
             {{-- Sección 1: Datos esenciales (alineado a la izquierda) --}}
             <div class="bg-white rounded shadow p-6 mb-6">
@@ -130,8 +130,12 @@
                         </div>
                         <div>
                             <label class="block font-medium mb-1">CCAF</label>
-                            <input x-model="formDetails.ccaf" class="w-full border rounded p-2"
-                                placeholder="Los Andes, 18, etc.">
+                            <select x-model="formDetails.ccaf_id" class="w-full border rounded p-2">
+                                <option value="">Selecciona una CCAF</option>
+                                <template x-for="item in options.ccafs" :key="item.id">
+                                    <option :value="item.id" x-text="item.nombre"></option>
+                                </template>
+                            </select>
                         </div>
                         <div>
                             <label class="block font-medium mb-1">Mutual</label>
@@ -149,8 +153,8 @@
                         </div>
                         <div x-show="formDetails.dia_pago==='dia_fijo'">
                             <label class="block font-medium mb-1">Día (1–31)</label>
-                            <input type="number" min="1" max="31" x-model.number="formDetails.dia_pago_dia"
-                                class="w-full border rounded p-2">
+                            <input type="number" min="1" max="31"
+                                x-model.number="formDetails.dia_pago_dia" class="w-full border rounded p-2">
                         </div>
                     </div>
                 </section>
@@ -216,103 +220,176 @@
     @endsection
 
     @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
         <script>
+            // Axios base (CSRF + AJAX headers)
+            (function setupAxios() {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (token) axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+                axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+            })();
+
+            // Componente Alpine para "Crear Empresa"
             function companyCreate() {
                 return {
-                    // UI state
+                    // UI
                     tab: 'ident',
                     companyId: null,
                     savingEssential: false,
                     savingDetails: false,
 
-                    // Forms
+                    // Catálogos
+                    options: {
+                        ccafs: [], // [{id,name,code?}, ...]
+                    },
+
+                    // Paso 1: esenciales
                     formEssential: {
                         razon_social: '',
                         rut: '',
                     },
+
+                    // Paso 2: ficha (tabs)
                     formDetails: {
-                        // identificación complementaria
+                        // Identificación complementaria
                         nombre_fantasia: '',
                         giro: '',
                         email: '',
                         phone: '',
                         name: '',
-                        // dirección
+
+                        // Dirección
                         direccion: '',
                         comuna: '',
                         region: '',
-                        // remuneraciones
+
+                        // Remuneraciones (empresa)
                         tipo_contribuyente: '',
-                        ccaf: '',
-                        mutual: '',
                         dia_pago: '',
                         dia_pago_dia: null,
-                        // banco
+                        ccaf_id: null, // FK
+
+                        // Banco (texto por ahora)
                         banco: '',
                         cuenta_bancaria: '',
-                        // representante
+
+                        // Representante
                         representante_nombre: '',
                         representante_rut: '',
                         representante_cargo: '',
                         representante_email: '',
-                        // meta
+
+                        // Metadatos
                         notes: '',
                     },
 
-                    async saveEssentials() {
+                    // Carga inicial
+                    async init() {
                         try {
-                            this.savingEssential = true;
+                            const resp = await axios.get("{{ route('settings.ccafs.json') }}", {
+                                headers: {
+                                    Accept: 'application/json'
+                                }
+                            });
 
+                            const rows = Array.isArray(resp.data) ? resp.data : [];
+                            // Normaliza a { id, name, code? } sin importar cómo se llame la columna
+                            this.options.ccafs = rows.map(r => ({
+                                id: r.id,
+                                nombre: r.name ?? r.nombre ?? r.descripcion ?? '',
+                                code: r.code ?? r.codigo ?? null,
+                            }));
+
+                            // DEBUG opcional (quitar luego):
+                            // console.log('CCAFs normalizadas:', this.options.ccafs);
+                        } catch (e) {
+                            toast('No se pudo cargar CCAF.', 'error');
+                        }
+                    },
+
+
+                    // Guarda Razón Social + RUT => crea registro y habilita tabs
+                    async saveEssentials() {
+                        if (!this.formEssential.razon_social?.trim() || !this.formEssential.rut?.trim()) {
+                            toast('Ingresa Razón social y RUT.', 'error');
+                            return;
+                        }
+
+                        this.savingEssential = true;
+                        try {
                             const resp = await axios.post("{{ route('companies.store') }}", this.formEssential, {
                                 headers: {
                                     'Accept': 'application/json'
                                 }
                             });
 
-                            this.companyId = resp.data.id;
-                            Alpine.store('toast').flash('Empresa creada. Completa la ficha debajo.', 'success');
-                        } catch (e) {
-                            const msg = e.response?.data?.message || 'Error al crear la empresa.';
-                            const errors = e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(
-                                '\n') : '';
-                            Alpine.store('toast').flash([msg, errors].filter(Boolean).join('\n'), 'error', 6000);
+                            if (resp.status === 201 && resp.data?.id) {
+                                const url = "{{ route('companies.edit', '__ID__') }}".replace('__ID__', resp.data.id);
+                                window.location.href = url;
+                                return;
+                            }
+
+
+                            const msg = (resp.data?.errors && Object.values(resp.data.errors).flat().join('\n')) ||
+                                resp.data?.message ||
+                                'Error al crear la empresa.';
+                            toast(msg, 'error', 7000);
                         } finally {
                             this.savingEssential = false;
                         }
                     },
 
+                    // Guarda la ficha (tabs) vía PUT
                     async saveDetails() {
                         if (!this.companyId) {
-                            Alpine.store('toast').flash('Primero guarda Razón social y RUT.', 'error');
+                            toast('Primero guarda Razón social y RUT.', 'error');
                             return;
                         }
-                        try {
-                            this.savingDetails = true;
+                        if (this.formDetails.dia_pago === 'dia_fijo' && !this.formDetails.dia_pago_dia) {
+                            toast('Debes indicar el día de pago (1–31).', 'error');
+                            return;
+                        }
 
+                        this.savingDetails = true;
+                        try {
                             const url = "{{ route('companies.update', '__ID__') }}".replace('__ID__', this.companyId);
-                            const payload = {
+                            const resp = await axios.post(url, {
                                 ...this.formDetails,
                                 _method: 'PUT'
-                            };
-
-                            await axios.post(url, payload, {
+                            }, {
                                 headers: {
-                                    'Accept': 'application/json'
-                                }
+                                    Accept: 'application/json'
+                                },
+                                validateStatus: () => true, // << clave
                             });
 
-                            Alpine.store('toast').flash('Ficha de empresa guardada.', 'success');
-                        } catch (e) {
-                            const msg = e.response?.data?.message || 'Error al guardar la ficha.';
-                            const errors = e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(
-                                '\n') : '';
-                            Alpine.store('toast').flash([msg, errors].filter(Boolean).join('\n'), 'error', 6000);
+                            if (resp.status >= 200 && resp.status < 300) {
+                                toast(resp.data?.message ?? 'Ficha guardada.', 'success');
+                                return;
+                            }
+
+                            const msg = (resp.data?.errors && Object.values(resp.data.errors).flat().join('\n')) ||
+                                resp.data?.message ||
+                                'Error al guardar la ficha.';
+                            toast(msg, 'error', 7000);
                         } finally {
                             this.savingDetails = false;
                         }
                     }
+
                 }
             }
+
+            // (Opcional) disparar flashes si algún día vuelves con redirect a esta vista
+            window.addEventListener('DOMContentLoaded', () => {
+                @if (session('success'))
+                    Alpine.store('toast').flash(@json(session('success')), 'success');
+                @endif
+                @if ($errors->any())
+                    Alpine.store('toast').flash(@json(implode("\n", $errors->all())), 'error', 7000);
+                @endif
+            });
         </script>
     @endpush
 

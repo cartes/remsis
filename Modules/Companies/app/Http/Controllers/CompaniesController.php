@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
+use Modules\AdminPanel\Models\Ccaf;
 
 class CompaniesController extends Controller
 {
@@ -22,36 +23,94 @@ class CompaniesController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'razon_social' => ['required', 'string', 'max:255'],
-            'rut' => ['required', 'string', 'max:20', 'unique:companies,rut'],
-        ]);
+        $validated = $request->validate(
+            [
+                'razon_social' => ['required', 'string', 'max:255'],
+                'rut' => ['required', 'string', 'max:20', 'unique:companies,rut'],
+            ],
+            [
+                'razon_social.required' => 'La razón social es obligatoria.',
+                'rut.required' => 'El RUT es obligatorio.',
+                'rut.unique' => 'El RUT ya está registrado en otra empresa.',
+            ]
+        );
 
-        $company = \Modules\Companies\Models\Company::create($validated);
+        $data = $validated + ['name' => $validated['razon_social']]; // por NOT NULL en name
+        $company = Company::create($data);
 
+        // Siempre JSON (como pediste):
         return response()->json([
             'status' => 'success',
             'message' => 'Empresa creada. Completa la ficha debajo.',
-            'id' => $company->id
+            'id' => $company->id,
         ], 201);
     }
 
-    public function edit($id)
+    public function edit(Company $company)
     {
-        $company = Company::findOrFail($id);
-        return view('companies::edit', compact('company'));
+        $ccafs = Ccaf::orderBy('nombre')->get(['id', 'nombre']);
+        return view('companies::edit', compact('company', 'ccafs'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Company $company)
     {
-        $company = Company::findOrFail($id);
+        $data = $request->validate([
+            'nombre_fantasia' => ['nullable', 'string', 'max:255'],
+            'giro' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'direccion' => ['nullable', 'string', 'max:255'],
+            'comuna' => ['nullable', 'string', 'max:100'],
+            'region' => ['nullable', 'string', 'max:100'],
+            'tipo_contribuyente' => ['nullable', Rule::in(['natural', 'juridica'])],
+            'dia_pago' => ['nullable', Rule::in(['ultimo_dia_habil', 'dia_fijo', 'quincenal'])],
+            'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
+            'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+            'banco' => ['nullable', 'string', 'max:100'],
+            'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
+            'representante_nombre' => ['nullable', 'string', 'max:255'],
+            'representante_rut' => ['nullable', 'string', 'max:20'],
+            'representante_cargo' => ['nullable', 'string', 'max:100'],
+            'representante_email' => ['nullable', 'email', 'max:255'],
+            'notes' => ['nullable', 'string'],
+        ], [
+            'dia_pago_dia.required_if' => 'Debes indicar el día cuando el pago es “Día fijo”.',
+        ]);
 
-        $validated = $request->validate($this->rules($company->id));
+        $company->update($data);
 
-        $company->update($validated);
+        return redirect()
+            ->route('companies.edit', $company)
+            ->with('success', 'Ficha de empresa guardada.');
+    }
 
-        return redirect()->route('companies.index')
-            ->with('success', 'Empresa actualizada correctamente.');
+    public function editEssentials(Company $company)
+    {
+        return view('companies::essentials_edit', compact('company'));
+    }
+
+    public function updateEssentials(Request $request, Company $company)
+    {
+        $data = $request->validate([
+            'razon_social' => ['required', 'string', 'max:255'],
+            'rut' => ['required', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($company->id)],
+        ], [
+            'razon_social.required' => 'La razón social es obligatoria.',
+            'rut.required' => 'El RUT es obligatorio.',
+            'rut.unique' => 'El RUT ya está registrado en otra empresa.',
+        ]);
+
+        // Si usas NOT NULL en 'name', sincroniza si quieres mantenerlo igual a razón social:
+        if (empty($company->name)) {
+            $data['name'] = $data['razon_social'];
+        }
+
+        $company->update($data);
+
+        return redirect()
+            ->route('companies.edit', $company)
+            ->with('success', 'Datos esenciales actualizados.');
     }
 
     public function destroy($id)
@@ -67,34 +126,24 @@ class CompaniesController extends Controller
     protected function rules(?int $ignoreId = null): array
     {
         return [
-            // Identificación
             'name' => ['nullable', 'string', 'max:255'],
             'razon_social' => ['nullable', 'string', 'max:255'],
             'nombre_fantasia' => ['nullable', 'string', 'max:255'],
-            'rut' => [
-                'nullable',
-                'string',
-                'max:20',
-                // único si se informa, ignorando el propio id en update
-                Rule::unique('companies', 'rut')->ignore($ignoreId),
-            ],
+            'rut' => ['nullable', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($ignoreId)],
             'giro' => ['nullable', 'string', 'max:255'],
-
-            // Contacto/Dirección
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
             'direccion' => ['nullable', 'string', 'max:255'],
             'comuna' => ['nullable', 'string', 'max:100'],
             'region' => ['nullable', 'string', 'max:100'],
-
-            // Remuneraciones
             'tipo_contribuyente' => ['nullable', Rule::in(['natural', 'juridica'])],
-            'ccaf' => ['nullable', 'string', 'max:100'],   // luego FK
-            'mutual' => ['nullable', 'string', 'max:100'],   // luego FK
             'dia_pago' => ['nullable', Rule::in(['ultimo_dia_habil', 'dia_fijo', 'quincenal'])],
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
 
-            // Bancos
+            // FKs catálogo
+            'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+
+            // Banco/cuenta si los mantienes
             'banco' => ['nullable', 'string', 'max:100'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
 
@@ -103,6 +152,8 @@ class CompaniesController extends Controller
             'representante_rut' => ['nullable', 'string', 'max:20'],
             'representante_cargo' => ['nullable', 'string', 'max:100'],
             'representante_email' => ['nullable', 'email', 'max:255'],
+
+            'notes' => ['nullable', 'string'],
         ];
     }
 }
