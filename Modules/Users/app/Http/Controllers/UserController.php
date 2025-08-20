@@ -24,7 +24,7 @@ class UserController extends Controller
             ])
             ->select('id', 'name', 'email', 'status') // incluye lo que uses en la tabla
             ->orderByDesc('id')
-            ->get(); // 👈 usa get() si tu front espera array
+            ->get();
 
         $roles = Role::select('name')->get();
 
@@ -157,13 +157,13 @@ class UserController extends Controller
             ['company_id' => (int) $validated['company_id']]
         );
 
-        $employee->load('company:id,nombre');
+        $employee->load('company:id,name');
 
         return response()->json([
             'ok' => true,
             'company' => [
                 'id' => $employee->company->id,
-                'nombre' => $employee->company->nombre,
+                'name' => $employee->company->name,
             ],
         ]);
     }
