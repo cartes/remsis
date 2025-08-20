@@ -32,12 +32,14 @@ class User extends Authenticatable
     ];
     protected $guard_name = 'web';
 
+    protected $with = ['employee.company','roles'];
+
     public function company()
     {
         return $this->hasOneThrough(Company::class, Employee::class, 'user_id', 'id', 'id', 'company_id');
     }
 
-    public function employees()
+    public function employee()
     {
         return $this->hasOne(Employee::class, 'user_id');
     }

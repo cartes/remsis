@@ -29,7 +29,7 @@ class CompaniesApiController extends Controller
             'data' => $companies->map(function ($c) {
                 return [
                     'id' => $c->id,
-                    'nombre' => $c->name,  // ✅ nombre
+                    'name' => $c->name,  // ✅ nombre
                     'rut' => $c->rut,        // ✅ rut
                 ];
             }),

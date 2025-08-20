@@ -50,7 +50,7 @@
                                                     <span
                                                         class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
                                                         <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                                        <span x-text="user.employee.company.nombre"></span>
+                                                        <span x-text="user.employee.company.name"></span>
                                                     </span>
                                                     <!-- Botón cambiar (opcional) -->
                                                     <button class="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
@@ -212,7 +212,7 @@
                             <button @click="attachCompany(c)"
                                 class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between">
                                 <div>
-                                    <div class="font-medium" x-text="c.nombre"></div>
+                                    <div class="font-medium" x-text="c.name"></div>
                                     <div class="text-xs text-gray-500" x-text="c.rut ?? ''"></div>
                                 </div>
                                 <span class="text-sm text-blue-600">Seleccionar</span>
@@ -459,11 +459,11 @@
                                     if (!this.users[idx].employee) this.users[idx].employee = {};
                                     this.users[idx].employee.company = {
                                         id: res.data?.company?.id ?? company.id,
-                                        nombre: res.data?.company?.nombre ?? company.nombre ?? ''
+                                        name: res.data?.company?.name ?? company.name ?? ''
                                     };
                                 }
 
-                                this.showToast('Vinculado a ' + (company.nombre ?? 'empresa'));
+                                this.showToast('Vinculado a ' + (company.name ?? 'empresa'));
                                 this.closeCompanyModal();
                             } catch (e) {
                                 console.error('attachCompany error', e);

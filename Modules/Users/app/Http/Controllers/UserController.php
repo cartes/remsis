@@ -19,14 +19,14 @@ class UserController extends Controller
     {
         $users = User::query()
             ->with([
-                'employee.company:id,nombre',   // 👈 empresa dentro de employee
+                'employee.company:id,name',   // 👈 empresa dentro de employee
                 'roles:id,name',                // 👈 roles (Spatie)
             ])
             ->select('id', 'name', 'email', 'status') // incluye lo que uses en la tabla
             ->orderByDesc('id')
             ->get(); // 👈 usa get() si tu front espera array
 
-        $roles = \Spatie\Permission\Models\Role::select('name')->get();
+        $roles = Role::select('name')->get();
 
         return view('users::index', compact('users', 'roles'));
     }
