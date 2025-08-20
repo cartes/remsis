@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Modules\Employees\Models\Employee;
+
 
 class UserController extends Controller
 {
@@ -123,6 +125,37 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Estado del usuario actualizado correctamente.',
             'status' => $user->status,
+        ]);
+    }
+
+    /**
+     * Attach a company to a user.
+     */
+    public function attachCompany(Request $request, User $user)
+    {
+        // Opcional: restringe a roles que pueden tener empresa
+        if (!$user->hasAnyRole(['admin', 'employee', 'contador'])) {
+            return response()->json(['message' => 'Este usuario no admite vínculo a empresa.'], 403);
+        }
+
+        $validated = $request->validate([
+            'company_id' => ['required', 'integer', 'exists:companies,id'],
+        ]);
+
+        // 🔒 Upsert por user_id: si existe, actualiza; si no, crea
+        $employee = Employee::updateOrCreate(
+            ['user_id' => $user->id],              // unique key
+            ['company_id' => (int) $validated['company_id']]
+        );
+
+        $employee->load('company:id,nombre');
+
+        return response()->json([
+            'ok' => true,
+            'company' => [
+                'id' => $employee->company->id,
+                'nombre' => $employee->company->nombre,
+            ],
         ]);
     }
 }

@@ -4,7 +4,7 @@ namespace Modules\AdminPanel\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
 // use Modules\AdminPanel\Database\Factories\IsapreFactory;
 
 class Isapre extends Model
@@ -16,5 +16,9 @@ class Isapre extends Model
      */
     protected $fillable = ['name', 'code'];
 
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
   
 }

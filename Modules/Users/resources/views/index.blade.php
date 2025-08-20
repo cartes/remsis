@@ -26,6 +26,7 @@
                             <th class="px-4 py-2">Nombre</th>
                             <th class="px-4 py-2">Email</th>
                             <th class="px-4 py-2">Rol</th>
+                            <th class="px-4 py-2">Empresa</th>
                             <th class="px-4 py-2">Estado</th>
                             <th class="px-4 py-2">Acciones</th>
                         </tr>
@@ -33,9 +34,45 @@
                     <tbody class="divide-y divide-gray-200">
                         <template x-for="user in users" :key="user.id">
                             <tr>
-                                <td class="px-4 py-2" x-text="user.name" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
-                                <td class="px-4 py-2" x-text="user.email" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
-                                <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')" :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" x-text="user.name"
+                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" x-text="user.email"
+                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')"
+                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2">
+                                    <!-- Solo admin o employee pueden vincular/cambiar empresa -->
+                                    <template
+                                        x-if="user.roles.some(r => ['admin','employee', 'contador'].includes(r.name))">
+                                        <div>
+                                            <template x-if="user?.employee?.company">
+                                                <div class="flex items-center gap-2">
+                                                    <span
+                                                        class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                                        <span x-text="user.employee.company.nombre"></span>
+                                                    </span>
+                                                    <!-- Botón cambiar (opcional) -->
+                                                    <button class="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                                        @click.prevent="openCompanyModal(user)">Cambiar</button>
+                                                </div>
+                                            </template>
+
+                                            <template x-if="!user?.employee?.company">
+                                                <button class="text-blue-600 underline hover:no-underline"
+                                                    @click.prevent="openCompanyModal(user)">
+                                                    Vincular a empresa
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Para otros roles, no mostrar acción -->
+                                    <template
+                                        x-if="!user.roles.some(r => ['admin','employee', 'contador'].includes(r.name))">
+                                        <span class="text-gray-400">—</span>
+                                    </template>
+                                </td>
                                 <td class="px-4 py-2">
                                     <!-- Si es super-admin, mostrar texto fijo -->
                                     <template x-if="user.roles.some(r => r.name === 'super-admin')">
@@ -154,6 +191,58 @@
                 </div>
             </div>
 
+            {{-- Modal Vincular Empresa --}}
+            <div x-show="companyModal.open" x-cloak
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative">
+                    <button @click="closeCompanyModal"
+                        class="absolute top-2 right-3 text-gray-500 text-2xl">&times;</button>
+                    <h2 class="text-xl font-semibold mb-4">
+                        Vincular empresa a <span class="font-bold" x-text="companyModal.user?.name ?? ''"></span>
+                    </h2>
+
+                    <div class="mb-3">
+                        <input type="text" x-model.debounce.400ms="companySearch" @input="fetchCompanies(1)"
+                            placeholder="Buscar por nombre o RUT..."
+                            class="w-full border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
+                    </div>
+
+                    <div class="border rounded divide-y max-h-80 overflow-auto" x-show="companies.length">
+                        <template x-for="c in companies" :key="c.id">
+                            <button @click="attachCompany(c)"
+                                class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between">
+                                <div>
+                                    <div class="font-medium" x-text="c.nombre"></div>
+                                    <div class="text-xs text-gray-500" x-text="c.rut ?? ''"></div>
+                                </div>
+                                <span class="text-sm text-blue-600">Seleccionar</span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <div class="py-3 text-center text-sm text-gray-500" x-show="companyLoading">Cargando...</div>
+                    <div class="py-3 text-center text-sm text-gray-500" x-show="!companyLoading && !companies.length">Sin
+                        resultados</div>
+
+                    <div class="mt-3 flex items-center justify-between">
+                        <div class="text-sm">Página <span x-text="companyMeta.current_page"></span> de <span
+                                x-text="companyMeta.last_page"></span></div>
+                        <div class="space-x-2">
+                            <button class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                :disabled="companyMeta.current_page <= 1"
+                                @click="fetchCompanies(companyMeta.current_page - 1)">
+                                Anterior
+                            </button>
+                            <button class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                :disabled="companyMeta.current_page >= companyMeta.last_page"
+                                @click="fetchCompanies(companyMeta.current_page + 1)">
+                                Siguiente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         @push('scripts')
@@ -162,7 +251,9 @@
                     store: "{{ route('users.store') }}",
                     update: "{{ route('users.update', ':id') }}",
                     destroy: "{{ route('users.destroy', ':id') }}",
-                    toggleStatus: "{{ route('users.toggleStatus', ':id') }}"
+                    toggleStatus: "{{ route('users.toggleStatus', ':id') }}",
+                    companiesIndex: "{{ route('admin.companies.index') }}",
+                    attachCompany: "{{ route('users.attach-company', ':id') }}",
                 };
 
                 function useEditor() {
@@ -182,6 +273,43 @@
                             password: '',
                         },
                         users: @json($users),
+                        companyModal: {
+                            open: false,
+                            user: null
+                        },
+                        companySearch: '',
+                        companyLoading: false,
+                        companies: [],
+                        companyMeta: {
+                            current_page: 1,
+                            last_page: 1
+                        },
+
+                        openCompanyModal(user) {
+                            if (!user || typeof user.id === 'undefined') {
+                                console.warn('openCompanyModal: user inválido', user);
+                                this.showToast('Usuario inválido');
+                                return;
+                            }
+                            this.companyModal.user = {
+                                id: user.id,
+                                name: user.name ?? ''
+                            };
+                            this.companyModal.open = true;
+                            this.companySearch = '';
+                            this.fetchCompanies(1);
+                        },
+
+                        closeCompanyModal() {
+                            this.companyModal.open = false;
+                            this.companyModal.user = null;
+                            this.companySearch = '';
+                            this.companies = [];
+                            this.companyMeta = {
+                                current_page: 1,
+                                last_page: 1
+                            };
+                        },
 
                         resetForm() {
                             this.form = {
@@ -283,7 +411,66 @@
                                 console.error('Error al eliminar usuario', error);
                                 alert('Error al eliminar usuario.');
                             }
-                        }
+                        },
+
+                        async fetchCompanies(page = 1) {
+                            try {
+                                this.companyLoading = true;
+                                const {
+                                    data
+                                } = await axios.get(routes.companiesIndex, {
+                                    params: {
+                                        search: this.companySearch,
+                                        page
+                                    }
+                                });
+                                this.companies = data.data;
+                                this.companyMeta = data.meta;
+                            } catch (e) {
+                                console.error(e);
+                                this.showToast('Error cargando empresas');
+                            } finally {
+                                this.companyLoading = false;
+                            }
+                        },
+
+                        async attachCompany(company) {
+                            // Validaciones ANTES de tocar .id
+                            if (!company || typeof company.id === 'undefined') {
+                                console.warn('attachCompany: empresa inválida', company);
+                                this.showToast('Empresa inválida');
+                                return;
+                            }
+                            if (!this.companyModal || !this.companyModal.user || typeof this.companyModal.user.id ===
+                                'undefined') {
+                                console.warn('attachCompany: user no seteado', this.companyModal);
+                                this.showToast('Usuario no seleccionado');
+                                return;
+                            }
+
+                            try {
+                                const url = routes.attachCompany.replace(':id', this.companyModal.user.id);
+                                const res = await axios.post(url, {
+                                    company_id: company.id
+                                });
+
+                                const idx = this.users.findIndex(u => u.id === this.companyModal.user.id);
+                                if (idx !== -1) {
+                                    if (!this.users[idx].employee) this.users[idx].employee = {};
+                                    this.users[idx].employee.company = {
+                                        id: res.data?.company?.id ?? company.id,
+                                        nombre: res.data?.company?.nombre ?? company.nombre ?? ''
+                                    };
+                                }
+
+                                this.showToast('Vinculado a ' + (company.nombre ?? 'empresa'));
+                                this.closeCompanyModal();
+                            } catch (e) {
+                                console.error('attachCompany error', e);
+                                this.showToast('No se pudo vincular');
+                            }
+                        },
+
                     }
                 }
             </script>

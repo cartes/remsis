@@ -5,6 +5,7 @@ namespace Modules\Users\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use \Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
 // use Modules\Users\Database\Factories\UserFactory;
 
 use Spatie\Permission\Traits\HasRoles;
@@ -33,6 +34,11 @@ class User extends Authenticatable
 
     public function company()
     {
-        return $this->belongsTo(Company::class);
+        return $this->hasOneThrough(Company::class, Employee::class, 'user_id', 'id', 'id', 'company_id');
+    }
+
+    public function employees()
+    {
+        return $this->hasOne(Employee::class, 'user_id');
     }
 }

@@ -5,6 +5,7 @@ use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\AdminPanelController;
 use Modules\AdminPanel\Http\Controllers\Auth\LogoutController;
 use Modules\AdminPanel\Http\Controllers\SettingsController;
+use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
 
 
 Route::middleware('guest')->group(function () {
@@ -38,6 +39,14 @@ Route::prefix('settings')
         Route::put('/afps/{afp}', [SettingsController::class, 'updateAfp'])->name('afps.update');
         Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
+
+        // API para empresas
+    
+        Route::prefix('admin')
+            ->middleware(['web', 'auth', 'role:super-admin|admin'])
+            ->group(function () {
+                Route::get('companies', [CompaniesApiController::class, 'index'])->name('admin.companies.index'); // ?search= & page=
+            });
 
     });
 

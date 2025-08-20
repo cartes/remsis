@@ -14,4 +14,9 @@ Route::middleware(['web', 'auth'])->prefix("users")->group(function () {
     Route::get("/roles", [RoleController::class, "index"])->name("roles.index");
 
     Route::put('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+
+    // Vincular usuario Employeee a Empresa
+    Route::post('/{user}/attach-company', [UserController::class, 'attachCompany'])->name('users.attach-company');
 });
+
+// Rutas de empleados (Employees Module)
