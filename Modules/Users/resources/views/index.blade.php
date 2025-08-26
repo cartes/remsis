@@ -13,9 +13,26 @@
 
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">Usuarios del sistema</h2>
-                <button @click="open = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    + Crear nuevo usuario
-                </button>
+
+                <div class="flex items-center gap-3">
+                    {{-- Selector de empresas --}}
+                    <form method="GET" action="{{ route('users.index') }}" id="companyFilterForm">
+                        <select name="company_id" class="border rounded px-3 py-2 text-sm min-w-[200px]"
+                            onchange="document.getElementById('companyFilterForm').submit()">
+                            <option value="">Todas las empresas</option>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->id }}" {{ $companyId == $company->id ? 'selected' : '' }}>
+                                    {{ $company->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                    {{-- Botón Crear usuario --}}
+                    <button @click="open = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        + Crear nuevo usuario
+                    </button>
+                </div>
             </div>
 
             {{-- Tabla dinámica de usuarios --}}
