@@ -28,7 +28,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/admin/dashboard');
+        $user = auth()->user();
+
+        if ($user->hasRole('employee')) {
+            return redirect()->route('employee.profile.show');
+        }
+
+        if ($user->hasAnyRole('super-admin', 'admin', 'contador')) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
     }
 
     /**

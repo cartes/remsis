@@ -13,13 +13,13 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
-Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
+Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'index'])->name('admin.dashboard');
     Route::post('logout', [AdminPanelController::class, 'logout'])->name('logout');
 });
 
 Route::prefix('settings')
-    ->middleware(['web', 'auth', 'role:super-admin'])
+    ->middleware(['web', 'auth', 'role:super-admin|admin'])
     ->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/afps', [SettingsController::class, 'storeAfp'])->name('afps.store');
@@ -50,7 +50,7 @@ Route::prefix('settings')
 
     });
 
-Route::middleware(['auth'])->prefix('api/settings')->group(function () {
+Route::middleware(['auth', 'role:super-admin|admin'])->prefix('api/settings')->group(function () {
     Route::get('/ccafs', [SettingsController::class, 'ccafJson'])->name('settings.ccafs.json');
     Route::get('/isapres', [SettingsController::class, 'isapreJson'])->name('settings.isapres.json');
     Route::get('/afps', [SettingsController::class, 'afpJson'])->name('settings.afps.json');

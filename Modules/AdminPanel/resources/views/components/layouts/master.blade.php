@@ -17,12 +17,14 @@
             <div class="p-4 font-bold text-xl border-b">Remsis</div>
             <nav class="mt-4">
                 <ul class="space-y-2 p-2">
-                    <li>
-                        <a href="{{ route('users.index') }}"
-                            class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
-                            <i class="fas fa-users mr-2"></i> Usuarios
-                        </a>
-                    </li>
+                    @role('super-admin|admin|contador')
+                        <li>
+                            <a href="{{ route('users.index') }}"
+                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                <i class="fas fa-users mr-2"></i> Usuarios
+                            </a>
+                        </li>
+                    @endrole
                     @role('super-admin')
                         <li>
                             <a href="{{ route('companies.index') }}"

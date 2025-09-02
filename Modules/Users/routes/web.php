@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Users\Http\Controllers\RoleController;
 use Modules\Users\Http\Controllers\UserController;
 
-Route::middleware(['web', 'auth'])->prefix("users")->group(function () {
+Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix("users")->group(function () {
     Route::get("/", [UserController::class, "index"])->name("users.index");
     Route::post("/", [UserController::class, "store"])->name("users.store");
     Route::get('/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
