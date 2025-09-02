@@ -13,13 +13,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
-Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [AdminPanelController::class, 'index'])->name('admin.dashboard');
+Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     Route::post('logout', [AdminPanelController::class, 'logout'])->name('logout');
 });
 
+Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminPanelController::class, 'index'])->name('admin.dashboard');
+});
+
 Route::prefix('settings')
-    ->middleware(['web', 'auth', 'role:super-admin|admin'])
+    ->middleware(['web', 'auth', 'blockEmployeeOnAdmin', 'role:super-admin|admin'])
     ->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/afps', [SettingsController::class, 'storeAfp'])->name('afps.store');
