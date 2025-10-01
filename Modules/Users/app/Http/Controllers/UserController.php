@@ -18,23 +18,46 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $companyId = $request->query('company_id');
+        $auth = $request->user();
+        $companyId = $request->integer('company_id');
 
-        $users = User::query()
+        $query = User::query()
             ->with([
                 'employee.company:id,name',
                 'roles:id,name',
             ])
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->whereHas('employee', fn($qq) => $qq->where('company_id', $companyId));
-            })
-            ->select('id', 'name', 'email', 'status') // incluye lo que uses en la tabla
-            ->orderByDesc('id')
+            ->select('id', 'name', 'email', 'status');
+
+        if ($auth->hasRole('super-admin')) {
+            if ($companyId) {
+                $query->whereHas('employee', fn($q) => $q->where('company_id', $companyId));
+            }
+        } else {
+            $enforcedCompanyId = $auth->company_id;
+
+            if ($enforcedCompanyId) {
+                abort(403, "No tiene empresa asignada");
+            }
+
+            $query->whereHas('roles', fn($q) => $q->where('name', 'employee'))
+                ->whereHas('roles', fn($q) => $q->where('name', 'contador'))
+                ->whereHas('employee', fn($q) => $q->where('company_id', $enforcedCompanyId));
+
+            $companyId = $enforcedCompanyId;
+
+        }
+
+        $users = $query->orderByDesc('id')->get();
+
+        // Roles visibles/seleccionables en UI
+        $roles = Role::select('name')
+            ->when(!$auth->hasRole('super-admin'), fn($q) => $q->whereIn('name', ['employee']))
             ->get();
 
-        $roles = Role::select('name')->get();
-
-        $companies = Company::orderBy('name')->get(['id', 'name']);
+        // Empresas mostradas en filtros de UI
+        $companies = Company::orderBy('name')
+            ->when(!$auth->hasRole('super-admin'), fn($q) => $q->where('id', $companyId))
+            ->get(['id', 'name']);
 
 
         return view('users::index', compact('users', 'roles', 'companies', 'companyId'));

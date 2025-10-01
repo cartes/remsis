@@ -19,4 +19,10 @@ Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix("users")->g
     Route::post('/{user}/attach-company', [UserController::class, 'attachCompany'])->name('users.attach-company');
 });
 
+Route::prefix('admin')
+    ->middleware(['web', 'auth', 'role:super-admin|admin|contador'])
+    ->group(function() {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    });
+
 // Rutas de empleados (Employees Module)
