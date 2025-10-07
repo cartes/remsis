@@ -51,8 +51,18 @@
                     <tbody class="divide-y divide-gray-200">
                         <template x-for="user in users" :key="user.id">
                             <tr>
-                                <td class="px-4 py-2" x-text="user.name"
-                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
+                                <td class="px-4 py-2" :class="user.status ? 'text-gray-800' : 'text-gray-300'">
+                                    <a :href="(user.roles.some(r => r.name === 'employee') && user.employee) ?
+                                    '/payroll/employee/' + user.employee.id: null"
+                                        :class="{
+                                            'text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer transition-colors duration-200': user
+                                                .roles.some(r => r.name === 'employee') && user.employee,
+                                            'text-inherit cursor-default':
+                                                !(user.roles.some(r => r.name === 'employee') && user.employee)
+                                        }"
+                                        x-text="user.name">
+                                    </a>
+                                </td>
                                 <td class="px-4 py-2" x-text="user.email"
                                     :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
                                 <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')"
@@ -112,16 +122,26 @@
                                     </template>
 
                                 </td>
+                                {{-- Acciones --}}
                                 <td class="px-4 py-2">
                                     <div class="flex space-x-2">
-                                        {{-- Botón Editar --}}
+                                        {{-- Botón de Remuneraciones solo para employees --}}
+                                        <template x-if="user.roles.some(r => r.name === 'employee') && user.employee">
+                                            <a :href="'/payroll/employee/' + user.employee.id" title="Remuneraciones"
+                                                class="p-3 w-5 h-5 flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-800 rounded-sm transition"
+                                                aria-label="Remuneraciones">
+                                                <i class="fas fa-dollar-sign text-xs"></i>
+                                            </a>
+                                        </template>
+
+                                        <!-- Botón Editar -->
                                         <button @click="edit(user.id)" title="Editar"
                                             class="p-3 w-5 h-5 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 rounded-sm transition"
                                             aria-label="Editar">
                                             <i class="fas fa-pen text-xs"></i>
                                         </button>
 
-                                        {{-- Botón Eliminar --}}
+                                        <!-- Botón Eliminar -->
                                         <button @click="remove(user.id)" title="Eliminar"
                                             class="p-3 w-5 h-5 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 rounded-sm transition"
                                             aria-label="Eliminar">
