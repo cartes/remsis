@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Users\Models\User;
 use Modules\AdminPanel\Models\Ccaf;
 use Modules\Employees\Models\Employee;
+use Modules\Payroll\Models\Payroll;
 
 // use Modules\Companies\Database\Factories\CompanyFactory;
 
@@ -60,7 +61,7 @@ class Company extends Model
 
     public function payrolls()
     {
-        return $this->hasMany(\Modules\Payroll\Models\Payroll::class);
+        return $this->hasMany(Payroll::class);
     }
 
     protected static function booted()
