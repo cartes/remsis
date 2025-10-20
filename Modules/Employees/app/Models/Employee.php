@@ -9,6 +9,7 @@ use Modules\Users\Models\User;
 use Modules\AdminPanel\Models\Ccaf;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
+use Modules\AdminPanel\Models\Bank;
 // use Modules\Employees\Database\Factories\EmployeeFactory;
 
 class Employee extends Model
@@ -21,18 +22,26 @@ class Employee extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'name',
+        'user_id',
+        'company_id',
+        'bank_id',
+        'bank_account_number',
+        'bank_account_type',
+        'first_name',
+        'last_name',
+        'rut',
         'email',
         'phone',
         'address',
-        'company_id',
-        'user_id',
         'position',
-        'salary',
-        'hire_date',
         'ccaf_id',
         'isapre_id',
         'afp_id',
+        'salary',
+        'salary_type',
+        'contract_type',
+        'hire_date',
+        'status',
     ];
 
     protected $casts = [
@@ -63,4 +72,15 @@ class Employee extends Model
     {
         return $this->belongsTo(Isapre::class);
     }
+
+    public function bank()
+    {
+        return $this->belongsTo(Bank::class);
+    }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
 }
