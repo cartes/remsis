@@ -58,6 +58,11 @@ class Company extends Model
         return $this->hasMany(Employee::class);
     }
 
+    public function payrolls()
+    {
+        return $this->hasMany(\Modules\Payroll\Models\Payroll::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($company) {
