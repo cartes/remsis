@@ -35,16 +35,13 @@ class UserController extends Controller
         } else {
             $enforcedCompanyId = $auth->company_id;
 
-            if ($enforcedCompanyId) {
+            if (!$enforcedCompanyId) {
                 abort(403, "No tiene empresa asignada");
             }
 
-            $query->whereHas('roles', fn($q) => $q->where('name', 'employee'))
-                ->whereHas('roles', fn($q) => $q->where('name', 'contador'))
-                ->whereHas('employee', fn($q) => $q->where('company_id', $enforcedCompanyId));
+            $query->whereHas('employee', fn($q) => $q->where('company_id', $enforcedCompanyId));
 
             $companyId = $enforcedCompanyId;
-
         }
 
         $users = $query->orderByDesc('id')->get();

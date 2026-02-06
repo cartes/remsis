@@ -1,5 +1,8 @@
 <?php
 
+// Suppress PHP 8.5 deprecation warnings (for vendor/framework compatibility)
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 use App\Http\Middleware\BlockEmployeeOnAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;

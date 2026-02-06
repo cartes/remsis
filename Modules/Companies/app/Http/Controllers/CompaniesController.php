@@ -12,17 +12,30 @@ class CompaniesController extends Controller
 {
     public function index()
     {
-        $companies = Company::orderBy('razon_social')->orderBy('name')->get();
+        $user = auth()->user();
+        $query = Company::orderBy('razon_social')->orderBy('name');
+
+        if (!$user->hasRole('super-admin')) {
+            $query->where('id', $user->company_id);
+        }
+
+        $companies = $query->get();
         return view('companies::index', compact('companies'));
     }
 
     public function create()
     {
+        if (!auth()->user()->hasRole('super-admin')) {
+            abort(403, 'No tiene permiso para crear empresas.');
+        }
         return view('companies::create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasRole('super-admin')) {
+            abort(403);
+        }
         $validated = $request->validate(
             [
                 'razon_social' => ['required', 'string', 'max:255'],
@@ -48,12 +61,20 @@ class CompaniesController extends Controller
 
     public function edit(Company $company)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+            abort(403);
+        }
         $ccafs = Ccaf::orderBy('nombre')->get(['id', 'nombre']);
         return view('companies::edit', compact('company', 'ccafs'));
     }
 
     public function update(Request $request, Company $company)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+            abort(403);
+        }
         $data = $request->validate([
             'nombre_fantasia' => ['nullable', 'string', 'max:255'],
             'giro' => ['nullable', 'string', 'max:255'],
