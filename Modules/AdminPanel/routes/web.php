@@ -42,6 +42,9 @@ Route::prefix('settings')
         Route::put('/afps/{afp}', [SettingsController::class, 'updateAfp'])->name('afps.update');
         Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
+        
+        Route::get('/legal-parameters', [SettingsController::class, 'legal'])->name('settings.legal');
+        Route::put('/legal-parameters', [SettingsController::class, 'updateLegalParameters'])->name('legal_parameters.update');
 
         // API para empresas
     

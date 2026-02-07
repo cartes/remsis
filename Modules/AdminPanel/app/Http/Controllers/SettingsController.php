@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
 use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\LegalParameter;
 
 class SettingsController extends Controller
 {
@@ -19,6 +20,13 @@ class SettingsController extends Controller
             'afps' => Afp::all(),
             'isapres' => Isapre::all(),
             'ccafs' => Ccaf::all(),
+        ]);
+    }
+
+    public function legal()
+    {
+        return view('adminpanel::settings.legal', [
+            'legalParameters' => LegalParameter::all(),
         ]);
     }
 
@@ -119,6 +127,17 @@ class SettingsController extends Controller
     public function isapreJson()
     {
         return Isapre::orderBy('name')->get(['id', 'name']);
+    }
+
+    public function updateLegalParameters(Request $request)
+    {
+        $data = $request->except(['_token', '_method']);
+        
+        foreach ($data as $key => $value) {
+            LegalParameter::where('key', $key)->update(['value' => $value]);
+        }
+
+        return redirect()->route('settings.legal')->with('success_legal', 'Parámetros legales actualizados correctamente.');
     }
 
 }

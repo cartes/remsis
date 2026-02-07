@@ -20,7 +20,7 @@
                     @role('super-admin|admin|contador')
                         <li>
                             <a href="{{ route('users.index') }}"
-                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('users*') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
                                 <i class="fas fa-users mr-2"></i> Usuarios
                             </a>
                         </li>
@@ -28,17 +28,17 @@
                     @role('super-admin')
                         <li>
                             <a href="{{ route('companies.index') }}"
-                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
-                                <i class="fas fa-building mr-2 text-sm text-gray-500"></i>
+                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('companies*') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
+                                <i class="fas fa-building mr-2 text-sm"></i>
                                 Empresas
                             </a>
                         </li>
                     @endrole
                     </li>
                     @hasrole('super-admin')
-                        <li x-data="{ open: false }" class="mt-4">
+                        <li x-data="{ open: {{ request()->routeIs('settings.*') ? 'true' : 'false' }} }" class="mt-4">
                             <button @click="open = !open"
-                                class="w-full flex items-center justify-between p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                class="w-full flex items-center justify-between p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('settings.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
                                 <span><i class="fas fa-sliders-h mr-2"></i>Configuraciones</span>
                                 <i :class="open ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
                             </button>
@@ -46,11 +46,16 @@
                             <ul x-show="open" x-transition class="pl-4 mt-2 space-y-1">
                                 <li>
                                     <a href="{{ route('settings.index') }}"
-                                        class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold text-gray-500 uppercase text-xs">
+                                        class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('settings.index') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
                                         <i class="fas fa-cogs mr-2 text-sm"></i> Entidades Base
                                     </a>
                                 </li>
-                                {{-- Puedes agregar más subítems aquí si luego quieres separar AFP, Isapres, etc. --}}
+                                <li>
+                                    <a href="{{ route('settings.legal') }}"
+                                        class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('settings.legal') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
+                                        <i class="fas fa-balance-scale mr-2 text-sm"></i> Parámetros Legales
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     @endhasrole

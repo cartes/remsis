@@ -42,16 +42,18 @@
 
         <div x-data="{ activeTab: 'afps', ...settingsManager() }" class="max-w-6xl mx-auto space-y-6">
 
-            {{-- HEADER / TABS --}}
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-                <div class="border-b border-gray-200 bg-gray-50 flex overflow-x-auto">
+            {{-- TABS CONTAINER --}}
+            <div class="flex flex-col">
+                {{-- HEADER / TABS --}}
+                <div class="flex overflow-x-auto border-b border-gray-200 pl-2">
                     @foreach ($entidades as $key => $config)
                         <button @click="activeTab = '{{ $key }}'"
                             :class="{
-                                'border-b-2 border-blue-600 text-blue-700 bg-blue-50/50': activeTab === '{{ $key }}',
-                                'text-gray-600 hover:text-gray-800 hover:bg-gray-100': activeTab !== '{{ $key }}'
+                                'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab ===
+                                    '{{ $key }}',
+                                'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== '{{ $key }}'
                             }"
-                            class="px-6 py-4 text-sm font-medium transition-colors duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none">
+                            class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                             <i class="{{ $config['icon'] ?? 'fas fa-circle' }}"></i>
                             {{ $config['label'] }}
                         </button>
@@ -59,9 +61,10 @@
                 </div>
 
                 {{-- CONTENT --}}
-                <div class="p-6 bg-white min-h-[400px]">
+                <div class="p-6 bg-white min-h-[400px] border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
                     @foreach ($entidades as $key => $config)
-                        <div x-show="activeTab === '{{ $key }}'" x-transition:enter="transition ease-out duration-300"
+                        <div x-show="activeTab === '{{ $key }}'"
+                            x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 translate-y-2"
                             x-transition:enter-end="opacity-100 translate-y-0">
 
@@ -104,7 +107,8 @@
                                             <tr class="hover:bg-gray-50 transition-colors group">
                                                 <td class="px-6 py-3 text-center text-gray-500 font-mono text-xs">
                                                     {{ $item->id }}</td>
-                                                <td class="px-6 py-3 font-medium text-gray-800">{{ $item->nombre }}</td>
+                                                <td class="px-6 py-3 font-medium text-gray-800">{{ $item->nombre }}
+                                                </td>
                                                 <td class="px-6 py-3 text-center">
                                                     <div class="flex items-center justify-center gap-3">
                                                         <button
@@ -147,17 +151,15 @@
             </div>
 
             {{-- MODAL CREATE --}}
-            <div x-show="modal.open" 
-                style="display: none;"
-                class="fixed inset-0 z-50 overflow-y-auto" 
-                aria-labelledby="modal-title" role="dialog"
-                aria-modal="true">
-                
+            <div x-show="modal.open" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true">
+
                 {{-- Backdrop --}}
                 <div x-show="modal.open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="modal.open = false"></div>
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="modal.open = false">
+                </div>
 
                 <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
                     <div x-show="modal.open" x-transition:enter="ease-out duration-300"
@@ -168,10 +170,11 @@
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         @click.away="modal.open = false"
                         class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                        
+
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
-                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <div
+                                    class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                                     <i class="fas fa-plus text-blue-600"></i>
                                 </div>
                                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
@@ -180,8 +183,7 @@
                                     </h3>
                                     <div class="mt-4">
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                        <input type="text" x-model="modal.nombre" required
-                                            @keydown.enter="submit()"
+                                        <input type="text" x-model="modal.nombre" required @keydown.enter="submit()"
                                             :placeholder="'Ingrese nombre'"
                                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
                                     </div>
@@ -203,15 +205,14 @@
             </div>
 
             {{-- MODAL EDIT --}}
-            <div x-show="edit.open" 
-                style="display: none;"
-                class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
-                aria-modal="true">
-                
+            <div x-show="edit.open" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true">
+
                 <div x-show="edit.open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="edit.open = false"></div>
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="edit.open = false">
+                </div>
 
                 <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
                     <div x-show="edit.open" x-transition:enter="ease-out duration-300"
@@ -222,10 +223,11 @@
                         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                         @click.away="edit.open = false"
                         class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                        
+
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
-                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <div
+                                    class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
                                     <i class="fas fa-edit text-blue-600"></i>
                                 </div>
                                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
@@ -278,7 +280,7 @@
                         this.modal.nombre = '';
                         this.modal.ref = ref;
                         this.modal.open = true;
-                        
+
                         // Focus input after modal opens
                         setTimeout(() => {
                             // Simple focus attempt if needed, though x-trap is better if available
@@ -287,7 +289,7 @@
 
                     async submit() {
                         if (!this.modal.nombre.trim()) return;
-                        
+
                         try {
                             const response = await axios.post(this.modal.action, {
                                 nombre: this.modal.nombre
@@ -297,7 +299,7 @@
 
                             // Referencia a la tabla correcta
                             const tableBody = this.$refs[this.modal.ref].querySelector('tbody');
-                            
+
                             // Remove "No records" row if it exists
                             if (tableBody.rows.length === 1 && tableBody.rows[0].cells.length === 1) {
                                 tableBody.innerHTML = '';
@@ -320,13 +322,13 @@
                             // to dynamically inserted HTML is tricky without a full component re-render. 
                             // Ideally, the list should be reactive, but this is a pure DOM manipulation approach 
                             // to match the existing pattern.
-                            
+
                             tableBody.appendChild(row);
 
                             this.modal.open = false;
-                            
+
                             // Optional hooks/notifications could go here
-                            
+
                         } catch (error) {
                             alert('Error al guardar: ' + (error.response?.data?.message || error.message));
                             console.error(error);
@@ -362,11 +364,12 @@
                             const actualizado = response.data;
 
                             const tableBody = this.$refs[this.edit.ref].querySelector('tbody');
-                            const row = Array.from(tableBody.rows).find(r => r.cells[0]?.textContent.trim() == this.edit.rowId);
-                            
+                            const row = Array.from(tableBody.rows).find(r => r.cells[0]?.textContent.trim() == this.edit
+                                .rowId);
+
                             if (row) {
                                 row.cells[1].textContent = this.edit.nombre; // Optimistically update or use response
-                                
+
                                 // Flash effect
                                 row.classList.add('bg-green-50');
                                 setTimeout(() => row.classList.remove('bg-green-50'), 1000);
@@ -374,23 +377,23 @@
 
                             this.edit.open = false;
                         } catch (error) {
-                             alert('Error al actualizar: ' + (error.response?.data?.message || error.message));
+                            alert('Error al actualizar: ' + (error.response?.data?.message || error.message));
                             console.error(error);
                         }
                     },
-                    
+
                     async deleteItem(id, label, action, ref) {
-                        if(!confirm(`¿Estás seguro de que deseas eliminar este registro de ${label}?`)) return;
-                        
+                        if (!confirm(`¿Estás seguro de que deseas eliminar este registro de ${label}?`)) return;
+
                         try {
                             await axios.delete(action);
-                             
+
                             const tableBody = this.$refs[ref].querySelector('tbody');
                             const row = Array.from(tableBody.rows).find(r => r.cells[0]?.textContent.trim() == id);
-                            
+
                             if (row) {
                                 row.remove();
-                                if(tableBody.rows.length === 0) {
+                                if (tableBody.rows.length === 0) {
                                     tableBody.innerHTML = `
                                         <tr>
                                             <td colspan="3" class="px-6 py-12 text-center text-gray-400 bg-white">
