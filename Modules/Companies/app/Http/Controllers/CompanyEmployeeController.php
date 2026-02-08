@@ -96,10 +96,10 @@ class CompanyEmployeeController extends Controller
 
         $validated = $request->validate([
             // Datos personales
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'rut' => 'required|string',
-            'email' => 'required|email',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'rut' => 'nullable|string',
+            'email' => 'nullable|email',
             'phone' => 'nullable|string',
             'birth_date' => 'nullable|date',
             'nationality' => 'nullable|string|max:100',
@@ -143,10 +143,21 @@ class CompanyEmployeeController extends Controller
         // También actualizar el nombre en el usuario si cambió
         $user = $employee->user;
         if ($user) {
-            $user->update([
-                'name' => "{$validated['first_name']} {$validated['last_name']}",
-                'email' => $validated['email'],
-            ]);
+            $userData = [];
+            
+            // Construir nombre si ambos campos están presentes
+            if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+                $userData['name'] = "{$validated['first_name']} {$validated['last_name']}";
+            }
+            
+            // Actualizar email si está presente
+            if (!empty($validated['email'])) {
+                $userData['email'] = $validated['email'];
+            }
+
+            if (!empty($userData)) {
+                $user->update($userData);
+            }
         }
 
         return response()->json([
