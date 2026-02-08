@@ -41,7 +41,8 @@ class Company extends Model
         'representante_nombre',
         'representante_rut',
         'representante_cargo',
-        'representante_email'
+        'representante_email',
+        'notes'
     ];
 
 
@@ -68,6 +69,11 @@ class Company extends Model
     public function payrolls()
     {
         return $this->hasMany(Payroll::class);
+    }
+
+    public function costCenters()
+    {
+        return $this->hasMany(\Modules\Companies\Models\CostCenter::class);
     }
 
     protected static function booted()

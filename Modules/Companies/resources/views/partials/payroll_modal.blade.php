@@ -5,7 +5,7 @@
     class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
 
     <div @click.away="showPayrollModal = false"
-        class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+        class="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
 
         {{-- Header --}}
         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -24,29 +24,48 @@
         </div>
 
         {{-- Tabs Modal --}}
-        <div class="flex border-b border-gray-200 bg-white">
+        <div class="flex border-b border-gray-200 bg-white overflow-x-auto">
             <button @click="activePayrollTab = 'personal'"
                 :class="activePayrollTab === 'personal' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all">
-                Personales
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-user mr-1"></i> Personales
+            </button>
+            <button @click="activePayrollTab = 'laboral'"
+                :class="activePayrollTab === 'laboral' ? 'border-blue-500 text-blue-600 bg-blue-50' :
+                    'border-transparent text-gray-500 hover:text-gray-700'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-briefcase mr-1"></i> Laborales
             </button>
             <button @click="activePayrollTab = 'prevision'"
                 :class="activePayrollTab === 'prevision' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all">
-                Previsión
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-shield-alt mr-1"></i> Previsión
             </button>
-            <button @click="activePayrollTab = 'sueldo'"
-                :class="activePayrollTab === 'sueldo' ? 'border-blue-500 text-blue-600 bg-blue-50' :
+            <button @click="activePayrollTab = 'remuneracion'"
+                :class="activePayrollTab === 'remuneracion' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all">
-                Sueldo / Banco
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-money-bill-wave mr-1"></i> Remuneración
+            </button>
+            <button @click="activePayrollTab = 'banco'"
+                :class="activePayrollTab === 'banco' ? 'border-blue-500 text-blue-600 bg-blue-50' :
+                    'border-transparent text-gray-500 hover:text-gray-700'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-university mr-1"></i> Bancarios
+            </button>
+            <button @click="activePayrollTab = 'emergencia'"
+                :class="activePayrollTab === 'emergencia' ? 'border-blue-500 text-blue-600 bg-blue-50' :
+                    'border-transparent text-gray-500 hover:text-gray-700'"
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                <i class="fas fa-phone-alt mr-1"></i> Emergencia
             </button>
         </div>
 
         {{-- Body --}}
         <div class="flex-1 overflow-y-auto p-6">
+            {{-- Tab: Datos Personales --}}
             <div x-show="activePayrollTab === 'personal'" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -67,25 +86,91 @@
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email</label>
-                        <input type="email" x-model="selectedEmployee.email"
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha Nacimiento</label>
+                        <input type="date" x-model="selectedEmployee.birth_date"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email</label>
+                        <input type="email" x-model="selectedEmployee.email"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Teléfono</label>
                         <input type="text" x-model="selectedEmployee.phone"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nacionalidad</label>
+                        <input type="text" x-model="selectedEmployee.nationality"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Estado Civil</label>
+                        <select x-model="selectedEmployee.marital_status"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccione...</option>
+                            <option value="single">Soltero/a</option>
+                            <option value="married">Casado/a</option>
+                            <option value="divorced">Divorciado/a</option>
+                            <option value="widowed">Viudo/a</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Dirección</label>
+                    <input type="text" x-model="selectedEmployee.address"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            {{-- Tab: Datos Laborales --}}
+            <div x-show="activePayrollTab === 'laboral'" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cargo / Posición</label>
                         <input type="text" x-model="selectedEmployee.position"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                     </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha
+                            Contratación</label>
+                        <input type="date" x-model="selectedEmployee.hire_date"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Contrato</label>
+                        <input type="text" x-model="selectedEmployee.contract_type"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: Indefinido, Plazo Fijo">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Jornada Laboral</label>
+                        <input type="text" x-model="selectedEmployee.work_schedule"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 45 hrs semanales">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Centro de Costo</label>
+                    <select x-model="selectedEmployee.cost_center_id"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="">Sin asignar</option>
+                        <template x-for="cc in costCenters" :key="cc.id">
+                            <option :value="cc.id" x-text="`${cc.code} - ${cc.name}`"></option>
+                        </template>
+                    </select>
                 </div>
             </div>
 
+            {{-- Tab: Previsión Social --}}
             <div x-show="activePayrollTab === 'prevision'" class="space-y-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">AFP</label>
@@ -109,6 +194,13 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Monto Adicional
+                        Salud</label>
+                    <input type="number" step="0.01" x-model="selectedEmployee.health_contribution"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        placeholder="0.00">
+                </div>
+                <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Caja de Compensación
                         (CCAF)</label>
                     <select x-model="selectedEmployee.ccaf_id"
@@ -119,9 +211,17 @@
                         </template>
                     </select>
                 </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">APV (Ahorro Previsional
+                        Voluntario)</label>
+                    <input type="number" step="0.01" x-model="selectedEmployee.apv_amount"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        placeholder="0.00">
+                </div>
             </div>
 
-            <div x-show="activePayrollTab === 'sueldo'" class="space-y-4">
+            {{-- Tab: Remuneración --}}
+            <div x-show="activePayrollTab === 'remuneracion'" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Sueldo Base</label>
@@ -132,6 +232,7 @@
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Sueldo</label>
                         <select x-model="selectedEmployee.salary_type"
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccione...</option>
                             <option value="mensual">Mensual</option>
                             <option value="quincenal">Quincenal</option>
                             <option value="semanal">Semanal</option>
@@ -139,12 +240,14 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Contrato</label>
-                    <input type="text" x-model="selectedEmployee.contract_type"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: Indefinido, Plazo Fijo">
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cargas Familiares</label>
+                    <input type="number" min="0" x-model="selectedEmployee.num_dependents"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                 </div>
-                <hr class="border-gray-100 my-2">
+            </div>
+
+            {{-- Tab: Datos Bancarios --}}
+            <div x-show="activePayrollTab === 'banco'" class="space-y-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Banco</label>
                     <select x-model="selectedEmployee.bank_id"
@@ -159,7 +262,7 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nº Cuenta</label>
                         <input type="text" x-model="selectedEmployee.bank_account_number"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Cuenta</label>
@@ -171,6 +274,20 @@
                             <option value="ahorro">Ahorro</option>
                         </select>
                     </div>
+                </div>
+            </div>
+
+            {{-- Tab: Contacto Emergencia --}}
+            <div x-show="activePayrollTab === 'emergencia'" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre Contacto</label>
+                    <input type="text" x-model="selectedEmployee.emergency_contact_name"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Teléfono Contacto</label>
+                    <input type="text" x-model="selectedEmployee.emergency_contact_phone"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
         </div>

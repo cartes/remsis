@@ -2,11 +2,12 @@
     @section('title', 'Nómina de Empleados - ' . $company->razon_social)
 
     @section('content')
-        <div class="max-w-7xl mx-auto" x-data="{
+        <div class="max-w-7xl mx-auto"
+            x-data='{
             showAddEmployeeModal: false,
             showPayrollModal: false,
             payrollLoading: false,
-            activePayrollTab: 'personal',
+            activePayrollTab: "personal",
             loading: false,
             afps: @json($afps),
             isapres: @json($isapres),
@@ -14,63 +15,75 @@
             bancos: @json($bancos),
             selectedEmployee: {
                 id: null,
-                first_name: '',
-                last_name: '',
-                rut: '',
-                email: '',
-                phone: '',
-                position: '',
-                afp_id: '',
-                isapre_id: '',
-                ccaf_id: '',
-                salary: '',
-                salary_type: '',
-                contract_type: '',
-                status: '',
-                bank_id: '',
-                bank_account_number: '',
-                bank_account_type: '',
-                user: { name: '', email: '' }
+                first_name: "",
+                last_name: "",
+                rut: "",
+                email: "",
+                phone: "",
+                position: "",
+                birth_date: "",
+                nationality: "",
+                marital_status: "",
+                num_dependents: 0,
+                hire_date: "",
+                work_schedule: "",
+                cost_center_id: "",
+                afp_id: "",
+                isapre_id: "",
+                ccaf_id: "",
+                health_contribution: "",
+                apv_amount: "",
+                salary: "",
+                salary_type: "",
+                contract_type: "",
+                status: "",
+                bank_id: "",
+                bank_account_number: "",
+                bank_account_type: "",
+                emergency_contact_name: "",
+                emergency_contact_phone: "",
+                address: "",
+                user: { name: "", email: "" }
             },
-            newEmployee: { name: '', email: '', password: '' },
+            newEmployee: { name: "", email: "", password: "" },
             async addEmployee() {
                 this.loading = true;
                 try {
-                    const response = await axios.post('{{ route('companies.employees.store', $company) }}', this.newEmployee);
-                    if (response.data.status === 'success') {
+                    const response = await axios.post("{{ route('companies.employees.store', $company) }}", this.newEmployee);
+                    if (response.data.status === "success") {
                         window.location.reload();
                     }
                 } catch (error) {
                     console.error(error);
-                    toast(error.response?.data?.message || 'Error al crear empleado', 'error');
+                    toast(error.response?.data?.message || "Error al crear empleado", "error");
                 } finally {
                     this.loading = false;
                 }
             },
             async removeEmployee(userId) {
-                if (!confirm('¿Seguro que deseas desvincular a este empleado?')) return;
+                if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
                 try {
-                    const url = '{{ route('companies.employees.destroy', [$company, ':id']) }}'.replace(':id', userId);
+                    const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(":id", userId);
                     const response = await axios.delete(url);
-                    if (response.data.status === 'success') {
+                    if (response.data.status === "success") {
                         window.location.reload();
                     }
                 } catch (error) {
-                    toast('Error al desvincular empleado', 'error');
+                    toast("Error al desvincular empleado", "error");
                 }
             },
             async openPayrollModal(employeeId) {
                 this.payrollLoading = true;
-                this.activePayrollTab = 'personal';
+                this.activePayrollTab = "personal";
                 try {
-                    const url = '{{ route('companies.employees.payroll', [$company, ':id']) }}'.replace(':id', employeeId);
+                    const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}".replace(":id", employeeId);
                     const response = await axios.get(url);
-                    if (response.data.status === 'success') {
+                    if (response.data.status === "success") {
                         this.selectedEmployee = response.data.employee;
                         this.showPayrollModal = true;
                     }
                 } catch (error) {
-                    toast('Error al cargar datos de nómina', 'error');
+                    toast("Error al cargar datos de nómina", "error");
                 } finally {
                     this.payrollLoading = false;
                 }
@@ -78,21 +91,21 @@
             async updatePayroll() {
                 this.payrollLoading = true;
                 try {
-                    const url = '{{ route('companies.employees.payroll.update', [$company, ':id']) }}'.replace(':id', this.selectedEmployee.id);
+                    const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
                     const response = await axios.put(url, this.selectedEmployee);
-                    if (response.data.status === 'success') {
-                        toast('Datos de nómina actualizados correctamente', 'success');
+                    if (response.data.status === "success") {
+                        toast("Datos de nómina actualizados correctamente", "success");
                         this.showPayrollModal = false;
                         window.location.reload();
                     }
                 } catch (error) {
                     console.error(error);
-                    toast('Error al actualizar datos de nómina', 'error');
+                    toast("Error al actualizar datos de nómina", "error");
                 } finally {
                     this.payrollLoading = false;
                 }
             }
-        }">
+        }'>
 
             {{-- Company Header --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">

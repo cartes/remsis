@@ -2,27 +2,68 @@
     @section('title', 'Editar Empresa')
 
     @section('content')
-        <div class="max-w-7xl mx-auto" x-data="{
-            activeTab: 'ident',
-            diaPago: '{{ old('dia_pago', $company->dia_pago) }}',
-            showEssentialsModal: false,
-            loadingEssentials: false,
-            essentials: {
-                razon_social: '{{ $company->razon_social }}',
-                rut: '{{ $company->rut }}'
-            },
-            async updateEssentials() {
-                this.loadingEssentials = true;
-                try {
-                    const response = await axios.put('{{ route('companies.essentials.update', $company) }}', this.essentials);
-                    window.location.reload();
-                } catch (error) {
-                    toast(error.response?.data?.message || 'Error al actualizar datos', 'error');
-                } finally {
-                    this.loadingEssentials = false;
+        <script>
+            (function() {
+                const initCompanyForm = () => {
+                    Alpine.data('companyForm', () => ({
+                        activeTab: @json(request('tab', 'ident')),
+                        diaPago: @json(old('dia_pago', $company->dia_pago)),
+                        showEssentialsModal: false,
+                        loadingEssentials: false,
+                        essentials: {
+                            razon_social: @json($company->razon_social),
+                            rut: @json($company->rut)
+                        },
+                        init() {
+                            this.$watch('activeTab', value => {
+                                const url = new URL(window.location);
+                                url.searchParams.set('tab', value);
+                                window.history.replaceState(null, '', url);
+                            });
+                        },
+                        async updateEssentials() {
+                            this.loadingEssentials = true;
+                            try {
+                                const response = await axios.put(
+                                    "{{ route('companies.essentials.update', $company) }}", this
+                                    .essentials);
+                                window.location.reload();
+                            } catch (error) {
+                                toast(error.response?.data?.message || "Error al actualizar datos",
+                                    "error");
+                            } finally {
+                                this.loadingEssentials = false;
+                            }
+                        }
+                    }));
+                };
+
+                if (typeof Alpine !== 'undefined') {
+                    initCompanyForm();
+                } else {
+                    document.addEventListener('alpine:init', initCompanyForm);
                 }
-            }
-        }">
+            })();
+        </script>
+
+        <div class="max-w-7xl mx-auto" x-data="companyForm">
+
+            {{-- Toast Notifications for Session Flashes --}}
+            @if (session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        toast("{{ session('success') }}", 'success');
+                    });
+                </script>
+            @endif
+
+            @if (session('error'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        toast("{{ session('error') }}", 'error');
+                    });
+                </script>
+            @endif
 
             {{-- Company Header Card --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">
@@ -84,6 +125,16 @@
                         <i class="fas fa-money-bill-wave"></i>
                         Remuneraciones
                     </button>
+                    {{-- Cost Centers Tab --}}
+                    <button @click="activeTab = 'cost-centers'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'cost-centers',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'cost-centers'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-sitemap"></i>
+                        Centros de Costos
+                    </button>
                     <button @click="activeTab = 'banco'"
                         :class="{
                             'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'banco',
@@ -111,11 +162,19 @@
                         <i class="fas fa-sticky-note"></i>
                         Notas
                     </button>
-
                 </div>
 
-                {{-- Tab Content --}}
-                <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
+
+                {{-- Cost Centers Tab --}}
+                <div x-show="activeTab === 'cost-centers'"
+                    class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm p-6"
+                    x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    @include('companies::partials.cost_centers_tab')
+                </div>
+
+                <div x-show="activeTab !== 'cost-centers'"
+                    class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
                     <form method="POST" action="{{ route('companies.update', $company) }}" class="p-6">
                         @csrf
                         @method('PUT')
@@ -425,7 +484,7 @@
                         </div>
 
                         {{-- Action Buttons (Only for form tabs) --}}
-                        <div x-show="activeTab !== 'payroll'"
+                        <div x-show="activeTab !== 'payroll' && activeTab !== 'cost-centers'"
                             class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
                             <a href="{{ route('companies.index') }}"
                                 class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-colors font-medium">
@@ -487,6 +546,7 @@
                     </form>
                 </div>
             </div>
+        </div>
         </div>
     @endsection
 </x-adminpanel::layouts.master>

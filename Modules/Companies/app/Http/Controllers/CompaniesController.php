@@ -75,7 +75,10 @@ class CompaniesController extends Controller
             ->with(['user:id,name,email,status', 'user.roles:id,name'])
             ->get();
 
-        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees'));
+        // Cargar centros de costo
+        $costCenters = $company->costCenters()->orderBy('code')->get();
+
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters'));
     }
 
     public function employees(Company $company)
@@ -95,7 +98,10 @@ class CompaniesController extends Controller
             ->with(['user:id,name,email,status', 'user.roles:id,name'])
             ->get();
 
-        return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees'));
+        // Cargar centros de costo activos
+        $costCenters = $company->costCenters()->active()->orderBy('code')->get(['id', 'code', 'name']);
+
+        return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters'));
     }
 
     public function update(Request $request, Company $company)

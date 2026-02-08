@@ -25,4 +25,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('companies.employees.payroll');
     Route::put('companies/{company}/employees/{employee}/payroll', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'updatePayroll'])
         ->name('companies.employees.payroll.update');
+
+    // Centros de Costo
+    Route::get('companies/{company}/cost-centers', [Modules\Companies\Http\Controllers\CostCenterController::class, 'index'])
+        ->name('companies.cost-centers');
+    Route::post('companies/{company}/cost-centers', [Modules\Companies\Http\Controllers\CostCenterController::class, 'store'])
+        ->name('companies.cost-centers.store');
+    Route::put('companies/{company}/cost-centers/{costCenter}', [Modules\Companies\Http\Controllers\CostCenterController::class, 'update'])
+        ->name('companies.cost-centers.update');
+    Route::delete('companies/{company}/cost-centers/{costCenter}', [Modules\Companies\Http\Controllers\CostCenterController::class, 'destroy'])
+        ->name('companies.cost-centers.destroy');
 });

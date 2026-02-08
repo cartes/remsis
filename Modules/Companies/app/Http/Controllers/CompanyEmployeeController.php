@@ -95,22 +95,47 @@ class CompanyEmployeeController extends Controller
         }
 
         $validated = $request->validate([
+            // Datos personales
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'rut' => 'required|string',
             'email' => 'required|email',
             'phone' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'nationality' => 'nullable|string|max:100',
+            'marital_status' => 'nullable|in:single,married,divorced,widowed,other',
+            'address' => 'nullable|string',
+            
+            // Datos laborales
             'position' => 'nullable|string',
+            'hire_date' => 'nullable|date',
+            'contract_type' => 'nullable|string',
+            'work_schedule' => 'nullable|string',
+            'cost_center_id' => 'nullable|exists:cost_centers,id',
+            
+            // Previsión social
             'afp_id' => 'nullable|exists:afps,id',
             'isapre_id' => 'nullable|exists:isapres,id',
             'ccaf_id' => 'nullable|exists:ccafs,id',
+            'health_contribution' => 'nullable|numeric|min:0',
+            'apv_amount' => 'nullable|numeric|min:0',
+            
+            // Remuneración
             'salary' => 'nullable|numeric',
             'salary_type' => 'nullable|in:mensual,quincenal,semanal',
-            'contract_type' => 'nullable|string',
-            'status' => 'nullable|in:active,inactive',
+            'num_dependents' => 'nullable|integer|min:0',
+            
+            // Datos bancarios
             'bank_id' => 'nullable|exists:banks,id',
             'bank_account_number' => 'nullable|string',
             'bank_account_type' => 'nullable|in:corriente,vista,ahorro',
+            
+            // Contacto emergencia
+            'emergency_contact_name' => 'nullable|string',
+            'emergency_contact_phone' => 'nullable|string',
+            
+            // Estado
+            'status' => 'nullable|in:active,inactive',
         ]);
 
         $employee->update($validated);

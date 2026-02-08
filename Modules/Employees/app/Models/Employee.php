@@ -34,18 +34,30 @@ class Employee extends Model
         'phone',
         'address',
         'position',
+        'birth_date',
+        'nationality',
+        'marital_status',
+        'num_dependents',
+        'hire_date',
+        'work_schedule',
+        'cost_center_id',
         'ccaf_id',
         'isapre_id',
         'afp_id',
+        'health_contribution',
+        'apv_amount',
         'salary',
         'salary_type',
         'contract_type',
         'hire_date',
         'status',
+        'emergency_contact_name',
+        'emergency_contact_phone',
     ];
 
     protected $casts = [
-        'hire_date' => 'datetime',
+        'hire_date' => 'date',
+        'birth_date' => 'date',
     ];
 
     public function user()
@@ -76,6 +88,11 @@ class Employee extends Model
     public function bank()
     {
         return $this->belongsTo(Bank::class);
+    }
+
+    public function costCenter()
+    {
+        return $this->belongsTo(\Modules\Companies\Models\CostCenter::class);
     }
 
     public function getFullNameAttribute()
