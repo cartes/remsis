@@ -21,13 +21,15 @@ class UserController extends Controller
         $auth = $request->user();
 
         $query = User::query()
-            ->with([
-                'roles:id,name',
-            ])
-            ->where('id', '!=', $auth->id) // Excluir al usuario actual
             ->whereHas('roles', function($q) {
                 $q->whereIn('name', ['super-admin', 'admin', 'contador', 'recursos-humanos']);
             })
+            ->when($request->company_id, function($q) use ($request) {
+                $q->whereHas('employee', function($eq) use ($request) {
+                    $eq->where('company_id', $request->company_id);
+                });
+            })
+            ->with(['roles:id,name', 'employee.company:id,name'])
             ->select('id', 'name', 'email', 'status');
 
         $users = $query->orderByDesc('id')->get();
@@ -37,9 +39,9 @@ class UserController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Ya no cargamos empresas aquí porque se gestionarán en Nómina
-        $companies = []; 
-        $companyId = null;
+        // Cargamos empresas para el filtro y para vincular
+        $companies = Company::orderBy('razon_social')->get(['id', 'razon_social as name']);
+        $companyId = $request->company_id;
 
         return view('users::index', compact('users', 'roles', 'companies', 'companyId'));
     }
@@ -68,13 +70,14 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'status' => true, // Asegurar que el usuario esté activo por defecto
         ]);
 
         $user->assignRole($validated['role']);
 
         return response()->json([
             'message' => 'Usuario creado exitosamente.',
-            'user' => $user->load('roles'),
+            'user' => $user->fresh(['roles:id,name']), // Recargar con roles
         ]);
     }
 
@@ -106,6 +109,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'role' => 'nullable|string|exists:roles,name',
             'password' => 'nullable|string|min:6',
+            'company_id' => 'nullable|integer|exists:companies,id',
         ]);
 
         $user->name = $validated['name'];
@@ -121,9 +125,21 @@ class UserController extends Controller
             $user->syncRoles([$validated['role']]);
         }
 
+        if (isset($validated['company_id'])) {
+            if ($validated['company_id']) {
+                \Modules\Employees\Models\Employee::updateOrCreate(
+                    ['user_id' => $user->id],
+                    ['company_id' => $validated['company_id']]
+                );
+            } else {
+                // Si viene nulo/vacio, desvincular (opcional)
+                \Modules\Employees\Models\Employee::where('user_id', $user->id)->delete();
+            }
+        }
+
         return response()->json([
             'message' => 'Usuario actualizado correctamente.',
-            'user' => $user->load('roles'),
+            'user' => $user->load(['roles', 'employee.company']),
         ]);
     }
 
@@ -162,7 +178,7 @@ class UserController extends Controller
     public function attachCompany(Request $request, User $user)
     {
         // Opcional: restringe a roles que pueden tener empresa
-        if (!$user->hasAnyRole(['admin', 'employee', 'contador'])) {
+        if (!$user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos'])) {
             return response()->json(['message' => 'Este usuario no admite vínculo a empresa.'], 403);
         }
 

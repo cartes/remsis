@@ -2,7 +2,27 @@
     @section('title', 'Editar Empresa')
 
     @section('content')
-        <div class="max-w-7xl mx-auto">
+        <div class="max-w-7xl mx-auto" x-data="{
+            activeTab: 'ident',
+            diaPago: '{{ old('dia_pago', $company->dia_pago) }}',
+            showEssentialsModal: false,
+            loadingEssentials: false,
+            essentials: {
+                razon_social: '{{ $company->razon_social }}',
+                rut: '{{ $company->rut }}'
+            },
+            async updateEssentials() {
+                this.loadingEssentials = true;
+                try {
+                    const response = await axios.put('{{ route('companies.essentials.update', $company) }}', this.essentials);
+                    window.location.reload();
+                } catch (error) {
+                    toast(error.response?.data?.message || 'Error al actualizar datos', 'error');
+                } finally {
+                    this.loadingEssentials = false;
+                }
+            }
+        }">
 
             {{-- Company Header Card --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">
@@ -18,26 +38,29 @@
                                         class="font-mono font-semibold">{{ $company->rut }}</span></p>
                             </div>
                         </div>
-                        <a href="{{ route('companies.essentials.edit', $company) }}"
-                            class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg hover:bg-amber-600 transition-colors shadow-sm font-medium">
-                            <i class="fas fa-pen-to-square"></i> Editar Esenciales
-                        </a>
+                        <div class="flex gap-2">
+                            <a href="{{ route('companies.employees', $company) }}"
+                                class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium">
+                                <i class="fas fa-users"></i> Empleados
+                            </a>
+                            <button @click="showEssentialsModal = true"
+                                class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg hover:bg-amber-600 transition-colors shadow-sm font-medium">
+                                <i class="fas fa-pen-to-square"></i> Editar Esenciales
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Tabbed Form --}}
-            <div x-data="{
-                activeTab: 'ident',
-                diaPago: '{{ old('dia_pago', $company->dia_pago) }}'
-            }" class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
 
                 {{-- Tab Navigation (Folder Style) --}}
-                <div class="flex overflow-x-auto border-b border-gray-200 pl-2">
+                <div class="flex overflow-x-auto border-b border-gray-200 pl-2 bg-gray-100/70">
                     <button @click="activeTab = 'ident'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'ident',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'ident'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'ident',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'ident'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-id-card"></i>
@@ -45,8 +68,8 @@
                     </button>
                     <button @click="activeTab = 'dir'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'dir',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'dir'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'dir',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'dir'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-map-marker-alt"></i>
@@ -54,8 +77,8 @@
                     </button>
                     <button @click="activeTab = 'remu'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'remu',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'remu'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'remu',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'remu'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-money-bill-wave"></i>
@@ -63,8 +86,8 @@
                     </button>
                     <button @click="activeTab = 'banco'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'banco',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'banco'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'banco',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'banco'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-university"></i>
@@ -72,8 +95,8 @@
                     </button>
                     <button @click="activeTab = 'rep'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'rep',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'rep'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'rep',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'rep'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-user-tie"></i>
@@ -81,8 +104,8 @@
                     </button>
                     <button @click="activeTab = 'meta'"
                         :class="{
-                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'meta',
-                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'meta'
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'meta',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'meta'
                         }"
                         class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
                         <i class="fas fa-sticky-note"></i>
@@ -417,6 +440,51 @@
                         </div>
                     </form>
 
+                </div>
+            </div>
+            {{-- Essentials Modal --}}
+            <div x-show="showEssentialsModal" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0" x-cloak
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[60] flex items-center justify-center p-4">
+
+                <div @click.away="showEssentialsModal = false"
+                    class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-800">Editar Datos Esenciales</h3>
+                        <button @click="showEssentialsModal = false"
+                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="updateEssentials" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Razón
+                                Social</label>
+                            <input type="text" x-model="essentials.razon_social" required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">RUT</label>
+                            <input type="text" x-model="essentials.rut" required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="button" @click="showEssentialsModal = false"
+                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" :disabled="loadingEssentials"
+                                class="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                <i class="fas fa-spinner fa-spin" x-show="loadingEssentials"></i>
+                                <i class="fas fa-save" x-show="!loadingEssentials"></i>
+                                <span x-text="loadingEssentials ? 'Guardando...' : 'Guardar Cambios'"></span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

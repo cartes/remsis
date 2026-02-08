@@ -22,14 +22,6 @@
             <div class="p-4 font-bold text-xl border-b flex-shrink-0">Remsis</div>
             <nav class="mt-4 flex-1">
                 <ul class="space-y-2 p-2 pb-10">
-                    @role('super-admin|admin|contador')
-                        <li>
-                            <a href="{{ route('users.index') }}"
-                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('users*') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
-                                <i class="fas fa-users mr-2"></i> Usuarios
-                            </a>
-                        </li>
-                    @endrole
                     @role('super-admin')
                         <li x-data="{ open: {{ request()->routeIs('companies*') || request()->is('payrolls*') ? 'true' : 'false' }} }">
                             <button @click="open = !open"
@@ -44,6 +36,14 @@
                                         <i class="fas fa-list mr-2 text-sm"></i> Listado
                                     </a>
                             </ul>
+                        </li>
+                    @endrole
+                    @role('super-admin|admin|contador')
+                        <li>
+                            <a href="{{ route('users.index') }}"
+                                class="w-full flex items-center p-2 rounded hover:bg-gray-200 font-bold uppercase text-xs {{ request()->routeIs('users*') ? 'text-blue-600 bg-blue-50' : 'text-gray-500' }}">
+                                <i class="fas fa-users mr-2"></i> Usuarios
+                            </a>
                         </li>
                     @endrole
                     @hasrole('super-admin')

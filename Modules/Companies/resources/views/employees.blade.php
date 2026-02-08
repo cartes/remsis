@@ -151,7 +151,17 @@
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4">
                                         <div class="flex flex-col">
-                                            <span class="font-bold text-gray-800">{{ $emp->user->name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-gray-800">{{ $emp->user->name }}</span>
+                                                <div class="flex gap-1">
+                                                    @foreach ($emp->user->roles as $role)
+                                                        <span
+                                                            class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[9px] font-bold uppercase border border-blue-100">
+                                                            {{ str_replace('-', ' ', $role->name) }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
                                             <span class="text-[11px] text-gray-500 mt-0.5">{{ $emp->user->email }}</span>
                                         </div>
                                     </td>

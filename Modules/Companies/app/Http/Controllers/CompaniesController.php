@@ -158,6 +158,13 @@ class CompaniesController extends Controller
 
         $company->update($data);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Datos esenciales actualizados.'
+            ]);
+        }
+
         return redirect()
             ->route('companies.edit', $company)
             ->with('success', 'Datos esenciales actualizados.');
