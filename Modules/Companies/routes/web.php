@@ -35,4 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('companies.cost-centers.update');
     Route::delete('companies/{company}/cost-centers/{costCenter}', [Modules\Companies\Http\Controllers\CostCenterController::class, 'destroy'])
         ->name('companies.cost-centers.destroy');
+
+    Route::get('companies/{company}/transactions', [CompaniesController::class, 'transactions'])
+        ->name('companies.transactions');
 });
