@@ -164,7 +164,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block font-medium mb-1">Banco</label>
-                            <input x-model="formDetails.banco" class="w-full border rounded p-2">
+                            <select x-model="formDetails.bank_id" class="w-full border rounded p-2">
+                                <option value="">Selecciona un Banco</option>
+                                <template x-for="item in options.bancos" :key="item.id">
+                                    <option :value="item.id" x-text="item.nombre"></option>
+                                </template>
+                            </select>
                         </div>
                         <div>
                             <label class="block font-medium mb-1">Cuenta bancaria</label>
@@ -242,6 +247,7 @@
                     // Catálogos
                     options: {
                         ccafs: [], // [{id,name,code?}, ...]
+                        bancos: [],
                     },
 
                     // Paso 1: esenciales
@@ -270,9 +276,8 @@
                         dia_pago_dia: null,
                         ccaf_id: null, // FK
 
-                        // Banco (texto por ahora)
-                        banco: '',
-                        cuenta_bancaria: '',
+                        // Banco (FK)
+                        bank_id: null,
 
                         // Representante
                         representante_nombre: '',
@@ -305,6 +310,17 @@
                             // console.log('CCAFs normalizadas:', this.options.ccafs);
                         } catch (e) {
                             toast('No se pudo cargar CCAF.', 'error');
+                        }
+
+                        try {
+                            const resp = await axios.get("{{ route('settings.bancos.json') }}", {
+                                headers: {
+                                    Accept: 'application/json'
+                                }
+                            });
+                            this.options.bancos = Array.isArray(resp.data) ? resp.data : [];
+                        } catch (e) {
+                            toast('No se pudo cargar Bancos.', 'error');
                         }
                     },
 

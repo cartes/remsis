@@ -94,9 +94,10 @@
                 const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
                 const response = await axios.put(url, this.selectedEmployee);
                 if (response.data.status === "success") {
-                    toast("Datos de nómina actualizados correctamente", "success");
-                    this.showPayrollModal = false;
-                    window.location.reload();
+                    toast(response.data.message || "Datos de nómina actualizados", "success");
+                    if (response.data.employee) {
+                        this.selectedEmployee = response.data.employee;
+                    }
                 }
             } catch (error) {
                 console.error(error);

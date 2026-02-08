@@ -38,6 +38,8 @@ class CompanyEmployeeController extends Controller
             'company_id' => $company->id,
         ]);
 
+        session()->flash('success', 'Empleado creado y vinculado correctamente.');
+
         return response()->json([
             'status' => 'success',
             'message' => 'Empleado creado y vinculado correctamente.',
@@ -66,6 +68,7 @@ class CompanyEmployeeController extends Controller
             
             // Opcional: si queremos borrar al usuario físico si no tiene otros roles
             // $user->delete(); 
+            session()->flash('success', 'Empleado desvinculado de la empresa.');
         }
 
         return response()->json([

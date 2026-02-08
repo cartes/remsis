@@ -52,6 +52,8 @@ class CompaniesController extends Controller
         $data = $validated + ['name' => $validated['razon_social']]; // por NOT NULL en name
         $company = Company::create($data);
 
+        session()->flash('success', 'Empresa creada. Completa la ficha debajo.');
+
         // Siempre JSON (como pediste):
         return response()->json([
             'status' => 'success',
@@ -205,11 +207,11 @@ class CompaniesController extends Controller
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
 
             // FKs catálogo
-            'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+        'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+        'bank_id' => ['nullable', 'exists:banks,id'],
 
-            // Banco/cuenta si los mantienes
-            'banco' => ['nullable', 'string', 'max:100'],
-            'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
+        // cuenta si los mantienes
+        'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
 
             // Representante
             'representante_nombre' => ['nullable', 'string', 'max:255'],

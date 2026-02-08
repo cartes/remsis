@@ -9,7 +9,7 @@ use Modules\AdminPanel\Models\Isapre;
 use Modules\AdminPanel\Models\Ccaf;
 use Modules\AdminPanel\Models\LegalParameter;
 use Modules\AdminPanel\Models\CodigoSii;
-use Modules\AdminPanel\Models\Banco;
+use Modules\AdminPanel\Models\Bank;
 
 class SettingsController extends Controller
 {
@@ -22,7 +22,7 @@ class SettingsController extends Controller
             'afps' => Afp::all(),
             'isapres' => Isapre::all(),
             'ccafs' => Ccaf::all(),
-            'bancos' => Banco::all(),
+            'bancos' => Bank::orderBy('name')->get(['id', 'name as nombre']),
         ]);
     }
 
@@ -63,8 +63,8 @@ class SettingsController extends Controller
 
     public function storeBanco(Request $request)
     {
-        $request->validate(['nombre' => 'required|string|max:255|unique:bancos,nombre']);
-        Banco::create(['nombre' => $request->nombre]);
+        $request->validate(['nombre' => 'required|string|max:255|unique:banks,name']);
+        $banco = Bank::create(['name' => $request->nombre]);
         return redirect()->route('settings.index')->with('success_banco', 'Banco agregado.');
     }
 
@@ -110,11 +110,11 @@ class SettingsController extends Controller
     public function updateBanco(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:bancos,nombre,' . $id,
+            'nombre' => 'required|string|max:255|unique:banks,name,' . $id,
         ]);
 
-        $banco = Banco::findOrFail($id);
-        $banco->nombre = $request->nombre;
+        $banco = Bank::findOrFail($id);
+        $banco->name = $request->nombre;
         $banco->save();
 
         return response()->json(['message' => 'Banco actualizado correctamente.']);
@@ -146,7 +146,7 @@ class SettingsController extends Controller
 
     public function destroyBanco($id)
     {
-        $banco = Banco::findOrFail($id);
+        $banco = Bank::findOrFail($id);
         $banco->delete();
 
         return response()->json(['message' => 'Banco eliminado correctamente.']);
@@ -169,7 +169,7 @@ class SettingsController extends Controller
 
     public function bancoJson()
     {
-        return Banco::orderBy('nombre')->get(['id', 'nombre']);
+        return Bank::orderBy('name')->get(['id', 'name as nombre']);
     }
 
     public function updateLegalParameters(Request $request)
