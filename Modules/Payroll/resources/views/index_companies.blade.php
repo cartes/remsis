@@ -2,7 +2,7 @@
     @section('title', 'Administración de Empresas')
 
     @section('content')
-        <div class="max-w-7xl mx-auto p-4 sm:p-6">
+        <div class="max-w-7xl mx-auto">
             {{-- Header --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">
                 <div

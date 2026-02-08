@@ -2,7 +2,7 @@
     @section('title', 'Nómina de Empleados - ' . $company->razon_social)
 
     @section('content')
-        <div class="max-w-7xl mx-auto p-4 sm:p-6" x-data="{
+        <div class="max-w-7xl mx-auto" x-data="{
             showAddEmployeeModal: false,
             showPayrollModal: false,
             payrollLoading: false,

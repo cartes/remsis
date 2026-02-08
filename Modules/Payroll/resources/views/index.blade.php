@@ -2,7 +2,7 @@
     @section('title', 'Historial de Nóminas')
 
     @section('content')
-        <div class="max-w-7xl mx-auto p-4 sm:p-6 text-sm">
+        <div class="max-w-7xl mx-auto text-sm">
             {{-- Company Context Header (if viewing specific company) --}}
             @if (isset($companyModel))
                 <div class="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">

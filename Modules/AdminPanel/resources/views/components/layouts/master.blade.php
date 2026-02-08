@@ -16,9 +16,17 @@
 
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen" x-data="{ sidebarOpen: false }">
+        {{-- Overlay for mobile --}}
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 md:hidden"
+            x-cloak></div>
+
         {{-- Sidebar --}}
-        <aside class="w-64 bg-white shadow-md flex flex-col h-screen sticky top-0 overflow-y-auto">
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+            class="fixed md:sticky top-0 left-0 w-64 bg-white shadow-xl md:shadow-md flex flex-col h-screen z-50 transition-transform duration-300 ease-in-out overflow-y-auto">
             <div class="p-4 font-bold text-xl border-b flex-shrink-0">Remsis</div>
             <nav class="mt-4 flex-1">
                 <ul class="space-y-2 p-2 pb-10">
@@ -95,16 +103,25 @@
         </aside>
 
         {{-- Contenido principal --}}
-        <main class="flex-1 p-6">
+        <main class="flex-1 min-w-0 px-6 py-8 md:px-8 md:py-10 lg:px-12 lg:py-12">
+            {{-- Mobile Header --}}
+            <div
+                class="md:hidden flex items-center justify-between mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div class="font-bold text-xl text-indigo-600">Remsis</div>
+                <button @click="sidebarOpen = true" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
             {{-- Header with Date and Notifications --}}
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <div>
                     {{-- Current Date --}}
                     <div class="text-sm text-gray-500 mb-1 flex items-center gap-2">
                         <i class="fas fa-calendar-day"></i>
-                        <span>{{ \Carbon\Carbon::now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</span>
+                        <span
+                            class="capitalize">{{ \Carbon\Carbon::now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</span>
                     </div>
-                    <h1 class="text-2xl font-semibold text-gray-800">@yield('title')</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">@yield('title')</h1>
                 </div>
 
                 {{-- Notification Bell --}}
