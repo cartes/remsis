@@ -1,215 +1,424 @@
 <x-adminpanel::layouts.master>
-    @section('title', 'Editar empresa')
+    @section('title', 'Editar Empresa')
 
     @section('content')
-    <div class="max-w-5xl">
+        <div class="max-w-7xl mx-auto">
 
-        {{-- Cabecera: Esenciales SOLO LECTURA --}}
-        <div class="bg-white rounded shadow p-6 mb-6">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <div class="text-sm text-gray-500">Razón social</div>
-                    <div class="text-xl font-semibold">{{ $company->razon_social }}</div>
-
-                    <div class="mt-3 text-sm text-gray-500">RUT</div>
-                    <div class="text-lg">{{ $company->rut }}</div>
+            {{-- Company Header Card --}}
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-lg">
+                                <i class="fas fa-building text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">{{ $company->razon_social }}</h2>
+                                <p class="text-sm text-gray-600 mt-1">RUT: <span
+                                        class="font-mono font-semibold">{{ $company->rut }}</span></p>
+                            </div>
+                        </div>
+                        <a href="{{ route('companies.essentials.edit', $company) }}"
+                            class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg hover:bg-amber-600 transition-colors shadow-sm font-medium">
+                            <i class="fas fa-pen-to-square"></i> Editar Esenciales
+                        </a>
+                    </div>
                 </div>
-
-                <a href="{{ route('companies.essentials.edit', $company) }}"
-                   class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded hover:bg-amber-600">
-                    <i class="fas fa-pen-to-square"></i> Editar esenciales
-                </a>
-            </div>
-        </div>
-
-        {{-- Tabs + Formulario de detalles --}}
-        <div class="bg-white rounded shadow p-6" x-data="{ 
-            tab: 'ident', 
-            diaPago: '{{ old('dia_pago', $company->dia_pago) }}' 
-        }">
-            {{-- Tabs --}}
-            <div class="flex flex-wrap gap-2 border-b mb-6">
-                <button type="button" @click="tab='ident'" class="px-4 py-2"
-                    :class="tab==='ident' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Identificación</button>
-                <button type="button" @click="tab='dir'" class="px-4 py-2"
-                    :class="tab==='dir' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Dirección</button>
-                <button type="button" @click="tab='remu'" class="px-4 py-2"
-                    :class="tab==='remu' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Remuneraciones</button>
-                <button type="button" @click="tab='banco'" class="px-4 py-2"
-                    :class="tab==='banco' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Banco</button>
-                <button type="button" @click="tab='rep'" class="px-4 py-2"
-                    :class="tab==='rep' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Representante</button>
-                <button type="button" @click="tab='meta'" class="px-4 py-2"
-                    :class="tab==='meta' ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-500'">Metadatos</button>
             </div>
 
-            <form method="POST" action="{{ route('companies.update', $company) }}" class="space-y-6">
-                @csrf
-                @method('PUT')
+            {{-- Tabbed Form --}}
+            <div x-data="{
+                activeTab: 'ident',
+                diaPago: '{{ old('dia_pago', $company->dia_pago) }}'
+            }" class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
 
-                {{-- Identificación --}}
-                <section x-show="tab==='ident'">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block font-medium mb-1">Nombre de fantasía</label>
-                            <input name="nombre_fantasia" value="{{ old('nombre_fantasia',$company->nombre_fantasia) }}"
-                                   class="w-full border rounded p-2">
-                            @error('nombre_fantasia') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Giro</label>
-                            <input name="giro" value="{{ old('giro',$company->giro) }}" class="w-full border rounded p-2">
-                            @error('giro') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Email</label>
-                            <input type="email" name="email" value="{{ old('email',$company->email) }}"
-                                   class="w-full border rounded p-2">
-                            @error('email') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Teléfono</label>
-                            <input name="phone" value="{{ old('phone',$company->phone) }}" class="w-full border rounded p-2">
-                            @error('phone') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-medium mb-1">Nombre interno (opcional)</label>
-                            <input name="name" value="{{ old('name',$company->name) }}" class="w-full border rounded p-2">
-                            @error('name') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </section>
+                {{-- Tab Navigation (Folder Style) --}}
+                <div class="flex overflow-x-auto border-b border-gray-200 pl-2">
+                    <button @click="activeTab = 'ident'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'ident',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'ident'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-id-card"></i>
+                        Identificación
+                    </button>
+                    <button @click="activeTab = 'dir'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'dir',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'dir'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Dirección
+                    </button>
+                    <button @click="activeTab = 'remu'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'remu',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'remu'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Remuneraciones
+                    </button>
+                    <button @click="activeTab = 'banco'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'banco',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'banco'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-university"></i>
+                        Banco
+                    </button>
+                    <button @click="activeTab = 'rep'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'rep',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'rep'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-user-tie"></i>
+                        Representante
+                    </button>
+                    <button @click="activeTab = 'meta'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-semibold -mb-px z-10': activeTab === 'meta',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent': activeTab !== 'meta'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-sticky-note"></i>
+                        Notas
+                    </button>
 
-                {{-- Dirección --}}
-                <section x-show="tab==='dir'">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block font-medium mb-1">Dirección</label>
-                            <input name="direccion" value="{{ old('direccion',$company->direccion) }}"
-                                   class="w-full border rounded p-2">
-                            @error('direccion') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Comuna</label>
-                            <input name="comuna" value="{{ old('comuna',$company->comuna) }}"
-                                   class="w-full border rounded p-2">
-                            @error('comuna') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Región</label>
-                            <input name="region" value="{{ old('region',$company->region) }}"
-                                   class="w-full border rounded p-2">
-                            @error('region') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </section>
-
-                {{-- Remuneraciones --}}
-                <section x-show="tab==='remu'">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block font-medium mb-1">Tipo contribuyente</label>
-                            <select name="tipo_contribuyente" class="w-full border rounded p-2">
-                                <option value="">—</option>
-                                <option value="natural"  @selected(old('tipo_contribuyente',$company->tipo_contribuyente)==='natural')>Natural</option>
-                                <option value="juridica" @selected(old('tipo_contribuyente',$company->tipo_contribuyente)==='juridica')>Jurídica</option>
-                            </select>
-                            @error('tipo_contribuyente') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div>
-                            <label class="block font-medium mb-1">CCAF</label>
-                            <select name="ccaf_id" class="w-full border rounded p-2">
-                                <option value="">Selecciona una CCAF</option>
-                                @foreach($ccafs as $c)
-                                    <option value="{{ $c->id }}" @selected(old('ccaf_id',$company->ccaf_id)===$c->id)>{{ $c->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('ccaf_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div>
-                            <label class="block font-medium mb-1">Día de pago</label>
-                            <select name="dia_pago" class="w-full border rounded p-2" x-model="diaPago">
-                                <option value="">—</option>
-                                <option value="ultimo_dia_habil">Último día hábil</option>
-                                <option value="dia_fijo">Día fijo</option>
-                                <option value="quincenal">Quincenal</option>
-                            </select>
-                            @error('dia_pago') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div x-show="diaPago==='dia_fijo'">
-                            <label class="block font-medium mb-1">Día (1–31)</label>
-                            <input type="number" min="1" max="31" name="dia_pago_dia"
-                                   value="{{ old('dia_pago_dia',$company->dia_pago_dia) }}"
-                                   class="w-full border rounded p-2">
-                            @error('dia_pago_dia') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </section>
-
-                {{-- Banco --}}
-                <section x-show="tab==='banco'">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block font-medium mb-1">Banco</label>
-                            <input name="banco" value="{{ old('banco',$company->banco) }}" class="w-full border rounded p-2">
-                            @error('banco') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Cuenta bancaria</label>
-                            <input name="cuenta_bancaria" value="{{ old('cuenta_bancaria',$company->cuenta_bancaria) }}"
-                                   class="w-full border rounded p-2">
-                            @error('cuenta_bancaria') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </section>
-
-                {{-- Representante --}}
-                <section x-show="tab==='rep'">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block font-medium mb-1">Nombre</label>
-                            <input name="representante_nombre" value="{{ old('representante_nombre',$company->representante_nombre) }}"
-                                   class="w-full border rounded p-2">
-                            @error('representante_nombre') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">RUT</label>
-                            <input name="representante_rut" value="{{ old('representante_rut',$company->representante_rut) }}"
-                                   class="w-full border rounded p-2">
-                            @error('representante_rut') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Cargo</label>
-                            <input name="representante_cargo" value="{{ old('representante_cargo',$company->representante_cargo) }}"
-                                   class="w-full border rounded p-2">
-                            @error('representante_cargo') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-medium mb-1">Email</label>
-                            <input type="email" name="representante_email" value="{{ old('representante_email',$company->representante_email) }}"
-                                   class="w-full border rounded p-2">
-                            @error('representante_email') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </section>
-
-                {{-- Metadatos --}}
-                <section x-show="tab==='meta'">
-                    <label class="block font-medium mb-1">Notas / Observaciones</label>
-                    <textarea name="notes" class="w-full border rounded p-2 min-h-[120px]">{{ old('notes',$company->notes) }}</textarea>
-                    @error('notes') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
-                </section>
-
-                <div class="flex gap-2 pt-2">
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar ficha</button>
-                    <a href="{{ route('companies.index') }}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Volver</a>
                 </div>
-            </form>
-        </div>
 
-    </div>
+                {{-- Tab Content --}}
+                <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
+                    <form method="POST" action="{{ route('companies.update', $company) }}" class="p-6">
+                        @csrf
+                        @method('PUT')
+
+                        {{-- Identificación Tab --}}
+                        <div x-show="activeTab === 'ident'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Información de Identificación</h3>
+                                <p class="text-sm text-gray-500">Datos básicos de la empresa</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de Fantasía</label>
+                                    <input name="nombre_fantasia"
+                                        value="{{ old('nombre_fantasia', $company->nombre_fantasia) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('nombre_fantasia')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Giro</label>
+                                    <input name="giro" value="{{ old('giro', $company->giro) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('giro')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-envelope text-gray-400"></i>
+                                        </div>
+                                        <input type="email" name="email" value="{{ old('email', $company->email) }}"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    </div>
+                                    @error('email')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-phone text-gray-400"></i>
+                                        </div>
+                                        <input name="phone" value="{{ old('phone', $company->phone) }}"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    </div>
+                                    @error('phone')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Interno <span
+                                            class="text-gray-400 font-normal">(opcional)</span></label>
+                                    <input name="name" value="{{ old('name', $company->name) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('name')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Dirección Tab --}}
+                        <div x-show="activeTab === 'dir'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Dirección y Ubicación</h3>
+                                <p class="text-sm text-gray-500">Datos de ubicación física de la empresa</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección</label>
+                                    <input name="direccion" value="{{ old('direccion', $company->direccion) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('direccion')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Comuna</label>
+                                    <input name="comuna" value="{{ old('comuna', $company->comuna) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('comuna')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Región</label>
+                                    <input name="region" value="{{ old('region', $company->region) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('region')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Remuneraciones Tab --}}
+                        <div x-show="activeTab === 'remu'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Configuración de Remuneraciones</h3>
+                                <p class="text-sm text-gray-500">Parámetros de pago y beneficios</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo
+                                        Contribuyente</label>
+                                    <select name="tipo_contribuyente"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="natural" @selected(old('tipo_contribuyente', $company->tipo_contribuyente) === 'natural')>Natural</option>
+                                        <option value="juridica" @selected(old('tipo_contribuyente', $company->tipo_contribuyente) === 'juridica')>Jurídica</option>
+                                    </select>
+                                    @error('tipo_contribuyente')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">CCAF</label>
+                                    <select name="ccaf_id"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                        <option value="">Seleccionar CCAF...</option>
+                                        @foreach ($ccafs as $c)
+                                            <option value="{{ $c->id }}" @selected(old('ccaf_id', $company->ccaf_id) === $c->id)>
+                                                {{ $c->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('ccaf_id')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Día de Pago</label>
+                                    <select name="dia_pago"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        x-model="diaPago">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="ultimo_dia_habil">Último día hábil</option>
+                                        <option value="dia_fijo">Día fijo</option>
+                                        <option value="quincenal">Quincenal</option>
+                                    </select>
+                                    @error('dia_pago')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div x-show="diaPago==='dia_fijo'" x-transition>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Día del Mes
+                                        (1–31)</label>
+                                    <input type="number" min="1" max="31" name="dia_pago_dia"
+                                        value="{{ old('dia_pago_dia', $company->dia_pago_dia) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('dia_pago_dia')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Banco Tab --}}
+                        <div x-show="activeTab === 'banco'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Información Bancaria</h3>
+                                <p class="text-sm text-gray-500">Datos de cuenta bancaria</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Banco</label>
+                                    <select name="bank_id"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                        <option value="">Seleccionar Banco...</option>
+                                        @foreach ($bancos as $banco)
+                                            <option value="{{ $banco->id }}" @selected(old('bank_id', $company->bank_id) === $banco->id)>
+                                                {{ $banco->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('bank_id')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Cuenta Bancaria</label>
+                                    <input name="cuenta_bancaria"
+                                        value="{{ old('cuenta_bancaria', $company->cuenta_bancaria) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-mono">
+                                    @error('cuenta_bancaria')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Representante Tab --}}
+                        <div x-show="activeTab === 'rep'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Representante Legal</h3>
+                                <p class="text-sm text-gray-500">Información del representante de la empresa</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo</label>
+                                    <input name="representante_nombre"
+                                        value="{{ old('representante_nombre', $company->representante_nombre) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('representante_nombre')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">RUT</label>
+                                    <input name="representante_rut"
+                                        value="{{ old('representante_rut', $company->representante_rut) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-mono">
+                                    @error('representante_rut')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Cargo</label>
+                                    <input name="representante_cargo"
+                                        value="{{ old('representante_cargo', $company->representante_cargo) }}"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @error('representante_cargo')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-envelope text-gray-400"></i>
+                                        </div>
+                                        <input type="email" name="representante_email"
+                                            value="{{ old('representante_email', $company->representante_email) }}"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    </div>
+                                    @error('representante_email')
+                                        <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                                class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Notas Tab --}}
+                        <div x-show="activeTab === 'meta'" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Notas y Observaciones</h3>
+                                <p class="text-sm text-gray-500">Información adicional sobre la empresa</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Notas Internas</label>
+                                <textarea name="notes" rows="6"
+                                    class="w-full border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                                    placeholder="Escribe cualquier observación o nota importante sobre esta empresa...">{{ old('notes', $company->notes) }}</textarea>
+                                @error('notes')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons (Only for form tabs) --}}
+                        <div x-show="activeTab !== 'payroll'"
+                            class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                            <a href="{{ route('companies.index') }}"
+                                class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                                <i class="fas fa-arrow-left"></i>
+                                Volver
+                            </a>
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg font-bold transform hover:-translate-y-0.5">
+                                <i class="fas fa-save"></i>
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
     @endsection
 </x-adminpanel::layouts.master>

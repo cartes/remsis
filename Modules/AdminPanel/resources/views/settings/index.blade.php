@@ -37,6 +37,17 @@
                     'ref' => 'ccafsTable',
                     'icon' => 'fas fa-hands-helping',
                 ],
+                'bancos' => [
+                    'label' => 'Bancos / Billeteras',
+                    'store' => 'bancos.store',
+                    'edit' => 'bancos.edit',
+                    'update' => 'bancos.update',
+                    'destroy' => 'bancos.destroy',
+                    'data' => $bancos,
+                    'session' => 'success_banco',
+                    'ref' => 'bancosTable',
+                    'icon' => 'fas fa-university',
+                ],
             ];
         @endphp
 

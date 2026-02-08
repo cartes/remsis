@@ -8,6 +8,8 @@ use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
 use Modules\AdminPanel\Models\Ccaf;
 use Modules\AdminPanel\Models\LegalParameter;
+use Modules\AdminPanel\Models\CodigoSii;
+use Modules\AdminPanel\Models\Banco;
 
 class SettingsController extends Controller
 {
@@ -20,6 +22,7 @@ class SettingsController extends Controller
             'afps' => Afp::all(),
             'isapres' => Isapre::all(),
             'ccafs' => Ccaf::all(),
+            'bancos' => Banco::all(),
         ]);
     }
 
@@ -27,6 +30,13 @@ class SettingsController extends Controller
     {
         return view('adminpanel::settings.legal', [
             'legalParameters' => LegalParameter::all(),
+        ]);
+    }
+
+    public function siiCodes()
+    {
+        return view('adminpanel::settings.sii_codes', [
+            'codigosSii' => CodigoSii::orderBy('codigo')->get(),
         ]);
     }
 
@@ -49,6 +59,13 @@ class SettingsController extends Controller
         $request->validate(['nombre' => 'required|string|max:255|unique:ccafs,nombre']);
         Ccaf::create(['nombre' => $request->nombre]);
         return redirect()->route('settings.index')->with('success_ccaf', 'CCAF agregada.');
+    }
+
+    public function storeBanco(Request $request)
+    {
+        $request->validate(['nombre' => 'required|string|max:255|unique:bancos,nombre']);
+        Banco::create(['nombre' => $request->nombre]);
+        return redirect()->route('settings.index')->with('success_banco', 'Banco agregado.');
     }
 
     public function updateAfp(Request $request, $id)
@@ -90,6 +107,19 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF actualizada correctamente.']);
     }
 
+    public function updateBanco(Request $request, $id)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:bancos,nombre,' . $id,
+        ]);
+
+        $banco = Banco::findOrFail($id);
+        $banco->nombre = $request->nombre;
+        $banco->save();
+
+        return response()->json(['message' => 'Banco actualizado correctamente.']);
+    }
+
     public function destroyAfp($id)
     {
         $afp = Afp::findOrFail($id);
@@ -114,6 +144,14 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF eliminada correctamente.']);
     }
 
+    public function destroyBanco($id)
+    {
+        $banco = Banco::findOrFail($id);
+        $banco->delete();
+
+        return response()->json(['message' => 'Banco eliminado correctamente.']);
+    }
+
     public function ccafJson()
     {
         return Ccaf::orderBy('nombre')->get(['id', 'nombre']); 
@@ -121,12 +159,17 @@ class SettingsController extends Controller
 
     public function afpJson()
     {
-        return Afp::orderBy('name')->get(['id', 'name']);
+        return Afp::orderBy('nombre')->get(['id', 'nombre']);
     }
 
     public function isapreJson()
     {
-        return Isapre::orderBy('name')->get(['id', 'name']);
+        return Isapre::orderBy('nombre')->get(['id', 'nombre']);
+    }
+
+    public function bancoJson()
+    {
+        return Banco::orderBy('nombre')->get(['id', 'nombre']);
     }
 
     public function updateLegalParameters(Request $request)

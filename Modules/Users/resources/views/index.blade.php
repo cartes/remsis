@@ -11,184 +11,152 @@
                 <button @click="toast.visible = false" class="ml-2 text-white font-bold">&times;</button>
             </div>
 
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Usuarios del sistema</h2>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Usuarios del Sistema</h2>
+                    <p class="text-sm text-gray-500 mt-1">Gestiona los accesos, roles y vinculaciones de usuarios con
+                        empresas.</p>
+                </div>
 
-                <div class="flex items-center gap-3">
-                    {{-- Selector de empresas --}}
-                    <form method="GET" action="{{ route('users.index') }}" id="companyFilterForm">
-                        <select name="company_id" class="border rounded px-3 py-2 text-sm min-w-[200px]"
-                            onchange="document.getElementById('companyFilterForm').submit()">
-                            <option value="">Todas las empresas</option>
-                            @foreach ($companies as $company)
-                                <option value="{{ $company->id }}" {{ $companyId == $company->id ? 'selected' : '' }}>
-                                    {{ $company->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {{-- Botón Crear usuario --}}
-                    <button @click="open = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        + Crear nuevo usuario
+                    <button @click="open = true"
+                        class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold">
+                        <i class="fas fa-plus"></i>
+                        <span>Nuevo Usuario</span>
                     </button>
                 </div>
             </div>
 
             {{-- Tabla dinámica de usuarios --}}
-            <div class="bg-white shadow rounded overflow-x-auto">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-left">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold tracking-wider">
                         <tr>
-                            <th class="px-4 py-2">Nombre</th>
-                            <th class="px-4 py-2">Email</th>
-                            <th class="px-4 py-2">Rol</th>
-                            <th class="px-4 py-2">Empresa</th>
-                            <th class="px-4 py-2">Estado</th>
-                            <th class="px-4 py-2">Acciones</th>
+                            <th class="px-6 py-4 text-left">Nombre / Email</th>
+                            <th class="px-6 py-4 text-left">Rol</th>
+                            <th class="px-6 py-4 text-center">Estado</th>
+                            <th class="px-6 py-4 text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <template x-for="user in users" :key="user.id">
-                            <tr>
-                                <td class="px-4 py-2" :class="user.status ? 'text-gray-800' : 'text-gray-300'">
-                                    <a :href="(user.roles.some(r => r.name === 'employee') && user.employee) ?
-                                    '/payroll/employee/' + user.employee.id: null"
-                                        :class="{
-                                            'text-blue-600 hover:text-blue-800 hover:underline font-medium cursor-pointer transition-colors duration-200': user
-                                                .roles.some(r => r.name === 'employee') && user.employee,
-                                            'text-inherit cursor-default':
-                                                !(user.roles.some(r => r.name === 'employee') && user.employee)
-                                        }"
-                                        x-text="user.name">
-                                    </a>
-                                </td>
-                                <td class="px-4 py-2" x-text="user.email"
-                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
-                                <td class="px-4 py-2" x-text="user.roles.map(r => r.name).join(', ')"
-                                    :class="user.status ? 'text-gray-800' : 'text-gray-300'"></td>
-                                <td class="px-4 py-2">
-                                    <!-- Solo admin o employee pueden vincular/cambiar empresa -->
-                                    <template
-                                        x-if="user.roles.some(r => ['admin','employee', 'contador'].includes(r.name))">
-                                        <div>
-                                            <template x-if="user?.employee?.company">
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                                        <span x-text="user.employee.company.name"></span>
-                                                    </span>
-                                                    <!-- Botón cambiar (opcional) -->
-                                                    <button class="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
-                                                        @click.prevent="openCompanyModal(user)">Cambiar</button>
-                                                </div>
-                                            </template>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center">
+                                {{-- Switch solo si NO es super-admin --}}
+                                <template x-if="!user.roles.some(r => r.name === 'super-admin')">
+                                    <button @click="toggleStatus(user.id)"
+                                        :class="user.status ? 'bg-green-100 text-green-700 border-green-200' :
+                                            'bg-gray-100 text-gray-400 border-gray-200'"
+                                        class="flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[11px] font-bold uppercase tracking-wide group/toggle">
+                                        <i :class="user.status ? 'fas fa-toggle-on text-green-600' :
+                                            'fas fa-toggle-off text-gray-400'"
+                                            class="text-base group-hover/toggle:scale-110 transition-transform"></i>
+                                        <span x-text="user.status ? 'Activo' : 'Inactivo'"></span>
+                                    </button>
+                                </template>
 
-                                            <template x-if="!user?.employee?.company">
-                                                <button class="text-blue-600 underline hover:no-underline"
-                                                    @click.prevent="openCompanyModal(user)">
-                                                    Vincular a empresa
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </template>
+                                {{-- Texto fijo si ES super-admin --}}
+                                <template x-if="user.roles.some(r => r.name === 'super-admin')">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wider border border-green-100">
+                                        <i class="fas fa-shield-alt"></i>
+                                        Siempre Activo
+                                    </span>
+                                </template>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2 text-xs">
+                                {{-- Botón Editar General (si NO es super-admin) --}}
+                                <template x-if="!user.roles.some(r => r.name === 'super-admin')">
+                                    <button @click="edit(user.id)"
+                                        class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all border border-blue-100"
+                                        title="Editar Perfil">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </button>
+                                </template>
 
-                                    <!-- Para otros roles, no mostrar acción -->
-                                    <template
-                                        x-if="!user.roles.some(r => ['admin','employee', 'contador'].includes(r.name))">
-                                        <span class="text-gray-400">—</span>
-                                    </template>
-                                </td>
-                                <td class="px-4 py-2">
-                                    <!-- Si es super-admin, mostrar texto fijo -->
-                                    <template x-if="user.roles.some(r => r.name === 'super-admin')">
-                                        <span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">
-                                            Siempre activo
-                                        </span>
-                                    </template>
+                                {{-- Botón Solo Clave (si ES super-admin) --}}
+                                <template x-if="user.roles.some(r => r.name === 'super-admin')">
+                                    <button @click="editPasswordOnly(user.id)"
+                                        class="bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white p-2 rounded-lg transition-all border border-orange-100"
+                                        title="Cambiar Contraseña">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                </template>
 
-                                    <!-- Si NO es super-admin, mostrar switch -->
-                                    <template x-if="!user.roles.some(r => r.name === 'super-admin')">
-                                        <button :title="user.status ? 'Desactivar' : 'Activar'"
-                                            @click="toggleStatus(user.id)"
-                                            class="p-3 w-5 h-5 flex items-center justify-center rounded-sm transition"
-                                            :class="user.status ?
-                                                'text-green-600 hover:text-green-800' :
-                                                'text-gray-400 hover:text-gray-900'">
-                                            <i
-                                                :class="[user.status ? 'fas fa-toggle-on' : 'fas fa-toggle-off', 'fa-2x']"></i>
-                                        </button>
-                                    </template>
-
-                                </td>
-                                {{-- Acciones --}}
-                                <td class="px-4 py-2">
-                                    <div class="flex space-x-2">
-                                        {{-- Botón de Remuneraciones solo para employees --}}
-                                        <template x-if="user.roles.some(r => r.name === 'employee') && user.employee">
-                                            <a :href="'/payroll/employee/' + user.employee.id" title="Remuneraciones"
-                                                class="p-3 w-5 h-5 flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-800 rounded-sm transition"
-                                                aria-label="Remuneraciones">
-                                                <i class="fas fa-dollar-sign text-xs"></i>
-                                            </a>
-                                        </template>
-
-                                        <!-- Botón Editar -->
-                                        <button @click="edit(user.id)" title="Editar"
-                                            class="p-3 w-5 h-5 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 rounded-sm transition"
-                                            aria-label="Editar">
-                                            <i class="fas fa-pen text-xs"></i>
-                                        </button>
-
-                                        <!-- Botón Eliminar -->
-                                        <button @click="remove(user.id)" title="Eliminar"
-                                            class="p-3 w-5 h-5 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 rounded-sm transition"
-                                            aria-label="Eliminar">
-                                            <i class="fas fa-times text-sm"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                {{-- Botón Eliminar (Solo si NO es super-admin) --}}
+                                <template x-if="!user.roles.some(r => r.name === 'super-admin')">
+                                    <button @click="remove(user.id)"
+                                        class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white p-2 rounded-lg transition-all border border-red-100"
+                                        title="Eliminar Usuario">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </template>
+                            </div>
+                        </td>
+                        </tr>
                         </template>
                     </tbody>
                 </table>
             </div>
 
             {{-- Modal Crear --}}
-            <div x-show="open" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-                    <button @click="open = false" class="absolute top-2 right-3 text-gray-500 text-2xl">&times;</button>
-                    <h2 class="text-xl font-semibold mb-4">Nuevo usuario</h2>
+            <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-cloak
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
 
-                    <form @submit.prevent="store">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium">Nombre</label>
-                            <input type="text" x-model="form.name" required
-                                class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
+                <div @click.away="open = false"
+                    class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-800">Crear Nuevo Usuario</h3>
+                        <button @click="open = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="store" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre
+                                Completo</label>
+                            <input type="text" x-model="form.name" required placeholder="Ej: Juan Pérez"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium">Correo electrónico</label>
-                            <input type="email" x-model="form.email" required
-                                class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Correo
+                                Electrónico</label>
+                            <input type="email" x-model="form.email" required placeholder="juan@ejemplo.com"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium">Contraseña</label>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contraseña
+                                Inicial</label>
                             <input type="password" x-model="form.password" required
-                                class="w-full mt-1 border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium">Rol</label>
-                            <select x-model="form.role" class="w-full mt-1 border-gray-300 rounded px-3 py-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Rol en el
+                                Sistema</label>
+                            <select x-model="form.role" required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
                                 <option value="">Selecciona un rol</option>
                                 @foreach ($roles as $role)
-                                    <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                    <option value="{{ $role->name }}">{{ ucfirst(str_replace('-', ' ', $role->name)) }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex justify-end mt-4">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                                Crear usuario
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="button" @click="open = false"
+                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Crear Usuario</span>
                             </button>
                         </div>
                     </form>
@@ -196,89 +164,76 @@
             </div>
 
             {{-- Modal Editar --}}
-            <div x-show="editModal" x-cloak class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-                    <button @click="editModal = false"
-                        class="absolute top-2 right-3 text-gray-500 text-2xl">&times;</button>
-                    <h2 class="text-xl font-semibold mb-4">Editar usuario</h2>
+            <div x-show="editModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-cloak
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4">
 
-                    <form @submit.prevent="update">
-                        <div class="mb-4">
-                            <label class="block text-sm">Nombre</label>
-                            <input type="text" x-model="form.name" class="w-full border px-3 py-2 rounded">
+                <div @click.away="editModal = false"
+                    class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-800">Modificar Perfil</h3>
+                        <button @click="editModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="update" class="p-6 space-y-4">
+                        <template x-if="!form.passwordOnly">
+                            <div class="space-y-4">
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre
+                                        Completo</label>
+                                    <input type="text" x-model="form.name" required
+                                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email</label>
+                                    <input type="email" x-model="form.email" required readonly
+                                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Rol</label>
+                                    <select x-model="form.role" required
+                                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->name }}">
+                                                {{ ucfirst(str_replace('-', ' ', $role->name)) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                <span
+                                    x-text="form.passwordOnly ? 'Nueva Contraseña' : 'Nueva Contraseña (Opcional)'"></span>
+                            </label>
+                            <input type="password" x-model="form.password" :required="form.passwordOnly"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm">Email</label>
-                            <input type="email" x-model="form.email" class="w-full border px-3 py-2 rounded">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm">Rol</label>
-                            <select x-model="form.role" class="w-full border px-3 py-2 rounded">
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                Guardar cambios
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="button" @click="editModal = false"
+                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-save"></i>
+                                <span>Guardar Cambios</span>
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            {{-- Modal Vincular Empresa --}}
-            <div x-show="companyModal.open" x-cloak
-                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative">
-                    <button @click="closeCompanyModal"
-                        class="absolute top-2 right-3 text-gray-500 text-2xl">&times;</button>
-                    <h2 class="text-xl font-semibold mb-4">
-                        Vincular empresa a <span class="font-bold" x-text="companyModal.user?.name ?? ''"></span>
-                    </h2>
+            {{-- Modal Vincular Empresa: ELIMINADO de aquí porque se mueve a Nómina --}}
 
-                    <div class="mb-3">
-                        <input type="text" x-model.debounce.400ms="companySearch" @input="fetchCompanies(1)"
-                            placeholder="Buscar por nombre o RUT..."
-                            class="w-full border-gray-300 rounded px-3 py-2 focus:ring focus:ring-blue-200">
-                    </div>
-
-                    <div class="border rounded divide-y max-h-80 overflow-auto" x-show="companies.length">
-                        <template x-for="c in companies" :key="c.id">
-                            <button @click="attachCompany(c)"
-                                class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between">
-                                <div>
-                                    <div class="font-medium" x-text="c.name"></div>
-                                    <div class="text-xs text-gray-500" x-text="c.rut ?? ''"></div>
-                                </div>
-                                <span class="text-sm text-blue-600">Seleccionar</span>
-                            </button>
-                        </template>
-                    </div>
-
-                    <div class="py-3 text-center text-sm text-gray-500" x-show="companyLoading">Cargando...</div>
-                    <div class="py-3 text-center text-sm text-gray-500" x-show="!companyLoading && !companies.length">Sin
-                        resultados</div>
-
-                    <div class="mt-3 flex items-center justify-between">
-                        <div class="text-sm">Página <span x-text="companyMeta.current_page"></span> de <span
-                                x-text="companyMeta.last_page"></span></div>
-                        <div class="space-x-2">
-                            <button class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
-                                :disabled="companyMeta.current_page <= 1"
-                                @click="fetchCompanies(companyMeta.current_page - 1)">
-                                Anterior
-                            </button>
-                            <button class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
-                                :disabled="companyMeta.current_page >= companyMeta.last_page"
-                                @click="fetchCompanies(companyMeta.current_page + 1)">
-                                Siguiente
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
         </div>
 
@@ -308,6 +263,7 @@
                             email: '',
                             role: '',
                             password: '',
+                            passwordOnly: false,
                         },
                         users: @json($users),
                         companyModal: {
@@ -355,6 +311,7 @@
                                 email: '',
                                 role: '',
                                 password: '',
+                                passwordOnly: false,
                             };
                         },
 
@@ -403,10 +360,25 @@
                         edit(id) {
                             const user = this.users.find(u => u.id === id);
                             if (user) {
+                                this.resetForm();
                                 this.form.id = user.id;
                                 this.form.name = user.name;
                                 this.form.email = user.email;
                                 this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
+                                this.form.passwordOnly = false;
+                                this.editModal = true;
+                            }
+                        },
+
+                        editPasswordOnly(id) {
+                            const user = this.users.find(u => u.id === id);
+                            if (user) {
+                                this.resetForm();
+                                this.form.id = user.id;
+                                this.form.name = user.name;
+                                this.form.email = user.email;
+                                this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
+                                this.form.passwordOnly = true;
                                 this.editModal = true;
                             }
                         },

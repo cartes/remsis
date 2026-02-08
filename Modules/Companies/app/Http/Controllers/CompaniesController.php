@@ -65,8 +65,37 @@ class CompaniesController extends Controller
         if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
-        $ccafs = Ccaf::orderBy('nombre')->get(['id', 'nombre']);
-        return view('companies::edit', compact('company', 'ccafs'));
+        $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
+        $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
+        $afps = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get(['id', 'nombre']);
+        $isapres = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get(['id', 'nombre']);
+
+        // Cargar empleados de esta empresa
+        $employees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
+            ->with(['user:id,name,email,status', 'user.roles:id,name'])
+            ->get();
+
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees'));
+    }
+
+    public function employees(Company $company)
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+            abort(403);
+        }
+
+        $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
+        $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
+        $afps = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get(['id', 'nombre']);
+        $isapres = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get(['id', 'nombre']);
+
+        // Cargar empleados de esta empresa
+        $employees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
+            ->with(['user:id,name,email,status', 'user.roles:id,name'])
+            ->get();
+
+        return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees'));
     }
 
     public function update(Request $request, Company $company)
@@ -88,7 +117,7 @@ class CompaniesController extends Controller
             'dia_pago' => ['nullable', Rule::in(['ultimo_dia_habil', 'dia_fijo', 'quincenal'])],
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
             'ccaf_id' => ['nullable', 'exists:ccafs,id'],
-            'banco' => ['nullable', 'string', 'max:100'],
+            'bank_id' => ['nullable', 'exists:banks,id'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
             'representante_nombre' => ['nullable', 'string', 'max:255'],
             'representante_rut' => ['nullable', 'string', 'max:20'],

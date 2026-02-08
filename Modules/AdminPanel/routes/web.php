@@ -32,6 +32,11 @@ Route::prefix('settings')
         Route::get('/afps/{afp}/edit', [SettingsController::class, 'editAfp'])->name('afps.edit');
         Route::delete('/afps/{afp}', [SettingsController::class, 'destroyAfp'])->name('afps.destroy');
 
+        Route::post('/bancos', [SettingsController::class, 'storeBanco'])->name('bancos.store');
+        Route::get('/bancos/{banco}/edit', [SettingsController::class, 'editBanco'])->name('bancos.edit');
+        Route::put('/bancos/{banco}', [SettingsController::class, 'updateBanco'])->name('bancos.update');
+        Route::delete('/bancos/{banco}', [SettingsController::class, 'destroyBanco'])->name('bancos.destroy');
+
         Route::get('/isapres/{isapre}/edit', [SettingsController::class, 'editIsapre'])->name('isapres.edit');
         Route::delete('/isapres/{isapre}', [SettingsController::class, 'destroyIsapre'])->name('isapres.destroy');
 
@@ -43,8 +48,11 @@ Route::prefix('settings')
         Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
         
+        
         Route::get('/legal-parameters', [SettingsController::class, 'legal'])->name('settings.legal');
         Route::put('/legal-parameters', [SettingsController::class, 'updateLegalParameters'])->name('legal_parameters.update');
+
+        Route::get('/codigos-sii', [SettingsController::class, 'siiCodes'])->name('settings.sii_codes');
 
         // API para empresas
     
@@ -60,4 +68,5 @@ Route::middleware(['auth', 'role:super-admin|admin'])->prefix('api/settings')->g
     Route::get('/ccafs', [SettingsController::class, 'ccafJson'])->name('settings.ccafs.json');
     Route::get('/isapres', [SettingsController::class, 'isapreJson'])->name('settings.isapres.json');
     Route::get('/afps', [SettingsController::class, 'afpJson'])->name('settings.afps.json');
+    Route::get('/bancos', [SettingsController::class, 'bancoJson'])->name('settings.bancos.json');
 });

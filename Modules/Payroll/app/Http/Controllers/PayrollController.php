@@ -16,13 +16,12 @@ class PayrollController extends Controller
 
         if ($user->hasRole('super-admin')) {
             if ($company) {
-                // Si tiene definida una empresa en el request, mostrar nóminas de esa empresa
-                // cuando eres super-admin
-                $companyId = $request->input('company');
+                // Si tiene definida una empresa en la ruta, mostrar nóminas de esa empresa
+                $companyModel = Company::findOrFail($company);
                 $payrolls = \Modules\Payroll\Models\Payroll::with(['employee', 'company', 'period'])
-                    ->where('company_id', $companyId)
+                    ->where('company_id', $company)
                     ->paginate(15);
-                return view('payroll::index', compact('payrolls'));
+                return view('payroll::index', compact('payrolls', 'companyModel'));
             } else {
                 $companies = Company::withCount('payrolls')->get();
                 return view('payroll::index_companies', compact('companies'));
@@ -32,7 +31,8 @@ class PayrollController extends Controller
             $payrolls = \Modules\Payroll\Models\Payroll::with(['employee', 'company', 'period'])
                 ->where('company_id', $user->company_id)
                 ->paginate(15);
-            return view('payroll::index', compact('payrolls'));
+            $companyModel = Company::find($user->company_id);
+            return view('payroll::index', compact('payrolls', 'companyModel'));
         }
     }
 

@@ -35,6 +35,7 @@ class Company extends Model
         'dia_pago',
         'dia_pago_dia',
         'banco',
+        'bank_id',
         'ccaf_id',
         'cuenta_bancaria',
         'representante_nombre',
@@ -47,6 +48,11 @@ class Company extends Model
     public function users()
     {
         return $this->hasManyThrough(User::class, Employee::class, 'company_id', 'id', 'id', 'user_id');
+    }
+
+    public function bank()
+    {
+        return $this->belongsTo(\Modules\AdminPanel\Models\Bank::class);
     }
 
     public function ccaf()

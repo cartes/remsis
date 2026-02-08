@@ -1,0 +1,250 @@
+<x-adminpanel::layouts.master>
+    @section('title', 'Nómina de Empleados - ' . $company->razon_social)
+
+    @section('content')
+        <div class="max-w-7xl mx-auto p-4 sm:p-6" x-data="{
+            showAddEmployeeModal: false,
+            showPayrollModal: false,
+            payrollLoading: false,
+            activePayrollTab: 'personal',
+            loading: false,
+            afps: @json($afps),
+            isapres: @json($isapres),
+            ccafs: @json($ccafs),
+            bancos: @json($bancos),
+            selectedEmployee: {
+                id: null,
+                first_name: '',
+                last_name: '',
+                rut: '',
+                email: '',
+                phone: '',
+                position: '',
+                afp_id: '',
+                isapre_id: '',
+                ccaf_id: '',
+                salary: '',
+                salary_type: '',
+                contract_type: '',
+                status: '',
+                bank_id: '',
+                bank_account_number: '',
+                bank_account_type: '',
+                user: { name: '', email: '' }
+            },
+            newEmployee: { name: '', email: '', password: '' },
+            async addEmployee() {
+                this.loading = true;
+                try {
+                    const response = await axios.post('{{ route('companies.employees.store', $company) }}', this.newEmployee);
+                    if (response.data.status === 'success') {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toast(error.response?.data?.message || 'Error al crear empleado', 'error');
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async removeEmployee(userId) {
+                if (!confirm('¿Seguro que deseas desvincular a este empleado?')) return;
+                try {
+                    const url = '{{ route('companies.employees.destroy', [$company, ':id']) }}'.replace(':id', userId);
+                    const response = await axios.delete(url);
+                    if (response.data.status === 'success') {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    toast('Error al desvincular empleado', 'error');
+                }
+            },
+            async openPayrollModal(employeeId) {
+                this.payrollLoading = true;
+                this.activePayrollTab = 'personal';
+                try {
+                    const url = '{{ route('companies.employees.payroll', [$company, ':id']) }}'.replace(':id', employeeId);
+                    const response = await axios.get(url);
+                    if (response.data.status === 'success') {
+                        this.selectedEmployee = response.data.employee;
+                        this.showPayrollModal = true;
+                    }
+                } catch (error) {
+                    toast('Error al cargar datos de nómina', 'error');
+                } finally {
+                    this.payrollLoading = false;
+                }
+            },
+            async updatePayroll() {
+                this.payrollLoading = true;
+                try {
+                    const url = '{{ route('companies.employees.payroll.update', [$company, ':id']) }}'.replace(':id', this.selectedEmployee.id);
+                    const response = await axios.put(url, this.selectedEmployee);
+                    if (response.data.status === 'success') {
+                        toast('Datos de nómina actualizados correctamente', 'success');
+                        this.showPayrollModal = false;
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toast('Error al actualizar datos de nómina', 'error');
+                } finally {
+                    this.payrollLoading = false;
+                }
+            }
+        }">
+
+            {{-- Company Header --}}
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-lg">
+                                <i class="fas fa-building text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">{{ $company->razon_social }}</h2>
+                                <p class="text-sm text-gray-600 mt-1">RUT: <span
+                                        class="font-mono font-semibold">{{ $company->rut }}</span></p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{{ route('companies.index') }}"
+                                class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <a href="{{ route('companies.edit', $company) }}"
+                                class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium text-sm">
+                                <i class="fas fa-edit"></i> Editar Empresa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Employees Section --}}
+            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Nómina de Empleados</h3>
+                        <p class="text-sm text-gray-500 mt-1">Gestión de empleados vinculados a esta empresa</p>
+                    </div>
+                    <button type="button" @click="showAddEmployeeModal = true"
+                        class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Nuevo Empleado</span>
+                    </button>
+                </div>
+
+                {{-- Employees Table --}}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] font-bold tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 text-left">Nombre / Email</th>
+                                <th class="px-6 py-4 text-center">Estado</th>
+                                <th class="px-6 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                            @forelse($employees as $emp)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-gray-800">{{ $emp->user->name }}</span>
+                                            <span class="text-[11px] text-gray-500 mt-0.5">{{ $emp->user->email }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span
+                                            class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $emp->user->status ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-400 border border-gray-100' }}">
+                                            {{ $emp->user->status ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" @click="openPayrollModal({{ $emp->id }})"
+                                                class="p-2 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all border border-blue-50"
+                                                title="Ver Ficha / Remuneraciones">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </button>
+                                            <button type="button" @click="removeEmployee({{ $emp->user->id }})"
+                                                class="p-2 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-50"
+                                                title="Eliminar / Desvincular">
+                                                <i class="fas fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-6 py-20 text-center">
+                                        <div class="flex flex-col items-center opacity-30">
+                                            <i class="fas fa-users-slash text-5xl mb-4"></i>
+                                            <p class="text-sm font-medium">No hay empleados registrados en esta empresa</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Add Employee Modal --}}
+            <div x-show="showAddEmployeeModal" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0" x-cloak
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[60] flex items-center justify-center p-4">
+
+                <div @click.away="showAddEmployeeModal = false"
+                    class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-gray-800">Agregar Nuevo Empleado</h3>
+                        <button @click="showAddEmployeeModal = false"
+                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="addEmployee" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre
+                                Completo</label>
+                            <input type="text" x-model="newEmployee.name" required placeholder="Ej: Juan Pérez"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Correo
+                                Electrónico</label>
+                            <input type="email" x-model="newEmployee.email" required placeholder="juan@ejemplo.com"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contraseña
+                                Inicial</label>
+                            <input type="password" x-model="newEmployee.password" required
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="button" @click="showAddEmployeeModal = false"
+                                class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" :disabled="loading"
+                                class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                <i class="fas fa-spinner fa-spin" x-show="loading"></i>
+                                <i class="fas fa-user-plus" x-show="!loading"></i>
+                                <span x-text="loading ? 'Procesando...' : 'Crear Empleado'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @include('companies::partials.payroll_modal')
+        </div>
+    @endsection
+</x-adminpanel::layouts.master>

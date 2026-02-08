@@ -19,43 +19,27 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $auth = $request->user();
-        $companyId = $request->integer('company_id');
 
         $query = User::query()
             ->with([
-                'employee.company:id,name',
                 'roles:id,name',
             ])
+            ->where('id', '!=', $auth->id) // Excluir al usuario actual
+            ->whereHas('roles', function($q) {
+                $q->whereIn('name', ['super-admin', 'admin', 'contador', 'recursos-humanos']);
+            })
             ->select('id', 'name', 'email', 'status');
-
-        if ($auth->hasRole('super-admin')) {
-            if ($companyId) {
-                $query->whereHas('employee', fn($q) => $q->where('company_id', $companyId));
-            }
-        } else {
-            $enforcedCompanyId = $auth->company_id;
-
-            if (!$enforcedCompanyId) {
-                abort(403, "No tiene empresa asignada");
-            }
-
-            $query->whereHas('employee', fn($q) => $q->where('company_id', $enforcedCompanyId));
-
-            $companyId = $enforcedCompanyId;
-        }
 
         $users = $query->orderByDesc('id')->get();
 
-        // Roles visibles/seleccionables en UI
-        $roles = Role::select('name')
-            ->when(!$auth->hasRole('super-admin'), fn($q) => $q->whereIn('name', ['employee']))
-            ->get();
-
-        // Empresas mostradas en filtros de UI
-        $companies = Company::orderBy('name')
-            ->when(!$auth->hasRole('super-admin'), fn($q) => $q->where('id', $companyId))
+        // Roles visibles/seleccionables en UI para gestión administrativa
+        $roles = Role::whereIn('name', ['super-admin', 'admin', 'contador', 'recursos-humanos'])
+            ->orderBy('name')
             ->get(['id', 'name']);
 
+        // Ya no cargamos empresas aquí porque se gestionarán en Nómina
+        $companies = []; 
+        $companyId = null;
 
         return view('users::index', compact('users', 'roles', 'companies', 'companyId'));
     }
@@ -121,10 +105,16 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'role' => 'nullable|string|exists:roles,name',
+            'password' => 'nullable|string|min:6',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
         $user->save();
 
         if ($validated['role']) {
