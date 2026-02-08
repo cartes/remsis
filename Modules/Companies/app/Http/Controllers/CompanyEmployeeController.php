@@ -9,6 +9,7 @@ use Modules\Employees\Models\Employee;
 use Modules\Companies\Models\Company;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use App\Rules\Rut;
 
 class CompanyEmployeeController extends Controller
 {
@@ -98,8 +99,12 @@ class CompanyEmployeeController extends Controller
             // Datos personales
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'rut' => 'nullable|string',
-            'email' => 'nullable|email',
+            'rut' => ['nullable', 'string', new Rut],
+            'email' => [
+                'nullable', 
+                'email', 
+                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($employee->user_id)
+            ],
             'phone' => 'nullable|string',
             'birth_date' => 'nullable|date',
             'nationality' => 'nullable|string|max:100',
@@ -140,23 +145,28 @@ class CompanyEmployeeController extends Controller
 
         $employee->update($validated);
 
-        // También actualizar el nombre en el usuario si cambió
+        // También actualizar el nombre y email en el usuario si cambiaron
         $user = $employee->user;
         if ($user) {
-            $userData = [];
+            $changed = false;
             
-            // Construir nombre si ambos campos están presentes
+            // Actualizar nombre si ambos están presentes
             if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
-                $userData['name'] = "{$validated['first_name']} {$validated['last_name']}";
+                $newName = trim("{$validated['first_name']} {$validated['last_name']}");
+                if ($user->name !== $newName) {
+                    $user->name = $newName;
+                    $changed = true;
+                }
             }
             
-            // Actualizar email si está presente
-            if (!empty($validated['email'])) {
-                $userData['email'] = $validated['email'];
+            // Actualizar email si está presente y es distinto
+            if (!empty($validated['email']) && $user->email !== $validated['email']) {
+                $user->email = $validated['email'];
+                $changed = true;
             }
 
-            if (!empty($userData)) {
-                $user->update($userData);
+            if ($changed) {
+                $user->save();
             }
         }
 

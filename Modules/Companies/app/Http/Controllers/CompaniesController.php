@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
 use Modules\AdminPanel\Models\Ccaf;
+use App\Rules\Rut;
 
 class CompaniesController extends Controller
 {
@@ -39,7 +40,7 @@ class CompaniesController extends Controller
         $validated = $request->validate(
             [
                 'razon_social' => ['required', 'string', 'max:255'],
-                'rut' => ['required', 'string', 'max:20', 'unique:companies,rut'],
+                'rut' => ['required', 'string', 'max:20', 'unique:companies,rut', new Rut],
             ],
             [
                 'razon_social.required' => 'La razón social es obligatoria.',
@@ -126,7 +127,7 @@ class CompaniesController extends Controller
             'bank_id' => ['nullable', 'exists:banks,id'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
             'representante_nombre' => ['nullable', 'string', 'max:255'],
-            'representante_rut' => ['nullable', 'string', 'max:20'],
+            'representante_rut' => ['nullable', 'string', 'max:20', new Rut],
             'representante_cargo' => ['nullable', 'string', 'max:100'],
             'representante_email' => ['nullable', 'email', 'max:255'],
             'notes' => ['nullable', 'string'],
@@ -150,7 +151,7 @@ class CompaniesController extends Controller
     {
         $data = $request->validate([
             'razon_social' => ['required', 'string', 'max:255'],
-            'rut' => ['required', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($company->id)],
+            'rut' => ['required', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($company->id), new Rut],
         ], [
             'razon_social.required' => 'La razón social es obligatoria.',
             'rut.required' => 'El RUT es obligatorio.',
@@ -192,7 +193,7 @@ class CompaniesController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'razon_social' => ['nullable', 'string', 'max:255'],
             'nombre_fantasia' => ['nullable', 'string', 'max:255'],
-            'rut' => ['nullable', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($ignoreId)],
+            'rut' => ['nullable', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($ignoreId), new Rut],
             'giro' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -212,7 +213,7 @@ class CompaniesController extends Controller
 
             // Representante
             'representante_nombre' => ['nullable', 'string', 'max:255'],
-            'representante_rut' => ['nullable', 'string', 'max:20'],
+            'representante_rut' => ['nullable', 'string', 'max:20', new Rut],
             'representante_cargo' => ['nullable', 'string', 'max:100'],
             'representante_email' => ['nullable', 'email', 'max:255'],
 
