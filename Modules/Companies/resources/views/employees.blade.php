@@ -44,51 +44,72 @@
             emergency_contact_phone: "",
             address: "",
             user: { name: "", email: "" }
-        },
-        newEmployee: { name: "", email: "", password: "" },
-        async addEmployee() {
-            this.loading = true;
-            try {
-                const response = await axios.post("{{ route('companies.employees.store', $company) }}", this.newEmployee);
-                if (response.data.status === "success") {
-                    window.location.reload();
+            },
+            newEmployee: { name: "", email: "", password: "" },
+            async addEmployee() {
+                this.loading = true;
+                try {
+                    const response = await axios.post("{{ route('companies.employees.store', $company) }}", this.newEmployee);
+                    if (response.data.status === "success") {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toast(error.response?.data?.message || "Error al crear empleado", "error");
+                } finally {
+                    this.loading = false;
                 }
-            } catch (error) {
-                console.error(error);
-                toast(error.response?.data?.message || "Error al crear empleado", "error");
-            } finally {
-                this.loading = false;
-            }
-        },
-        async removeEmployee(userId) {
-            if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
-            try {
-                const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(":id", userId);
-                const response = await axios.delete(url);
-                if (response.data.status === "success") {
-                    window.location.reload();
+            },
+            async removeEmployee(userId) {
+                if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
+                try {
+                    const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(":id", userId);
+                    const response = await axios.delete(url);
+                    if (response.data.status === "success") {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    toast("Error al desvincular empleado", "error");
                 }
-            } catch (error) {
-                toast("Error al desvincular empleado", "error");
-            }
-        },
-        async openPayrollModal(employeeId) {
-            this.payrollLoading = true;
-            this.activePayrollTab = "personal";
-            try {
-                const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}".replace(":id", employeeId);
-                const response = await axios.get(url);
-                if (response.data.status === "success") {
-                    this.selectedEmployee = response.data.employee;
-                    this.showPayrollModal = true;
+            },
+            async openPayrollModal(employeeId) {
+                this.payrollLoading = true;
+                this.activePayrollTab = "personal";
+                try {
+                    const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}".replace(":id", employeeId);
+                    const response = await axios.get(url);
+                    if (response.data.status === "success") {
+                        this.selectedEmployee = response.data.employee;
+                        this.showPayrollModal = true;
+                    }
+                } catch (error) {
+                    toast("Error al cargar datos de nómina", "error");
+                } finally {
+                    this.payrollLoading = false;
                 }
-            } catch (error) {
-                toast("Error al cargar datos de nómina", "error");
-            } finally {
-                this.payrollLoading = false;
-            }
-        },
-        async updatePayroll() {
+            },
+            searchTerm: "",
+            searchResults: [],
+            showSearchResults: false,
+            async fetchEmployeesSearch() {
+                if (this.searchTerm.length < 3) {
+                    this.searchResults = [];
+                    this.showSearchResults = false;
+                    return;
+                }
+                try {
+                    const response = await axios.get("{{ route('companies.employees.search', $company) }}", {
+                        params: {
+                            query: this.searchTerm
+                        }
+                    });
+                    this.searchResults = response.data;
+                    this.showSearchResults = true;
+                } catch (error) {
+                    console.error("Error searching employees:", error);
+                }
+            },
+            async updatePayroll() {
             this.payrollLoading = true;
             try {
                 const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
@@ -114,11 +135,53 @@
                 <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Nómina de Empleados</h2>
                 <p class="text-sm text-gray-500 mt-1">Gestión de empleados vinculados a esta empresa.</p>
             </div>
-            <button type="button" @click="showAddEmployeeModal = true"
-                class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold">
-                <i class="fas fa-user-plus"></i>
-                <span>Nuevo Empleado</span>
-            </button>
+            <div class="flex items-center gap-4">
+                {{-- Buscador de Empleados --}}
+                <div class="relative" @click.away="showSearchResults = false">
+                    <div class="relative">
+                        <input type="text" x-model="searchTerm" @input.debounce.300ms="fetchEmployeesSearch()"
+                            placeholder="Buscar empleado..."
+                            class="w-64 pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+
+                    {{-- Resultados de búsqueda --}}
+                    <div x-show="showSearchResults && searchResults.length > 0" x-cloak
+                        class="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden">
+                        <div class="max-h-60 overflow-y-auto">
+                            <template x-for="emp in searchResults" :key="emp.id">
+                                <button @click="openPayrollModal(emp.id); showSearchResults = false; searchTerm = ''"
+                                    class="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold uppercase">
+                                        <span x-text="emp.user.name.substring(0,2)"></span>
+                                    </div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="text-sm font-bold text-gray-800 truncate"
+                                            x-text="emp.user.name"></span>
+                                        <span class="text-[11px] text-gray-500 truncate" x-text="emp.user.email"></span>
+                                    </div>
+                                    <i class="fas fa-chevron-right ml-auto text-gray-300 text-[10px]"></i>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- No se encontraron resultados --}}
+                    <div x-show="showSearchResults && searchResults.length === 0 && searchTerm.length >= 3" x-cloak
+                        class="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-4 text-center">
+                        <p class="text-sm text-gray-400">No se encontraron empleados</p>
+                    </div>
+                </div>
+
+                <button type="button" @click="showAddEmployeeModal = true"
+                    class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Nuevo Empleado</span>
+                </button>
+            </div>
         </div>
 
         {{-- Employees Table Section --}}

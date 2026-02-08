@@ -17,6 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Gestión de Empleados (Nómina) dentro de Empresa
     Route::post('companies/{company}/employees', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'store'])
         ->name('companies.employees.store');
+    Route::get('companies/{company}/employees/search', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'search'])
+        ->name('companies.employees.search');
     Route::delete('companies/{company}/employees/{user}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroy'])
         ->name('companies.employees.destroy');
 

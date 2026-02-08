@@ -179,4 +179,23 @@ class CompanyEmployeeController extends Controller
             'employee' => $employee->fresh('user')
         ]);
     }
+    public function search(Request $request, Company $company)
+    {
+        $term = $request->query('query');
+
+        if (strlen($term) < 3) {
+            return response()->json([]);
+        }
+
+        $employees = Employee::where('company_id', $company->id)
+            ->whereHas('user', function ($query) use ($term) {
+                $query->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            })
+            ->with(['user', 'user.roles'])
+            ->limit(10)
+            ->get();
+
+        return response()->json($employees);
+    }
 }
