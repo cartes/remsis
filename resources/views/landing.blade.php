@@ -266,7 +266,7 @@
     </footer>
 
     <!-- Login Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors - > has('email') || $errors - > has('password')) open = true" x-show="open" @open-login-modal.window="open = true"
+    <div x-data="{ open: false }" x-init="if ($errors->has('email') || $errors->has('password')) open = true" x-show="open" @open-login-modal.window="open = true"
         @open-register-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
         class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <!-- Overlay -->
@@ -324,7 +324,7 @@
     </div>
 
     <!-- Register Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors - > has('name') || ($errors - > has('email') && !old('password')) || $errors - > has('password')) open = true" x-show="open" @open-register-modal.window="open = true"
+    <div x-data="{ open: false }" x-init="if ($errors->has('name') || ($errors->has('email') && !old('password')) || $errors->has('password')) open = true" x-show="open" @open-register-modal.window="open = true"
         @open-login-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
         class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <!-- Overlay -->
