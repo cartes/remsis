@@ -15,8 +15,9 @@
             <div class="p-4 font-bold text-xl border-b">Remsis</div>
             <nav class="mt-4">
                 <ul class="space-y-2 p-2">
-                    <li><a href="{{ route('users.index') }}" class="block p-2 rounded hover:bg-gray-200">Usuarios</a>
-                        <li><a href="{{ route('roles.index') }}" class="block p-2 rounded hover:bg-gray-200">Roles</a></li>
+                    <li><a href="{{ route('admin.users.index') }}"
+                            class="block p-2 rounded hover:bg-gray-200">Usuarios</a>
+                    <li><a href="{{ route('roles.index') }}" class="block p-2 rounded hover:bg-gray-200">Roles</a></li>
                     </li>
                     {{-- Agrega más ítems según el módulo --}}
                 </ul>

@@ -22,7 +22,7 @@ Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix("users")->g
 Route::prefix('admin')
     ->middleware(['web', 'auth', 'role:super-admin|admin|contador'])
     ->group(function() {
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
     });
 
 // Rutas de empleados (Employees Module)

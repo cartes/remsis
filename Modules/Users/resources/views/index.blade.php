@@ -91,14 +91,14 @@
                                     class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                             </div>
                             <div class="max-h-60 overflow-y-auto p-1">
-                                <a href="{{ route('users.index') }}"
+                                <a href="{{ route('admin.users.index') }}"
                                     data-tooltip="Haz clic para quitar el filtro y ver todos los usuarios"
                                     class="block px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                     <i class="fas fa-times-circle mr-1"></i> Ver Todos
                                 </a>
                                 <template x-for="comp in filteredCompanies" :key="comp.id">
                                     <button
-                                        @click="window.location.href = '{{ route('users.index') }}?company_id=' + comp.id"
+                                        @click="window.location.href = '{{ route('admin.users.index') }}?company_id=' + comp.id"
                                         class="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-all flex items-center gap-2">
                                         <i class="fas fa-building text-gray-400"></i>
                                         <span x-text="comp.name"></span>

@@ -60,7 +60,7 @@
                         @endrole
 
                         @role('super-admin|admin|contador')
-                            <a href="{{ route('users.index') }}"
+                            <a href="{{ route('admin.users.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('users*') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
                                     class="fas fa-users transition-colors {{ request()->routeIs('users*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
@@ -111,7 +111,7 @@
                         <p class="text-[10px] font-bold text-slate-400 truncate tracking-tight">
                             {{ Auth::user()->email }}</p>
                     </div>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('admin.logout') }}">
                         @csrf
                         <button type="submit"
                             class="text-slate-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg">

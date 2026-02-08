@@ -9,12 +9,12 @@ use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
 
 
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('admin.login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 });
 
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
-    Route::post('logout', [AdminPanelController::class, 'logout'])->name('logout');
+    Route::post('logout', [AdminPanelController::class, 'logout'])->name('admin.logout');
 });
 
 Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix('admin')->group(function () {
