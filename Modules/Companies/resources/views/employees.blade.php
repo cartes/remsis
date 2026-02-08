@@ -13,6 +13,7 @@
             isapres: @json($isapres),
             ccafs: @json($ccafs),
             bancos: @json($bancos),
+            costCenters: @json($costCenters),
             selectedEmployee: {
                 id: null,
                 first_name: "",

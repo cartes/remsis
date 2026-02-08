@@ -160,13 +160,29 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Centro de Costo</label>
-                    <select x-model="selectedEmployee.cost_center_id"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                        <option value="">Sin asignar</option>
-                        <template x-for="cc in costCenters" :key="cc.id">
-                            <option :value="cc.id" x-text="`${cc.code} - ${cc.name}`"></option>
-                        </template>
-                    </select>
+                    <template x-if="!costCenters || costCenters.length === 0">
+                        <div
+                            class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 text-center">
+                            <div class="text-yellow-600 flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span class="text-xs font-semibold">Empresa sin centros de costo creados</span>
+                            </div>
+                            <a href="{{ route('companies.edit', ['company' => $company->id, 'tab' => 'cost-centers']) }}"
+                                class="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm">
+                                <i class="fas fa-plus-circle"></i> Crear Centros de Costo
+                            </a>
+                        </div>
+                    </template>
+
+                    <template x-if="costCenters && costCenters.length > 0">
+                        <select x-model="selectedEmployee.cost_center_id"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="">Sin asignar</option>
+                            <template x-for="cc in costCenters" :key="cc.id">
+                                <option :value="cc.id" x-text="`${cc.code} - ${cc.name}`"></option>
+                            </template>
+                        </select>
+                    </template>
                 </div>
             </div>
 
