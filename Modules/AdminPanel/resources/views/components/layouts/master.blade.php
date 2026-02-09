@@ -100,18 +100,76 @@
             </div>
 
             {{-- Sidebar Footer --}}
-            <div class="p-4 bg-slate-50 border-t border-gray-100 flex-shrink-0">
-                <div class="flex items-center gap-3 px-2 py-2">
+            <div class="p-4 bg-slate-50 border-t border-gray-100 relative" x-data="{ showProfileForm: false, timeout: null }">
+                {{-- Profile Edit Tooltip --}}
+                <div x-show="showProfileForm" x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95" @mouseenter="clearTimeout(timeout)"
+                    @mouseleave="showProfileForm = false"
+                    class="absolute bottom-full left-4 mb-3 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-200 p-5 z-[100] w-80"
+                    style="display: none;">
+                    {{-- Arrow --}}
                     <div
-                        class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-xs font-black text-white uppercase shadow-md shadow-indigo-500/20">
-                        {{ substr(Auth::user()->name, 0, 2) }}
+                        class="absolute -bottom-1.5 left-8 w-3 h-3 bg-white border-b border-r border-slate-200 transform rotate-45">
+                    </div>
+
+                    <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-lg shadow-indigo-500/20 overflow-hidden">
+                            @if (Auth::user()->profile_photo)
+                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                                    class="w-full h-full object-cover">
+                            @else
+                                {{ substr(Auth::user()->name, 0, 2) }}
+                            @endif
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-black text-slate-800 truncate">{{ Auth::user()->name }}</h3>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">Ajustes de
+                                Cuenta</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <a href="{{ route('profile.edit') }}"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group/item">
+                            <i
+                                class="fas fa-user-gear text-slate-400 group-hover/item:text-indigo-600 transition-colors"></i>
+                            Editar Perfil
+                        </a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-all group/item">
+                                <i class="fas fa-power-off opacity-70 group-hover/item:opacity-100"></i>
+                                Cerrar Sesión
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 px-2 py-2 group/user transition-all duration-300 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer"
+                    @mouseenter="clearTimeout(timeout); showProfileForm = true"
+                    @mouseleave="timeout = setTimeout(() => { showProfileForm = false }, 300)">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-xs font-black text-white uppercase shadow-md shadow-indigo-500/20 transition-transform group-hover/user:scale-105 overflow-hidden">
+                        @if (Auth::user()->profile_photo)
+                            <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                                class="w-full h-full object-cover">
+                        @else
+                            {{ substr(Auth::user()->name, 0, 2) }}
+                        @endif
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-black text-slate-800 truncate">{{ Auth::user()->name }}</p>
+                        <p
+                            class="text-xs font-black text-slate-800 truncate group-hover/user:text-indigo-600 transition-colors">
+                            {{ Auth::user()->name }}</p>
                         <p class="text-[10px] font-bold text-slate-400 truncate tracking-tight">
                             {{ Auth::user()->email }}</p>
                     </div>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" @mouseenter="clearTimeout(timeout)">
                         @csrf
                         <button type="submit"
                             class="text-slate-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg">
@@ -162,9 +220,11 @@
                         {{-- Notification Dropdown --}}
                         <div x-show="open" @click.away="open = false"
                             x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
                             class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                             style="display: none;">
 
