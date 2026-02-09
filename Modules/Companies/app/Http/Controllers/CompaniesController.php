@@ -113,6 +113,10 @@ class CompaniesController extends Controller
         if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
+
+        if ($request->has('work_schedule') && is_string($request->work_schedule)) {
+            $request->merge(['work_schedule' => json_decode($request->work_schedule, true)]);
+        }
         $data = $request->validate([
             'nombre_fantasia' => ['nullable', 'string', 'max:255'],
             'giro' => ['nullable', 'string', 'max:255'],
