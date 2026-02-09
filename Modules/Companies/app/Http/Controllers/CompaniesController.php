@@ -139,8 +139,13 @@ class CompaniesController extends Controller
 
         $company->update($data);
 
+        $params = ['company' => $company];
+        if ($request->has('tab')) {
+            $params['tab'] = $request->input('tab');
+        }
+
         return redirect()
-            ->route('companies.edit', $company)
+            ->route('companies.edit', $params)
             ->with('success', 'Ficha de empresa guardada.');
     }
 

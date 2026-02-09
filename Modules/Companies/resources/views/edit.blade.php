@@ -160,6 +160,7 @@
                 <form method="POST" action="{{ route('companies.update', $company) }}" class="p-6">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="tab" x-model="activeTab">
 
                     {{-- Identificación Tab --}}
                     <div x-show="activeTab === 'ident'" x-transition:enter="transition ease-out duration-300"
