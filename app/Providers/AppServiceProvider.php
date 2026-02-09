@@ -20,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Database\Eloquent\Model::preventLazyLoading(! app()->isProduction());
+        if (app()->isProduction()) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
         \Illuminate\Support\Facades\Blade::component('layouts.company', 'layouts.company');
     }
 }
