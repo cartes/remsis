@@ -72,6 +72,25 @@
                             window.history.replaceState(null, '', url);
                         });
                     },
+                    calculateScheduleHours() {
+                        let totalMinutes = 0;
+                        Object.values(this.schedule).forEach(day => {
+                            if (day.active && day.start && day.end) {
+                                const start = new Date(`1970-01-01T${day.start}:00`);
+                                const end = new Date(`1970-01-01T${day.end}:00`);
+                                let diff = (end - start) / 1000 / 60; // minutos
+                                if (diff < 0) diff += 24 * 60; // cruce de medianoche
+                                diff -= (parseInt(day.break) || 0);
+                                totalMinutes += Math.max(0, diff);
+                            }
+                        });
+                        return Number((totalMinutes / 60).toFixed(2));
+                    },
+                    get hoursDiscrepancy() {
+                        const calculated = this.calculateScheduleHours();
+                        const defined = parseFloat(this.weeklyHours) || 0;
+                        return Math.abs(calculated - defined) > 0.1;
+                    },
                     async updateEssentials() {
                         this.loadingEssentials = true;
                         try {
@@ -420,6 +439,16 @@
                                     <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
                                             class="fas fa-exclamation-circle"></i>{{ $message }}</p>
                                 @enderror
+                            </div>
+                            <div x-show="hoursDiscrepancy" x-transition
+                                class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+                                <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
+                                <div class="text-sm text-amber-800">
+                                    <p class="font-semibold">Discrepancia detectada</p>
+                                    <p>La suma del horario (<span x-text="calculateScheduleHours()"></span> hrs) no
+                                        coincide
+                                        con las horas semanales definidas.</p>
+                                </div>
                             </div>
                         </div>
 
