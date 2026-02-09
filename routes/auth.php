@@ -20,7 +20,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('login', function () {
         return redirect('/');
-    })->name('login');
+    })->name('admin.login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
@@ -57,5 +57,5 @@ Route::middleware('auth')->group(function () {
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
+        ->name('admin.logout');
 });
