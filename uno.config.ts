@@ -14,7 +14,10 @@ export default defineConfig({
         pipeline: {
             include: [
                 /\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/,
-                '**/*.blade.php',
+                './resources/**/*.blade.php',
+                './Modules/**/*.blade.php',
+                './Modules/**/*.php',
+                './app/**/*.php',
             ],
         },
     },
