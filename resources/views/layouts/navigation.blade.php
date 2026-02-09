@@ -19,41 +19,76 @@
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+            <div class="hidden sm:flex sm:items-center sm:ms-6" x-data="{ showProfileForm: false, timeout: null }">
+                <div class="relative">
+                    {{-- Profile Edit Tooltip --}}
+                    <div x-show="showProfileForm" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                        @mouseenter="clearTimeout(timeout)" @mouseleave="showProfileForm = false"
+                        class="absolute top-full right-0 mt-3 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-200 p-4 z-[100] w-64"
+                        style="display: none;">
+                        {{-- Arrow --}}
+                        <div
+                            class="absolute -top-1.5 right-12 w-3 h-3 bg-white border-t border-l border-slate-200 transform rotate-45">
+                        </div>
 
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                        <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-sm font-black text-white shadow-xl shadow-blue-500/20 overflow-hidden">
+                                @if (Auth::user()->profile_photo)
+                                    <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                                        class="w-full h-full object-cover">
+                                @else
+                                    {{ substr(Auth::user()->name, 0, 2) }}
+                                @endif
                             </div>
-                        </button>
-                    </x-slot>
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-black text-slate-800 truncate">{{ Auth::user()->name }}</h3>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                                    Configuración</p>
+                            </div>
+                        </div>
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
+                        <div class="space-y-1">
+                            <a href="{{ route('profile.edit') }}"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all group/item">
+                                <i
+                                    class="fas fa-user-gear text-slate-400 group-hover/item:text-blue-600 transition-colors"></i>
+                                Editar Perfil
+                            </a>
 
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-all group/item">
+                                    <i class="fas fa-power-off opacity-70 group-hover/item:opacity-100"></i>
+                                    Cerrar Sesión
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
+                    <button @mouseenter="clearTimeout(timeout); showProfileForm = true"
+                        @mouseleave="timeout = setTimeout(() => { showProfileForm = false }, 300)"
+                        class="inline-flex items-center gap-3 px-4 py-2 border border-transparent text-sm leading-4 font-black rounded-xl text-slate-600 bg-white hover:text-blue-600 focus:outline-none transition ease-in-out duration-150 group">
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs">{{ Auth::user()->name }}</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Mi Perfil</span>
+                        </div>
+
+                        <div
+                            class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black group-hover:bg-blue-600 group-hover:text-white transition-all overflow-hidden shadow-sm">
+                            @if (Auth::user()->profile_photo)
+                                <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                                    class="w-full h-full object-cover">
+                            @else
+                                {{ substr(Auth::user()->name, 0, 2) }}
+                            @endif
+                        </div>
+                    </button>
+                </div>
             </div>
 
             <!-- Hamburger -->
@@ -89,7 +124,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    {{ __('Editar Perfil') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
