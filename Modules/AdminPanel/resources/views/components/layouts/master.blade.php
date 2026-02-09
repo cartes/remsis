@@ -46,7 +46,7 @@
                         <a href="{{ route('admin.dashboard') }}"
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                             <i
-                                class="fas fa-chart-line transition-colors {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                class="fas fa-chart-line w-5 text-center transition-colors {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                             Dashboard General
                         </a>
 
@@ -54,7 +54,7 @@
                             <a href="{{ route('companies.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('companies.index') || request()->is('companies*') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
-                                    class="fas fa-building transition-colors {{ request()->routeIs('companies.index') || request()->is('companies*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                    class="fas fa-building w-5 text-center transition-colors {{ request()->routeIs('companies.index') || request()->is('companies*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Listado Empresas
                             </a>
                         @endrole
@@ -63,7 +63,7 @@
                             <a href="{{ route('users.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('users*') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
-                                    class="fas fa-users transition-colors {{ request()->routeIs('users*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                    class="fas fa-users w-5 text-center transition-colors {{ request()->routeIs('users*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Gestión Usuarios
                             </a>
                         @endrole
@@ -79,19 +79,19 @@
                             <a href="{{ route('settings.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('settings.index') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
-                                    class="fas fa-cogs transition-colors {{ request()->routeIs('settings.index') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                    class="fas fa-cogs w-5 text-center transition-colors {{ request()->routeIs('settings.index') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Entidades Base
                             </a>
                             <a href="{{ route('settings.legal') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('settings.legal') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
-                                    class="fas fa-balance-scale transition-colors {{ request()->routeIs('settings.legal') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                    class="fas fa-balance-scale w-5 text-center transition-colors {{ request()->routeIs('settings.legal') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Parámetros Legales
                             </a>
                             <a href="{{ route('settings.sii_codes') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('settings.sii_codes') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i
-                                    class="fas fa-file-invoice transition-colors {{ request()->routeIs('settings.sii_codes') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                    class="fas fa-file-invoice w-5 text-center transition-colors {{ request()->routeIs('settings.sii_codes') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Códigos SII
                             </a>
                         </div>
