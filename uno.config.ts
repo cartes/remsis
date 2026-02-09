@@ -1,36 +1,42 @@
 import {
-  defineConfig,
-  presetAttributify,
-  presetIcons,
-  presetTypography,
-  presetWebFonts,
-  presetWind3,
-  transformerDirectives,
-  transformerVariantGroup
-} from 'unocss'
+    defineConfig,
+    presetAttributify,
+    presetIcons,
+    presetTypography,
+    presetWebFonts,
+    presetWind3,
+    transformerDirectives,
+    transformerVariantGroup,
+} from "unocss";
 
 export default defineConfig({
-  shortcuts: [
-    // ...
-  ],
-  theme: {
-    colors: {
-      // ...
-    }
-  },
-  presets: [
-    presetWind3(),
-    presetAttributify(),
-    presetIcons(),
-    presetTypography(),
-    presetWebFonts({
-      fonts: {
+    content: {
+        pipeline: {
+            include: [
+                /\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/,
+                "resources/**/*.blade.php",
+                "Modules/**/*.blade.php",
+            ],
+        },
+    },
+    shortcuts: [
         // ...
-      },
-    }),
-  ],
-  transformers: [
-    transformerDirectives(),
-    transformerVariantGroup(),
-  ],
-})
+    ],
+    theme: {
+        colors: {
+            // ...
+        },
+    },
+    presets: [
+        presetWind3(),
+        presetAttributify(),
+        presetIcons(),
+        presetTypography(),
+        presetWebFonts({
+            fonts: {
+                // ...
+            },
+        }),
+    ],
+    transformers: [transformerDirectives(), transformerVariantGroup()],
+});

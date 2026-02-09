@@ -23,7 +23,7 @@
 
         {{-- Sidebar Navigation --}}
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-            class="fixed lg:sticky top-0 left-0 w-68 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-screen z-50 transition-transform duration-300 ease-in-out">
+            class="fixed lg:static top-0 left-0 w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-screen z-50 transition-transform duration-300 ease-in-out">
 
             {{-- Sidebar Header / Logo --}}
             <div class="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
