@@ -58,13 +58,17 @@
                                                 </div>
                                                 <div>
                                                     <div class="font-semibold text-gray-800">
-                                                        {{ $company->razon_social ?? $company->name }}</div>
-                                                    @if ($company->nombre_fantasia)
-                                                        <div class="text-xs text-gray-500">{{ $company->nombre_fantasia }}
-                                                        </div>
-                                                    @endif
+                                                        <a class="text-blue-600 block hover:underline"
+                                                            href="{{ route('companies.edit', $company->id) }}">
+                                                            {{ $company->razon_social ?? $company->name }}
+                                                            @if ($company->nombre_fantasia)
+                                                                <div class="text-xs text-gray-500 font-normal mt-0.5">
+                                                                    {{ $company->nombre_fantasia }}
+                                                                </div>
+                                                            @endif
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                            </div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <span class="font-mono text-gray-700">{{ $company->rut }}</span>
