@@ -42,7 +42,13 @@ class Company extends Model
         'representante_rut',
         'representante_cargo',
         'representante_email',
-        'notes'
+        'notes',
+        'weekly_hours',
+        'work_schedule'
+    ];
+
+    protected $casts = [
+        'work_schedule' => 'array',
     ];
 
 

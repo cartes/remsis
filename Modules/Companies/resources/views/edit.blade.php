@@ -12,6 +12,59 @@
                         razon_social: @json($company->razon_social),
                         rut: @json($company->rut)
                     },
+                    weeklyHours: @json($company->weekly_hours ?? 44),
+                    editingWeeklyHours: false,
+                    schedule: @json($company->work_schedule) || {
+                        mon: {
+                            label: 'Lunes',
+                            active: true,
+                            start: '09:00',
+                            end: '18:30',
+                            break: 60
+                        },
+                        tue: {
+                            label: 'Martes',
+                            active: true,
+                            start: '09:00',
+                            end: '18:30',
+                            break: 60
+                        },
+                        wed: {
+                            label: 'Miércoles',
+                            active: true,
+                            start: '09:00',
+                            end: '18:30',
+                            break: 60
+                        },
+                        thu: {
+                            label: 'Jueves',
+                            active: true,
+                            start: '09:00',
+                            end: '18:30',
+                            break: 60
+                        },
+                        fri: {
+                            label: 'Viernes',
+                            active: true,
+                            start: '09:00',
+                            end: '16:30',
+                            break: 60
+                        },
+                        sat: {
+                            label: 'Sábado',
+                            active: false,
+                            start: '10:00',
+                            end: '14:00',
+                            break: 0
+                        },
+                        sun: {
+                            label: 'Domingo',
+                            active: false,
+                            start: '10:00',
+                            end: '14:00',
+                            break: 0
+                        },
+                    },
                     init() {
                         this.$watch('activeTab', value => {
                             const url = new URL(window.location);
@@ -342,6 +395,89 @@
                                     <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
                                             class="fas fa-exclamation-circle"></i>{{ $message }}</p>
                                 @enderror
+                            </div>
+
+                            {{-- Horas Semanales --}}
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Horas de trabajo
+                                    semanal</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" name="weekly_hours" x-model="weeklyHours"
+                                        :readonly="!editingWeeklyHours"
+                                        class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
+                                        :class="{
+                                            'bg-white': editingWeeklyHours,
+                                            'bg-gray-50 text-gray-500': !
+                                                editingWeeklyHours
+                                        }">
+                                    <button type="button"
+                                        @click="editingWeeklyHours = !editingWeeklyHours; if(editingWeeklyHours) $nextTick(() => $el.previousElementSibling.focus())"
+                                        class="px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+                                        x-text="editingWeeklyHours ? 'Cancelar' : 'Modificar'">
+                                    </button>
+                                </div>
+                                @error('weekly_hours')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Horario de Oficina Section --}}
+                        <div class="mt-8 border-t border-gray-100 pt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Horario de Oficina</h3>
+                            <p class="text-sm text-gray-500 mb-6">Define los turnos de trabajo y horarios de colación
+                                para la semana.</p>
+
+                            {{-- Hidden input to store json --}}
+                            <input type="hidden" name="work_schedule" :value="JSON.stringify(schedule)">
+
+                            <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                                        <tr>
+                                            <th class="px-4 py-3 font-bold w-32">Día</th>
+                                            <th class="px-4 py-3 font-bold">Estado</th>
+                                            <th class="px-4 py-3 font-bold">Entrada</th>
+                                            <th class="px-4 py-3 font-bold">Salida</th>
+                                            <th class="px-4 py-3 font-bold">Colación (min)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <template x-for="(day, key) in schedule" :key="key">
+                                            <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                                                <td class="px-4 py-3 font-medium text-gray-800 capitalize"
+                                                    x-text="day.label"></td>
+                                                <td class="px-4 py-3">
+                                                    <label class="relative inline-flex items-center cursor-pointer">
+                                                        <input type="checkbox" x-model="day.active"
+                                                            class="sr-only peer">
+                                                        <div
+                                                            class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                                                        </div>
+                                                    </label>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <input type="time" x-model="day.start" :disabled="!day.active"
+                                                        class="border-gray-300 rounded-md text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 w-32">
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <input type="time" x-model="day.end" :disabled="!day.active"
+                                                        class="border-gray-300 rounded-md text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 w-32">
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <div class="relative w-24">
+                                                        <input type="number" x-model="day.break"
+                                                            :disabled="!day.active" min="0" step="15"
+                                                            class="w-full border-gray-300 rounded-md text-sm p-1.5 pr-8 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                                                        <span
+                                                            class="absolute right-2 top-1.5 text-xs text-gray-400 font-medium">min</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

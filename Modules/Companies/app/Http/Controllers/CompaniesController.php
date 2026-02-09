@@ -133,6 +133,8 @@ class CompaniesController extends Controller
             'representante_cargo' => ['nullable', 'string', 'max:100'],
             'representante_email' => ['nullable', 'email', 'max:255'],
             'notes' => ['nullable', 'string'],
+            'weekly_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
+            'work_schedule' => ['nullable', 'array'],
         ], [
             'dia_pago_dia.required_if' => 'Debes indicar el día cuando el pago es “Día fijo”.',
         ]);

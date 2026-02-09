@@ -10,13 +10,15 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('banks', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->string('code')->unique();
-            $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('banks')) {
+            Schema::create('banks', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->string('code')->unique();
+                $table->enum('status', ['active', 'inactive'])->default('active');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

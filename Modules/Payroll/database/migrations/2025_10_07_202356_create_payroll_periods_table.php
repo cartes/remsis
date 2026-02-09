@@ -10,16 +10,18 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('payroll_periods', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->date('payment_date')->nullable();
-            $table->enum('status', ['active', 'closed', 'cancelled'])->default('active');
-            
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('payroll_periods')) {
+            Schema::create('payroll_periods', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->date('start_date');
+                $table->date('end_date');
+                $table->date('payment_date')->nullable();
+                $table->enum('status', ['active', 'closed', 'cancelled'])->default('active');
+                
+                $table->timestamps();
+            });
+        }
     }
 
     /**
