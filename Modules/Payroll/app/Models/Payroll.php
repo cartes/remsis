@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Employees\Models\Employee;
 use Modules\Companies\Models\Company;
-use App\Models\User; 
+use Modules\Users\Models\User; 
 use Modules\AdminPanel\Models\Bank;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;

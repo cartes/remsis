@@ -8,10 +8,18 @@ use \Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
 // use Modules\Users\Database\Factories\UserFactory;
 
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Permission\Traits\HasRoles;
-class User extends Authenticatable
+
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\UserFactory::new();
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +37,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'metadata' => 'array',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
     protected $guard_name = 'web';
 

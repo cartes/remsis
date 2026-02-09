@@ -3,7 +3,7 @@
 namespace Modules\AdminPanel\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use Modules\Users\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

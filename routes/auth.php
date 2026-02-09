@@ -12,15 +12,12 @@ use Modules\AdminPanel\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', function () {
-        return redirect('/');
-    })->name('register');
+    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    Route::get('login', function () {
-        return redirect('/');
-    })->name('login');
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::get('login-admin', [AuthenticatedSessionController::class, 'create'])->name('admin.login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
