@@ -41,7 +41,8 @@
                 <div class="space-y-1">
                     <a href="{{ route('dashboard') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 text-slate-600 hover:text-blue-600 group">
-                        <i class="fas fa-chart-line text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                        <i
+                            class="fas fa-chart-line w-5 text-center text-slate-400 group-hover:text-blue-500 transition-colors"></i>
                         Dashboard
                     </a>
                 </div>
@@ -56,7 +57,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                         :class="activeTab === 'accounting' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
                             'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-calculator transition-colors"
+                        <i class="fas fa-calculator w-5 text-center transition-colors"
                             :class="activeTab === 'accounting' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
                         Contabilidad
                     </a>
@@ -65,7 +66,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                         :class="activeTab === 'employees' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
                             'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-users-viewfinder transition-colors"
+                        <i class="fas fa-users-viewfinder w-5 text-center transition-colors"
                             :class="activeTab === 'employees' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
                         Nómina de Empleados
                     </a>
@@ -74,7 +75,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                         :class="activeTab === 'transactions' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
                             'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-money-bill-transfer transition-colors"
+                        <i class="fas fa-money-bill-transfer w-5 text-center transition-colors"
                             :class="activeTab === 'transactions' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
                         Movimientos
                     </a>
@@ -83,7 +84,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                         :class="activeTab === 'cost-centers' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
                             'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-folder-tree transition-colors"
+                        <i class="fas fa-folder-tree w-5 text-center transition-colors"
                             :class="activeTab === 'cost-centers' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
                         Centros de Costo
                     </a>
@@ -95,7 +96,8 @@
                 <div class="space-y-1">
                     <a href="{{ route('companies.index') }}"
                         class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all border border-amber-100 group shadow-sm">
-                        <i class="fas fa-chevron-left group-hover:-translate-x-1 transition-transform"></i>
+                        <i
+                            class="fas fa-chevron-left w-5 text-center group-hover:-translate-x-1 transition-transform"></i>
                         Volver a Empresas
                     </a>
                 </div>
