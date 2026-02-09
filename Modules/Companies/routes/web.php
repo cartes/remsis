@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Companies\Http\Controllers\CompaniesController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('companies', CompaniesController::class)->names('companies');
 
     Route::get('companies/{company}/essentials/edit', [CompaniesController::class, 'editEssentials'])
