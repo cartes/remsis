@@ -105,7 +105,7 @@
                         Cumple con la legislación chilena (DT, Previred) sin complicaciones. Automatiza sueldos,
                         liquidaciones y contratos en minutos.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                         <button onclick="openRegisterModal()"
                             class="inline-flex justify-center items-center px-8 py-4 text-lg font-semibold rounded-button text-white bg-brand-blue hover:bg-blue-600 transition-all duration-150">
                             Comenzar Gratis
