@@ -17,12 +17,14 @@
 <body class="font-sans antialiased text-brand-dark bg-white">
 
     <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-100">
+    <nav class="bg-white border-b border-gray-100 sticky top-0 z-40" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex-shrink-0">
                     <span class="font-bold text-2xl tracking-tight text-brand-dark">REMSYS</span>
                 </div>
+
+                <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="#features"
                         class="text-base font-medium text-gray-600 hover:text-brand-dark transition-colors">Características</a>
@@ -43,6 +45,47 @@
                         </button>
                     @endauth
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="text-gray-600 hover:text-brand-dark focus:outline-none">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Portal -->
+        <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-4"
+            class="md:hidden bg-white border-b border-gray-100 px-6 py-8 space-y-6 shadow-xl" x-cloak>
+            <a href="#features" @click="mobileMenuOpen = false"
+                class="block text-lg font-bold text-gray-600">Características</a>
+            <a href="#pricing" @click="mobileMenuOpen = false" class="block text-lg font-bold text-gray-600">Precios</a>
+            <div class="pt-4 border-t border-gray-100 flex flex-col gap-4">
+                @auth
+                    <a href="{{ route('dashboard') }}"
+                        class="w-full text-center px-6 py-4 text-lg font-bold rounded-button text-white bg-brand-blue">
+                        Dashboard
+                    </a>
+                @else
+                    <button onclick="openLoginModal()" @click="mobileMenuOpen = false"
+                        class="w-full text-center px-6 py-4 text-lg font-bold text-brand-dark border border-gray-200 rounded-button">
+                        Iniciar Sesión
+                    </button>
+                    <button onclick="openRegisterModal()" @click="mobileMenuOpen = false"
+                        class="w-full text-center px-6 py-4 text-lg font-bold rounded-button text-white bg-brand-blue">
+                        Comenzar Gratis
+                    </button>
+                @endauth
             </div>
         </div>
     </nav>
@@ -55,7 +98,7 @@
                 <!-- LEFT: Text Content -->
                 <div>
                     <p class="text-sm font-semibold text-brand-blue uppercase tracking-wide mb-6">REMSYS</p>
-                    <h1 class="text-6xl lg:text-7xl font-bold tracking-tight text-brand-dark mb-6 leading-tight">
+                    <h1 class="text-5xl sm:text-7xl font-bold tracking-tight text-brand-dark mb-6 leading-tight">
                         Gestión de remuneraciones, simple y al día.
                     </h1>
                     <p class="text-xl text-gray-600 mb-10 leading-relaxed">
@@ -97,7 +140,7 @@
     <section id="features" class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-20">
-                <h2 class="text-5xl font-bold tracking-tight text-brand-dark mb-6">
+                <h2 class="text-4xl sm:text-5xl font-bold tracking-tight text-brand-dark mb-6">
                     Todo lo que necesitas para tu empresa
                 </h2>
                 <p class="text-xl text-gray-600">
@@ -198,14 +241,14 @@
     <!-- Pricing Section -->
     <section id="pricing" class="py-24 bg-white">
         <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-            <h2 class="text-5xl font-bold tracking-tight text-brand-dark mb-6">
+            <h2 class="text-4xl sm:text-5xl font-bold tracking-tight text-brand-dark mb-6">
                 Precios transparentes
             </h2>
             <p class="text-xl text-gray-600 mb-12">
                 Sin sorpresas. Paga solo por lo que usas.
             </p>
-            <div class="bg-gray-50 rounded-3xl p-12 border border-gray-100">
-                <div class="text-6xl font-bold text-brand-dark mb-4">$5.000 <span
+            <div class="bg-gray-50 rounded-3xl p-8 sm:p-12 border border-gray-100">
+                <div class="text-5xl sm:text-6xl font-bold text-brand-dark mb-4">$5.000 <span
                         class="text-2xl font-normal text-gray-600">CLP</span></div>
                 <p class="text-xl text-gray-600 mb-8">por empleado/mes</p>
                 <button onclick="openRegisterModal()"
@@ -266,7 +309,7 @@
     </footer>
 
     <!-- Login Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors->has('email') || $errors->has('password')) open = true" x-show="open" @open-login-modal.window="open = true"
+    <div x-data="{ open: false }" x-init="if ($errors - > has('email') || $errors - > has('password')) open = true" x-show="open" @open-login-modal.window="open = true"
         @open-register-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
         class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <!-- Overlay -->
@@ -274,7 +317,8 @@
 
         <!-- Modal -->
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative bg-white rounded-3xl shadow-xl max-w-md w-full p-8" @click.away="open = false">
+            <div class="relative bg-white rounded-3xl shadow-xl w-full max-w-[calc(100vw-2rem)] sm:max-w-md p-6 sm:p-8"
+                @click.away="open = false">
                 <!-- Close button -->
                 <button @click="open = false" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,7 +368,7 @@
     </div>
 
     <!-- Register Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors->has('name') || ($errors->has('email') && !old('password')) || $errors->has('password')) open = true" x-show="open" @open-register-modal.window="open = true"
+    <div x-data="{ open: false }" x-init="if ($errors - > has('name') || ($errors - > has('email') && !old('password')) || $errors - > has('password')) open = true" x-show="open" @open-register-modal.window="open = true"
         @open-login-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
         class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <!-- Overlay -->
@@ -332,7 +376,8 @@
 
         <!-- Modal -->
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative bg-white rounded-3xl shadow-xl max-w-md w-full p-8" @click.away="open = false">
+            <div class="relative bg-white rounded-3xl shadow-xl w-full max-w-[calc(100vw-2rem)] sm:max-w-md p-6 sm:p-8"
+                @click.away="open = false">
                 <!-- Close button -->
                 <button @click="open = false" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
