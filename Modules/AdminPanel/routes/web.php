@@ -44,6 +44,12 @@ Route::prefix('settings')
         Route::get('/ccafs/{ccaf}/edit', [SettingsController::class, 'editCcaf'])->name('ccafs.edit');
         Route::delete('/ccafs/{ccaf}', [SettingsController::class, 'destroyCcaf'])->name('ccafs.destroy');
 
+        //Mutuales
+        Route::post('/mutuales', [SettingsController::class, 'storeMutual'])->name('mutuales.store');
+        Route::put('/mutuales/{mutual}', [SettingsController::class, 'updateMutual'])->name('mutuales.update');
+        Route::delete('/mutuales/{mutual}', [SettingsController::class, 'destroyMutual'])->name('mutuales.destroy');
+
+
         Route::put('/afps/{afp}', [SettingsController::class, 'updateAfp'])->name('afps.update');
         Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
@@ -66,6 +72,7 @@ Route::prefix('settings')
 
 Route::middleware(['auth', 'role:super-admin|admin'])->prefix('api/settings')->group(function () {
     Route::get('/ccafs', [SettingsController::class, 'ccafJson'])->name('settings.ccafs.json');
+    Route::get('/mutuales', [SettingsController::class, 'mutualJson'])->name('settings.mutuales.json');
     Route::get('/isapres', [SettingsController::class, 'isapreJson'])->name('settings.isapres.json');
     Route::get('/afps', [SettingsController::class, 'afpJson'])->name('settings.afps.json');
     Route::get('/bancos', [SettingsController::class, 'bancoJson'])->name('settings.bancos.json');

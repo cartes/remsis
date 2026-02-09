@@ -389,6 +389,23 @@
                             </div>
 
                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Mutual de
+                                    Seguridad</label>
+                                <select name="mutual_id"
+                                    class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    <option value="">Seleccionar Mutual...</option>
+                                    @foreach ($mutuales as $m)
+                                        <option value="{{ $m->id }}" @selected(old('mutual_id', $company->mutual_id) === $m->id)>
+                                            {{ $m->nombre }}</option>
+                                    @endforeach
+                                </select>
+                                @error('mutual_id')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Día de Pago</label>
                                 <select name="dia_pago"
                                     class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"

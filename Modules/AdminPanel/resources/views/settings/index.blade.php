@@ -37,6 +37,27 @@
                     'ref' => 'ccafsTable',
                     'icon' => 'fas fa-hands-helping',
                 ],
+                'mutuales' => [
+                    'label' => 'Mutuales',
+                    'store' => 'mutuales.store',
+                    'edit' => 'mutuales.edit', // This route isn't defined as GET, checking if logic uses it.
+        // Ah, the view logic for edit button uses update route directly: route($config['update'], $item->id)
+        // The 'edit' key in array doesn't seem to be used for route generation in the loop logic shown?
+                    // Let's check the loop.
+        // Loop uses: store, update, destroy.
+        // Edit button: route($config['update'], $item->id)
+        // Wait, the edit button in table:
+        // @click="editModal(..., '{{ route($config['update'], $item->id) }}', ...)"
+        // So 'edit' key might be unused or used elsewhere?
+        // The keys used are: label, store, update, destroy, data, session, ref, icon.
+        // I'll keep 'edit' key for consistency but it seems unused in the snippet I saw.
+                    'update' => 'mutuales.update',
+                    'destroy' => 'mutuales.destroy',
+                    'data' => $mutuales,
+                    'session' => 'success_mutual',
+                    'ref' => 'mutualesTable',
+                    'icon' => 'fas fa-briefcase-medical',
+                ],
                 'bancos' => [
                     'label' => 'Bancos / Billeteras',
                     'store' => 'bancos.store',
@@ -51,7 +72,17 @@
             ];
         @endphp
 
-        <div x-data="{ activeTab: 'afps', ...settingsManager() }" class="max-w-6xl mx-auto space-y-6">
+        <div x-data="{
+            activeTab: new URLSearchParams(window.location.search).get('tab') || 'afps',
+            ...settingsManager(),
+            init() {
+                this.$watch('activeTab', value => {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', value);
+                    window.history.replaceState(null, '', url);
+                });
+            }
+        }" class="max-w-6xl mx-auto space-y-6">
 
             {{-- TABS CONTAINER --}}
             <div class="flex flex-col">

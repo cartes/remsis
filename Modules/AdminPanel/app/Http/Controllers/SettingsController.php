@@ -10,6 +10,7 @@ use Modules\AdminPanel\Models\Ccaf;
 use Modules\AdminPanel\Models\LegalParameter;
 use Modules\AdminPanel\Models\CodigoSii;
 use Modules\AdminPanel\Models\Bank;
+use Modules\AdminPanel\Models\Mutual;
 
 class SettingsController extends Controller
 {
@@ -22,6 +23,7 @@ class SettingsController extends Controller
             'afps' => Afp::all(),
             'isapres' => Isapre::all(),
             'ccafs' => Ccaf::all(),
+            'mutuales' => Mutual::all(),
             'bancos' => Bank::orderBy('name')->get(['id', 'name as nombre']),
         ]);
     }
@@ -43,28 +45,55 @@ class SettingsController extends Controller
     public function storeAfp(Request $request)
     {
         $request->validate(['nombre' => 'required|string|max:255|unique:afps,nombre']);
-        Afp::create(['nombre' => $request->nombre]);
+        $afp = Afp::create(['nombre' => $request->nombre]);
+
+        if ($request->wantsJson()) {
+            return response()->json($afp);
+        }
         return redirect()->route('settings.index')->with('success_afp', 'AFP agregada.');
     }
 
     public function storeIsapre(Request $request)
     {
         $request->validate(['nombre' => 'required|string|max:255|unique:isapres,nombre']);
-        Isapre::create(['nombre' => $request->nombre]);
+        $isapre = Isapre::create(['nombre' => $request->nombre]);
+
+        if ($request->wantsJson()) {
+            return response()->json($isapre);
+        }
         return redirect()->route('settings.index')->with('success_isapre', 'Isapre agregada.');
     }
 
     public function storeCcaf(Request $request)
     {
         $request->validate(['nombre' => 'required|string|max:255|unique:ccafs,nombre']);
-        Ccaf::create(['nombre' => $request->nombre]);
+        $ccaf = Ccaf::create(['nombre' => $request->nombre]);
+
+        if ($request->wantsJson()) {
+            return response()->json($ccaf);
+        }
         return redirect()->route('settings.index')->with('success_ccaf', 'CCAF agregada.');
+    }
+
+    public function storeMutual(Request $request)
+    {
+        $request->validate(['nombre' => 'required|string|max:255|unique:mutuales,nombre']);
+        $mutual = Mutual::create(['nombre' => $request->nombre]);
+
+        if ($request->wantsJson()) {
+            return response()->json($mutual);
+        }
+        return redirect()->route('settings.index')->with('success_mutual', 'Mutual agregada.');
     }
 
     public function storeBanco(Request $request)
     {
         $request->validate(['nombre' => 'required|string|max:255|unique:banks,name']);
         $banco = Bank::create(['name' => $request->nombre]);
+        
+        if ($request->wantsJson()) {
+            return response()->json(['id' => $banco->id, 'nombre' => $banco->name]);
+        }
         return redirect()->route('settings.index')->with('success_banco', 'Banco agregado.');
     }
 
@@ -107,6 +136,19 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF actualizada correctamente.']);
     }
 
+    public function updateMutual(Request $request, $id)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:mutuales,nombre,' . $id,
+        ]);
+
+        $mutual = Mutual::findOrFail($id);
+        $mutual->nombre = $request->nombre;
+        $mutual->save();
+
+        return response()->json(['message' => 'Mutual actualizada correctamente.']);
+    }
+
     public function updateBanco(Request $request, $id)
     {
         $request->validate([
@@ -144,6 +186,14 @@ class SettingsController extends Controller
         return response()->json(['message' => 'CCAF eliminada correctamente.']);
     }
 
+    public function destroyMutual($id)
+    {
+        $mutual = Mutual::findOrFail($id);
+        $mutual->delete();
+
+        return response()->json(['message' => 'Mutual eliminada correctamente.']);
+    }
+
     public function destroyBanco($id)
     {
         $banco = Bank::findOrFail($id);
@@ -155,6 +205,11 @@ class SettingsController extends Controller
     public function ccafJson()
     {
         return Ccaf::orderBy('nombre')->get(['id', 'nombre']); 
+    }
+
+    public function mutualJson()
+    {
+        return Mutual::orderBy('nombre')->get(['id', 'nombre']); 
     }
 
     public function afpJson()

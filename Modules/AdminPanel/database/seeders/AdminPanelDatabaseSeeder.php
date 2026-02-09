@@ -15,6 +15,7 @@ class AdminPanelDatabaseSeeder extends Seeder
             AfpSeeder::class,
             IsapreSeeder::class,
             CcafSeeder::class,
+            MutualSeeder::class,
         ]);
     }
 }

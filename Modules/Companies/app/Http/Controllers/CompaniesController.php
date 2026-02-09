@@ -72,6 +72,7 @@ class CompaniesController extends Controller
         $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
         $afps = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get(['id', 'nombre']);
         $isapres = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get(['id', 'nombre']);
+        $mutuales = \Modules\AdminPanel\Models\Mutual::orderBy('nombre')->get(['id', 'nombre']);
 
         // Cargar empleados de esta empresa
         $employees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
@@ -81,7 +82,7 @@ class CompaniesController extends Controller
         // Cargar centros de costo
         $costCenters = $company->costCenters()->orderBy('code')->get();
 
-        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters'));
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales'));
     }
 
     public function employees(Company $company)
@@ -130,6 +131,7 @@ class CompaniesController extends Controller
             'dia_pago' => ['nullable', Rule::in(['ultimo_dia_habil', 'dia_fijo', 'quincenal'])],
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
             'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+            'mutual_id' => ['nullable', 'exists:mutuales,id'],
             'bank_id' => ['nullable', 'exists:banks,id'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
             'representante_nombre' => ['nullable', 'string', 'max:255'],

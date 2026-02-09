@@ -37,6 +37,7 @@ class Company extends Model
         'banco',
         'bank_id',
         'ccaf_id',
+        'mutual_id',
         'cuenta_bancaria',
         'representante_nombre',
         'representante_rut',
@@ -65,6 +66,11 @@ class Company extends Model
     public function ccaf()
     {
         return $this->belongsTo(Ccaf::class);
+    }
+
+    public function mutual()
+    {
+        return $this->belongsTo(\Modules\AdminPanel\Models\Mutual::class, 'mutual_id');
     }
 
     public function employees()
