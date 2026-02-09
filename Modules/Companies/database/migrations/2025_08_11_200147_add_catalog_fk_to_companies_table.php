@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::table('companies', function (Blueprint $table) {
             $table->foreignId('ccaf_id')->nullable()->constrained('ccafs')->nullOnDelete();
-            $table->foreignId('isapre_id')->nullable()->constrained('isapre')->nullOnDelete();
-            $table->foreignId('afp_id')->nullable()->constrained('afp')->nullOnDelete();
+            $table->foreignId('isapre_id')->nullable()->constrained('isapres')->nullOnDelete();
+            $table->foreignId('afp_id')->nullable()->constrained('afps')->nullOnDelete();
         });
     }
 
