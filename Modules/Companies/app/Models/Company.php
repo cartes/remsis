@@ -13,7 +13,10 @@ use Modules\Payroll\Models\Payroll;
 
 class Company extends Model
 {
-    use HasFactory;
+    const GRATIFICATION_SYSTEM_NONE = 'sin_gratificacion';
+    const GRATIFICATION_SYSTEM_ART_47 = 'art_47';
+    const GRATIFICATION_SYSTEM_ART_50 = 'art_50';
+    const GRATIFICATION_SYSTEM_CONVENTIONAL = 'convencional';
 
     /**
      * The attributes that are mass assignable.
@@ -38,6 +41,8 @@ class Company extends Model
         'bank_id',
         'ccaf_id',
         'mutual_id',
+        'gratification_system',
+        'gratification_months',
         'cuenta_bancaria',
         'representante_nombre',
         'representante_rut',
@@ -50,6 +55,7 @@ class Company extends Model
 
     protected $casts = [
         'work_schedule' => 'array',
+        'gratification_months' => 'integer',
     ];
 
 

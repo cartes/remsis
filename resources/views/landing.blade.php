@@ -309,9 +309,46 @@
     </footer>
 
     <!-- Login Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors - > has('email') || $errors - > has('password')) open = true" x-show="open" @open-login-modal.window="open = true"
-        @open-register-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
-        class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div x-data="{
+        open: false,
+        loading: false,
+        errors: {},
+        formData: {
+            email: '{{ old('email') }}',
+            password: '',
+            remember: false
+        },
+        async login() {
+            this.loading = true;
+            this.errors = {};
+    
+            try {
+                const response = await fetch('{{ route('login') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.formData)
+                });
+    
+                const data = await response.json();
+    
+                if (response.ok) {
+                    window.location.href = data.redirect;
+                } else {
+                    this.errors = data.errors || { email: [data.message || 'Error al iniciar sesión'] };
+                    this.loading = false;
+                }
+            } catch (error) {
+                this.errors = { email: ['Error de conexión. Intente nuevamente.'] };
+                this.loading = false;
+            }
+        }
+    }" @open-login-modal.window="open = true" @open-register-modal.window="open = false"
+        @keydown.escape.window="open = false" x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+        style="display: none;">
         <!-- Overlay -->
         <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="open = false"></div>
 
@@ -330,31 +367,44 @@
                 <h2 class="text-3xl font-bold text-brand-dark mb-2">Iniciar Sesión</h2>
                 <p class="text-gray-600 mb-8">Accede a tu cuenta REMSYS</p>
 
-                <form method="POST" action="{{ route('login') }}">
-                    @csrf
+                <form @submit.prevent="login()">
                     <div class="space-y-6">
                         <div>
                             <label for="email"
                                 class="block text-sm font-semibold text-brand-dark mb-2">Email</label>
-                            <input type="email" id="email" name="email" :value="old('email')" required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent">
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            <input type="email" id="email" x-model="formData.email" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                                :class="{ 'border-red-500': errors.email }">
+                            <template x-if="errors.email">
+                                <p class="mt-2 text-sm text-red-600" x-text="errors.email[0]"></p>
+                            </template>
                         </div>
                         <div>
                             <label for="password"
                                 class="block text-sm font-semibold text-brand-dark mb-2">Contraseña</label>
-                            <input type="password" id="password" name="password" required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent">
-                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                            <input type="password" id="password" x-model="formData.password" required
+                                class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                                :class="{ 'border-red-500': errors.password }">
+                            <template x-if="errors.password">
+                                <p class="mt-2 text-sm text-red-600" x-text="errors.password[0]"></p>
+                            </template>
                         </div>
                         <div class="flex items-center">
-                            <input type="checkbox" id="remember" name="remember"
+                            <input type="checkbox" id="remember" x-model="formData.remember"
                                 class="w-4 h-4 text-brand-blue border-gray-300 rounded focus:ring-brand-blue">
                             <label for="remember" class="ml-2 text-sm text-gray-600">Recuérdame</label>
                         </div>
-                        <button type="submit"
-                            class="w-full px-6 py-4 text-lg font-semibold rounded-button text-white bg-brand-blue hover:bg-blue-600 transition-all duration-150">
-                            Iniciar Sesión
+                        <button type="submit" :disabled="loading"
+                            class="w-full px-6 py-4 text-lg font-semibold rounded-button text-white bg-brand-blue hover:bg-blue-600 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center">
+                            <svg x-show="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                    stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            <span x-text="loading ? 'Iniciando...' : 'Iniciar Sesión'"></span>
                         </button>
                     </div>
                 </form>
@@ -368,7 +418,7 @@
     </div>
 
     <!-- Register Modal (Alpine.js) -->
-    <div x-data="{ open: false }" x-init="if ($errors - > has('name') || ($errors - > has('email') && !old('password')) || $errors - > has('password')) open = true" x-show="open" @open-register-modal.window="open = true"
+    <div x-data="{ open: false }" x-init="if ({{ $errors->has('name') || ($errors->has('email') && !old('password')) || $errors->has('password') ? 'true' : 'false' }}) open = true" x-show="open" @open-register-modal.window="open = true"
         @open-login-modal.window="open = false" @keydown.escape.window="open = false" x-cloak
         class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <!-- Overlay -->

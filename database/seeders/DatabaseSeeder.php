@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
+            CodigoSiiSeeder::class,
             CompanyUserSeeder::class,
         ]);
     }

@@ -433,6 +433,54 @@
                                 @enderror
                             </div>
 
+                            {{-- Sistema de Gratificación --}}
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Sistema de
+                                    Gratificación</label>
+                                <select name="gratification_system"
+                                    class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    <option value="sin_gratificacion" @selected(old('gratification_system', $company->gratification_system) === 'sin_gratificacion')>Sin gratificación
+                                    </option>
+                                    <option value="art_47" @selected(old('gratification_system', $company->gratification_system) === 'art_47')>Gratificación legal Art. 47
+                                        (30% utilidades)</option>
+                                    <option value="art_50" @selected(old('gratification_system', $company->gratification_system) === 'art_50')>Gratificación legal Art. 50
+                                        (25% remuneraciones con tope 4,75 IMM)</option>
+                                    <option value="convencional" @selected(old('gratification_system', $company->gratification_system) === 'convencional')>Gratificación
+                                        convencional (contrato/colectivo)</option>
+                                </select>
+                                @error('gratification_system')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Meses de Gratificación --}}
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Meses de pago al
+                                    año</label>
+                                <select name="gratification_months"
+                                    class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    @foreach ([1, 2, 4, 12] as $months)
+                                        <option value="{{ $months }}" @selected(old('gratification_months', $company->gratification_months) == $months)>
+                                            {{ $months }} {{ $months == 1 ? 'mes (Anual)' : 'meses' }}
+                                            @if ($months == 2)
+                                                (Semestral)
+                                            @endif
+                                            @if ($months == 4)
+                                                (Trimestral)
+                                            @endif
+                                            @if ($months == 12)
+                                                (Mensual)
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('gratification_months')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             {{-- Horas Semanales --}}
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Horas de trabajo

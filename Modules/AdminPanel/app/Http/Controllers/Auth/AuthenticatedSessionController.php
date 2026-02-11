@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
         $request->authenticate();
 
@@ -30,18 +30,32 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
+        $redirectUrl = route('admin.dashboard');
+
         if ($user->hasRole('employee')) {
-            return redirect()->route('employee.profile.show');
+            $redirectUrl = route('employee.profile.show');
+        } elseif ($user->hasAnyRole('super-admin', 'admin', 'contador')) {
+            $redirectUrl = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
+        } else {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'No tienes rol asignado para ingresar.',
+                    'errors' => ['email' => ['No tienes rol asignado para ingresar.']]
+                ], 403);
+            }
+            
+            return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
         }
 
-        if ($user->hasAnyRole('super-admin', 'admin', 'contador')) {
-            return redirect()->intended(route('admin.dashboard'));
+        if ($request->expectsJson()) {
+            return response()->json(['redirect' => $redirectUrl]);
         }
 
-        auth()->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
+        return redirect()->to($redirectUrl);
     }
 
     /**

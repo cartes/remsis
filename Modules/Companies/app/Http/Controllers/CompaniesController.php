@@ -134,6 +134,8 @@ class CompaniesController extends Controller
             'mutual_id' => ['nullable', 'exists:mutuales,id'],
             'bank_id' => ['nullable', 'exists:banks,id'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
+            'gratification_system' => ['required', Rule::in(['sin_gratificacion', 'art_47', 'art_50', 'convencional'])],
+            'gratification_months' => ['required', 'integer', 'min:1', 'max:12'],
             'representante_nombre' => ['nullable', 'string', 'max:255'],
             'representante_rut' => ['nullable', 'string', 'max:20', new Rut],
             'representante_cargo' => ['nullable', 'string', 'max:100'],
