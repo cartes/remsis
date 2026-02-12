@@ -105,9 +105,32 @@ class Employee extends Model
         return $this->belongsTo(\Modules\Companies\Models\CostCenter::class);
     }
 
+    protected $appends = ['full_name', 'completion_percentage'];
+
     public function getFullNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getCompletionPercentageAttribute()
+    {
+        $fields = [
+            'first_name', 'last_name', 'rut', 'birth_date', 'email', 'phone', 'nationality', 'marital_status', 'address',
+            'position', 'hire_date', 'contract_type', 'work_schedule', 'cost_center_id',
+            'afp_id', 'isapre_id', 'ccaf_id', 'health_contribution',
+            'salary', 'salary_type',
+            'bank_id', 'bank_account_number', 'bank_account_type',
+            'emergency_contact_name', 'emergency_contact_phone'
+        ];
+
+        $filled = 0;
+        foreach ($fields as $field) {
+            if (!empty($this->{$field})) {
+                $filled++;
+            }
+        }
+
+        return round(($filled / count($fields)) * 100);
     }
 
 }

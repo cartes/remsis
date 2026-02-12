@@ -45,9 +45,11 @@
             address: "",
             user: { name: "", email: "" }
             },
+            errors: {},
             newEmployee: { name: "", email: "", password: "" },
             async addEmployee() {
                 this.loading = true;
+                this.errors = {};
                 try {
                     const response = await axios.post("{{ route('companies.employees.store', $company) }}", this.newEmployee);
                     if (response.data.status === "success") {
@@ -55,7 +57,11 @@
                     }
                 } catch (error) {
                     console.error(error);
-                    toast(error.response?.data?.message || "Error al crear empleado", "error");
+                    if (error.response?.status === 422) {
+                        this.errors = error.response.data.errors;
+                    } else {
+                        toast(error.response?.data?.message || "Error al crear empleado", "error");
+                    }
                 } finally {
                     this.loading = false;
                 }
@@ -75,6 +81,7 @@
             async openPayrollModal(employeeId) {
                 this.payrollLoading = true;
                 this.activePayrollTab = "personal";
+                this.errors = {};
                 try {
                     const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}".replace(":id", employeeId);
                     const response = await axios.get(url);
@@ -110,23 +117,29 @@
                 }
             },
             async updatePayroll() {
-            this.payrollLoading = true;
-            try {
-                const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
-                const response = await axios.put(url, this.selectedEmployee);
-                if (response.data.status === "success") {
-                    toast(response.data.message || "Datos de nómina actualizados", "success");
-                    if (response.data.employee) {
-                        this.selectedEmployee = response.data.employee;
+                this.payrollLoading = true;
+                this.errors = {};
+                try {
+                    const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
+                    const response = await axios.put(url, this.selectedEmployee);
+                    if (response.data.status === "success") {
+                        toast(response.data.message || "Datos de nómina actualizados", "success");
+                        if (response.data.employee) {
+                            this.selectedEmployee = response.data.employee;
+                        }
                     }
+                } catch (error) {
+                    console.error(error);
+                    if (error.response?.status === 422) {
+                        this.errors = error.response.data.errors;
+                        toast("Hay errores de validación en el formulario", "error");
+                    } else {
+                        toast("Error al actualizar datos de nómina", "error");
+                    }
+                } finally {
+                    this.payrollLoading = false;
                 }
-            } catch (error) {
-                console.error(error);
-                toast("Error al actualizar datos de nómina", "error");
-            } finally {
-                this.payrollLoading = false;
             }
-        }
     }'>
 
         {{-- Header con Acciones --}}
@@ -190,11 +203,53 @@
             {{-- Employees Table --}}
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] font-bold tracking-wider">
+                    <thead
+                        class="bg-gray-50 text-gray-600 uppercase text-[10px] font-bold tracking-wider overflow-visible">
                         <tr>
-                            <th class="px-6 py-4 text-left">Nombre / Email</th>
-                            <th class="px-6 py-4 text-center">Estado</th>
-                            <th class="px-6 py-4 text-right">Acciones</th>
+                            <th class="px-6 py-4 text-left overflow-visible">
+                                <div class="group relative flex items-center">
+                                    <span>Nombre / Email</span>
+                                    <div
+                                        class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 left-0 whitespace-nowrap normal-case tracking-normal">
+                                        Nombre y correo electrónico del empleado
+                                        <div class="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-center overflow-visible">
+                                <div class="group relative flex items-center justify-center">
+                                    <span>Estado</span>
+                                    <div
+                                        class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap normal-case tracking-normal">
+                                        Estado actual de la cuenta del usuario
+                                        <div
+                                            class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45">
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-center overflow-visible">
+                                <div class="group relative flex items-center justify-center">
+                                    <span>Porcentaje</span>
+                                    <div
+                                        class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap normal-case tracking-normal">
+                                        Datos completados para remuneraciones
+                                        <div
+                                            class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45">
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-right overflow-visible">
+                                <div class="group relative flex items-center justify-end">
+                                    <span>Acciones</span>
+                                    <div
+                                        class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 right-0 whitespace-nowrap normal-case tracking-normal">
+                                        Acciones de gestión de empleado
+                                        <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                    </div>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
@@ -221,6 +276,18 @@
                                         class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $emp->user->status ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-400 border border-gray-100' }}">
                                         {{ $emp->user->status ? 'Activo' : 'Inactivo' }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <div class="flex flex-col items-center gap-1">
+                                        <div class="w-full bg-gray-100 rounded-full h-1.5 max-w-[80px]">
+                                            <div class="h-1.5 rounded-full {{ $emp->completion_percentage > 90 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-amber-400' }}"
+                                                style="width: {{ $emp->completion_percentage }}%"></div>
+                                        </div>
+                                        <span
+                                            class="text-[10px] font-black {{ $emp->completion_percentage > 90 ? 'text-green-600' : 'text-gray-500' }}">
+                                            {{ $emp->completion_percentage }}%
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -273,20 +340,32 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre
                             Completo</label>
-                        <input type="text" x-model="newEmployee.name" required placeholder="Ej: Juan Pérez"
-                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <input type="text" x-model="newEmployee.name" placeholder="Ej: Juan Pérez"
+                            :class="errors.name ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <template x-if="errors.name">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Correo
                             Electrónico</label>
-                        <input type="email" x-model="newEmployee.email" required placeholder="juan@ejemplo.com"
-                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <input type="email" x-model="newEmployee.email" placeholder="juan@ejemplo.com"
+                            :class="errors.email ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <template x-if="errors.email">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.email[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contraseña
                             Inicial</label>
-                        <input type="password" x-model="newEmployee.password" required
-                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <input type="password" x-model="newEmployee.password"
+                            :class="errors.password ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <template x-if="errors.password">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.password[0]"></p>
+                        </template>
                     </div>
 
                     <div class="pt-4 flex gap-3">

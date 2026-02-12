@@ -206,7 +206,7 @@ class CompaniesController extends Controller
     /** Reglas compartidas */
     protected function rules(?int $ignoreId = null): array
     {
-        return [
+        $rules = [
             'name' => ['nullable', 'string', 'max:255'],
             'razon_social' => ['nullable', 'string', 'max:255'],
             'nombre_fantasia' => ['nullable', 'string', 'max:255'],
@@ -222,19 +222,35 @@ class CompaniesController extends Controller
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
 
             // FKs catálogo
-        'ccaf_id' => ['nullable', 'exists:ccafs,id'],
-        'bank_id' => ['nullable', 'exists:banks,id'],
+            'ccaf_id' => ['nullable', 'exists:ccafs,id'],
+            'bank_id' => ['nullable', 'exists:banks,id'],
 
-        // cuenta si los mantienes
-        'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
+            // cuenta si los mantienes
+            'cuenta_bancaria' => ['nullable', 'string', 'max:100'],
 
             // Representante
             'representante_nombre' => ['nullable', 'string', 'max:255'],
             'representante_rut' => ['nullable', 'string', 'max:20', new Rut],
             'representante_cargo' => ['nullable', 'string', 'max:100'],
             'representante_email' => ['nullable', 'email', 'max:255'],
-
-            'notes' => ['nullable', 'string'],
         ];
+
+        return $rules;
+    }
+
+    public function dashboard(Company $company)
+    {
+        $totalEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)->count();
+        $activeEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
+            ->whereHas('user', function ($q) {
+                $q->where('status', true);
+            })->count();
+
+        // Simulación de datos para el dashboard
+        $completionAverage = \Modules\Employees\Models\Employee::where('company_id', $company->id)
+            ->get()
+            ->avg('completion_percentage') ?? 0;
+
+        return view('companies::dashboard', compact('company', 'totalEmployees', 'activeEmployees', 'completionAverage'));
     }
 }

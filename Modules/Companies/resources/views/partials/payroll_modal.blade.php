@@ -71,24 +71,40 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombres</label>
                         <input type="text" x-model="selectedEmployee.first_name"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.first_name ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.first_name">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.first_name[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Apellidos</label>
                         <input type="text" x-model="selectedEmployee.last_name"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.last_name ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.last_name">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.last_name[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">RUT</label>
                         <input type="text" x-model="selectedEmployee.rut"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
+                            :class="errors.rut ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
+                        <template x-if="errors.rut">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.rut[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha Nacimiento</label>
                         <input type="date" x-model="selectedEmployee.birth_date"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.birth_date ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.birth_date">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.birth_date[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -125,7 +141,11 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Dirección</label>
                     <input type="text" x-model="selectedEmployee.address"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.address ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <template x-if="errors.address">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.address[0]"></p>
+                    </template>
                 </div>
             </div>
 
@@ -133,15 +153,24 @@
             <div x-show="activePayrollTab === 'laboral'" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cargo / Posición</label>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cargo /
+                            Posición</label>
                         <input type="text" x-model="selectedEmployee.position"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.position ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.position">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.position[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha
                             Contratación</label>
                         <input type="date" x-model="selectedEmployee.hire_date"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.hire_date ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.hire_date">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.hire_date[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -242,7 +271,11 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Sueldo Base</label>
                         <input type="number" x-model="selectedEmployee.salary"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.salary ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.salary">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.salary[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Sueldo</label>

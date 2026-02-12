@@ -38,6 +38,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('companies/{company}/cost-centers/{costCenter}', [Modules\Companies\Http\Controllers\CostCenterController::class, 'destroy'])
         ->name('companies.cost-centers.destroy');
 
+    Route::get('companies/{company}/dashboard', [CompaniesController::class, 'dashboard'])
+        ->name('companies.dashboard');
+
     Route::get('companies/{company}/transactions', [CompaniesController::class, 'transactions'])
         ->name('companies.transactions');
 });

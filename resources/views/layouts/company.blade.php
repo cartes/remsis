@@ -7,6 +7,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $company->razon_social ?? $company->name }} - {{ config('app.name') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -24,7 +27,7 @@
         class="w-68 bg-white border-r border-gray-200 flex-shrink-0 hidden lg:flex flex-col h-screen sticky top-0 z-50">
         {{-- Sidebar Header / Logo --}}
         <div class="h-20 flex items-center px-6 border-b border-gray-100">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+            <a href="{{ route('companies.dashboard', $company) }}" class="flex items-center gap-3">
                 <div
                     class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20">
                     R
@@ -39,11 +42,25 @@
             <div>
                 <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Plataforma</p>
                 <div class="space-y-1">
-                    <a href="{{ route('dashboard') }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 text-slate-600 hover:text-blue-600 group">
+                    <a href="{{ route('companies.dashboard', $company) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 {{ ($activeTab ?? '') === 'dashboard' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600' }} group">
                         <i
-                            class="fas fa-chart-line w-5 text-center text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                            class="fas fa-chart-pie w-5 text-center {{ ($activeTab ?? '') === 'dashboard' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
                         Dashboard
+                    </a>
+
+                    <a href="{{ route('companies.employees', $company) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 {{ ($activeTab ?? '') === 'employees' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600' }} group">
+                        <i
+                            class="fas fa-users w-5 text-center {{ ($activeTab ?? '') === 'employees' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
+                        Nómina
+                    </a>
+
+                    <a href="{{ route('companies.edit', $company) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 {{ ($activeTab ?? '') === 'settings' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600' }} group">
+                        <i
+                            class="fas fa-building-gear w-5 text-center {{ ($activeTab ?? '') === 'settings' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
+                        Configuración
                     </a>
                 </div>
             </div>

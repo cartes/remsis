@@ -14,9 +14,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): \Illuminate\Http\RedirectResponse
     {
-        return view('adminpanel::auth.login');
+        return redirect('/');
     }
 
     /**
