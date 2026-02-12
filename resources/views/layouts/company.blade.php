@@ -48,20 +48,6 @@
                             class="fas fa-chart-pie w-5 text-center {{ ($activeTab ?? '') === 'dashboard' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
                         Dashboard
                     </a>
-
-                    <a href="{{ route('companies.employees', $company) }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 {{ ($activeTab ?? '') === 'employees' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600' }} group">
-                        <i
-                            class="fas fa-users w-5 text-center {{ ($activeTab ?? '') === 'employees' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
-                        Nómina
-                    </a>
-
-                    <a href="{{ route('companies.edit', $company) }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-slate-50 {{ ($activeTab ?? '') === 'settings' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600' }} group">
-                        <i
-                            class="fas fa-building-gear w-5 text-center {{ ($activeTab ?? '') === 'settings' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
-                        Configuración
-                    </a>
                 </div>
             </div>
 
