@@ -49,7 +49,6 @@ class Employee extends Model
         'salary',
         'salary_type',
         'contract_type',
-        'hire_date',
         'status',
         'emergency_contact_name',
         'emergency_contact_phone',
@@ -59,6 +58,17 @@ class Employee extends Model
         'hire_date' => 'date',
         'birth_date' => 'date',
     ];
+
+    /**
+     * Prepare a date for array / JSON serialization.
+     *
+     * @param  \DateTimeInterface  $date
+     * @return string
+     */
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d');
+    }
 
     public function user()
     {
