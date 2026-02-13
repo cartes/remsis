@@ -43,4 +43,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('companies/{company}/transactions', [CompaniesController::class, 'transactions'])
         ->name('companies.transactions');
+
+    // Payroll Periods nested under companies
+    Route::prefix('companies/{company}/payroll-periods')->name('companies.payroll-periods.')->group(function () {
+        Route::get('/', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'index'])->name('index');
+        Route::get('/create', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'create'])->name('create');
+        Route::post('/', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'store'])->name('store');
+        Route::patch('/{id}/status', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'updateStatus'])->name('updateStatus');
+    });
 });

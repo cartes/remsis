@@ -17,7 +17,7 @@ return new class extends Migration {
                 $table->date('start_date');
                 $table->date('end_date');
                 $table->date('payment_date')->nullable();
-                $table->enum('status', ['active', 'closed', 'cancelled'])->default('active');
+                $table->string('status')->default('draft'); // Using string instead of enum for SQLite compatibility
                 
                 $table->timestamps();
             });

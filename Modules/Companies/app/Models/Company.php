@@ -94,6 +94,11 @@ class Company extends Model
         return $this->hasMany(\Modules\Companies\Models\CostCenter::class);
     }
 
+    public function payrollPeriods()
+    {
+        return $this->hasMany(\Modules\Payroll\Models\PayrollPeriod::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($company) {

@@ -253,4 +253,14 @@ class CompaniesController extends Controller
 
         return view('companies::dashboard', compact('company', 'totalEmployees', 'activeEmployees', 'completionAverage'));
     }
+
+    public function transactions(Company $company)
+    {
+        $user = auth()->user();
+        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+            abort(403);
+        }
+
+        return view('companies::transactions', compact('company'));
+    }
 }

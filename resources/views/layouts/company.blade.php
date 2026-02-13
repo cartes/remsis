@@ -94,6 +94,32 @@
                 </div>
             </div>
 
+            {{-- Payroll Section --}}
+            <div>
+                <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Nómina
+                </p>
+                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}' }">
+                    <a href="{{ route('companies.payroll-periods.index', ['company' => $company]) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
+                        :class="activeTab === 'payroll-periods' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:bg-slate-50 group'">
+                        <i class="fas fa-calendar-alt w-5 text-center transition-colors"
+                            :class="activeTab === 'payroll-periods' ? 'text-blue-600' :
+                                'text-slate-400 group-hover:text-blue-500'"></i>
+                        Períodos de Nómina
+                    </a>
+
+                    <a href="{{ route('payrolls.byCompany', ['company' => $company]) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
+                        :class="activeTab === 'payrolls' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:bg-slate-50 group'">
+                        <i class="fas fa-file-invoice-dollar w-5 text-center transition-colors"
+                            :class="activeTab === 'payrolls' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
+                        Historial de Nóminas
+                    </a>
+                </div>
+            </div>
+
             {{-- Actions Section --}}
             <div class="pt-4 border-t border-slate-100">
                 <div class="space-y-1">
@@ -164,7 +190,8 @@
                 <div
                     class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-xs font-black text-white uppercase shadow-md shadow-blue-500/20 transition-transform group-hover/user:scale-105 overflow-hidden">
                     @if (Auth::user()->profile_photo)
-                        <img src="{{ Storage::url(Auth::user()->profile_photo) }}" class="w-full h-full object-cover">
+                        <img src="{{ Storage::url(Auth::user()->profile_photo) }}"
+                            class="w-full h-full object-cover">
                     @else
                         {{ substr(Auth::user()->name, 0, 2) }}
                     @endif
