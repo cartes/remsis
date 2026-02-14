@@ -143,6 +143,7 @@ class CompaniesController extends Controller
             'notes' => ['nullable', 'string'],
             'weekly_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
             'work_schedule' => ['nullable', 'array'],
+            'allows_overtime' => ['nullable', 'boolean'],
         ], [
             'dia_pago_dia.required_if' => 'Debes indicar el día cuando el pago es “Día fijo”.',
         ]);

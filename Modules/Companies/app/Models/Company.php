@@ -50,12 +50,14 @@ class Company extends Model
         'representante_email',
         'notes',
         'weekly_hours',
-        'work_schedule'
+        'work_schedule',
+        'allows_overtime'
     ];
 
     protected $casts = [
         'work_schedule' => 'array',
         'gratification_months' => 'integer',
+        'allows_overtime' => 'boolean',
     ];
 
 

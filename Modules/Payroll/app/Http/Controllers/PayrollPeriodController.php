@@ -112,6 +112,49 @@ class PayrollPeriodController extends Controller
     }
 
     /**
+     * Show the wizard for managing payroll lines.
+     */
+    public function wizard(Request $request, Company $company, $periodId)
+    {
+        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
+        
+        // Get lines with employee data
+        $lines = \Modules\Payroll\Models\PayrollLine::with(['employee.costCenter'])
+            ->where('payroll_period_id', $period->id)
+            ->get();
+            
+        // Filter by Cost Center if requested
+        if ($request->has('cost_center_id') && $request->cost_center_id) {
+            $lines = $lines->filter(function ($line) use ($request) {
+                return $line->employee->cost_center_id == $request->cost_center_id;
+            });
+        }
+        
+        // Load cost centers for filter
+        $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
+
+        return view('payroll::periods.wizard', compact('company', 'period', 'lines', 'costCenters'));
+    }
+
+    /**
+     * Calculate payroll for the period.
+     */
+    public function calculate(Request $request, Company $company, $periodId, \Modules\Payroll\Services\PayrollCalculationService $service)
+    {
+        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
+        
+        try {
+            $count = $service->calculatePeriod($period);
+            
+            return redirect()
+                ->route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $period->id])
+                ->with('success', "Cálculo realizado exitosamente para $count empleados.");
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error al calcular la nómina: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Update the status of a period.
      */
     public function updateStatus(Request $request, Company $company, $id)
@@ -120,19 +163,23 @@ class PayrollPeriodController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'status' => 'required|in:draft,open,closed,paid',
+            'status' => 'required|in:draft,open,closed,paid,calculated', // Added calculated
         ]);
 
         $newStatus = $validated['status'];
         $currentStatus = $period->status;
 
         // Define allowed transitions
+        // We can allow transitions from calculated to closed too
         $allowedTransitions = [
-            PayrollPeriod::STATUS_DRAFT => [PayrollPeriod::STATUS_OPEN],
-            PayrollPeriod::STATUS_OPEN => [PayrollPeriod::STATUS_CLOSED],
+            PayrollPeriod::STATUS_DRAFT => [PayrollPeriod::STATUS_OPEN, 'calculated'],
+            PayrollPeriod::STATUS_OPEN => [PayrollPeriod::STATUS_CLOSED, 'calculated'],
+            'calculated' => [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_OPEN],
             PayrollPeriod::STATUS_CLOSED => [PayrollPeriod::STATUS_PAID],
         ];
-
+        
+        // ... rest of the method logic
+        
         // Check if transition is allowed
         $isAllowed = isset($allowedTransitions[$currentStatus]) && 
                      in_array($newStatus, $allowedTransitions[$currentStatus]);
@@ -164,6 +211,53 @@ class PayrollPeriodController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el estado: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    /**
+     * Update a specific payroll line and recalculate.
+     */
+    public function updateLine(Request $request, Company $company, $periodId, $lineId, \Modules\Payroll\Services\PayrollCalculationService $service)
+    {
+        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
+        $line = \Modules\Payroll\Models\PayrollLine::where('payroll_period_id', $period->id)->findOrFail($lineId);
+
+        $validated = $request->validate([
+            'overtime_hours' => 'nullable|numeric|min:0',
+            'anticipos_amount' => 'nullable|numeric|min:0',
+            'otros_descuentos' => 'nullable|numeric|min:0',
+            'gratification_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            // Update line with manual inputs
+            if ($request->has('overtime_hours')) {
+                $line->overtime_hours = $request->overtime_hours;
+            }
+            if ($request->has('anticipos_amount')) {
+                $line->anticipos_amount = $request->anticipos_amount;
+            }
+            if ($request->has('otros_descuentos')) {
+                $line->otros_descuentos = $request->otros_descuentos;
+            }
+            if ($request->has('gratification_amount')) {
+                $line->gratification_amount = $request->gratification_amount;
+            }
+            $line->save();
+
+            // Recalculate this employee's line to update totals
+            // The service uses existing line data for overtime hours (and now gratification) if present
+            $service->calculateEmployee($line->employee, $period);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Línea de nómina actualizada y recalculada.',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar la línea: ' . $e->getMessage(),
             ], 500);
         }
     }

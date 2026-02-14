@@ -95,13 +95,21 @@
                                 <div
                                     class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {{-- Status Change Buttons --}}
+                                    @if ($period->status === 'draft' || $period->status === 'open' || $period->status === 'calculated')
+                                        <a href="{{ route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $period->id]) }}"
+                                            class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                            title="Calcular Nómina">
+                                            <i class="fas fa-calculator"></i>
+                                        </a>
+                                    @endif
+
                                     @if ($period->status === 'draft')
                                         <button @click="updateStatus({{ $period->id }}, 'open')"
                                             class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                             title="Abrir Período">
                                             <i class="fas fa-folder-open"></i>
                                         </button>
-                                    @elseif($period->status === 'open')
+                                    @elseif($period->status === 'open' || $period->status === 'calculated')
                                         <button @click="updateStatus({{ $period->id }}, 'closed')"
                                             class="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
                                             title="Cerrar Período">
