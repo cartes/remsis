@@ -1,146 +1,7 @@
 <x-layouts.company :company="$company" activeTab="employees">
     @section('title', 'Nómina de Empleados - ' . $company->razon_social)
 
-    <div class="max-w-7xl mx-auto"
-        x-data='{
-        showAddEmployeeModal: false,
-        showPayrollModal: false,
-        payrollLoading: false,
-        activePayrollTab: "personal",
-        loading: false,
-        afps: @json($afps),
-        isapres: @json($isapres),
-        ccafs: @json($ccafs),
-        bancos: @json($bancos),
-        costCenters: @json($costCenters),
-        selectedEmployee: {
-            id: null,
-            first_name: "",
-            last_name: "",
-            rut: "",
-            email: "",
-            phone: "",
-            position: "",
-            birth_date: "",
-            nationality: "",
-            marital_status: "",
-            num_dependents: 0,
-            hire_date: "",
-            work_schedule: "",
-            cost_center_id: "",
-            afp_id: "",
-            isapre_id: "",
-            ccaf_id: "",
-            health_contribution: "",
-            apv_amount: "",
-            salary: "",
-            salary_type: "",
-            contract_type: "",
-            status: "",
-            bank_id: "",
-            bank_account_number: "",
-            bank_account_type: "",
-            emergency_contact_name: "",
-            emergency_contact_phone: "",
-            address: "",
-            user: { name: "", email: "" }
-            },
-            errors: {},
-            newEmployee: { name: "", email: "", password: "" },
-            async addEmployee() {
-                this.loading = true;
-                this.errors = {};
-                try {
-                    const response = await axios.post("{{ route('companies.employees.store', $company) }}", this.newEmployee);
-                    if (response.data.status === "success") {
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    console.error(error);
-                    if (error.response?.status === 422) {
-                        this.errors = error.response.data.errors;
-                    } else {
-                        toast(error.response?.data?.message || "Error al crear empleado", "error");
-                    }
-                } finally {
-                    this.loading = false;
-                }
-            },
-            async removeEmployee(userId) {
-                if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
-                try {
-                    const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(":id", userId);
-                    const response = await axios.delete(url);
-                    if (response.data.status === "success") {
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    toast("Error al desvincular empleado", "error");
-                }
-            },
-            async openPayrollModal(employeeId) {
-                this.payrollLoading = true;
-                this.activePayrollTab = "personal";
-                this.errors = {};
-                try {
-                    const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}".replace(":id", employeeId);
-                    const response = await axios.get(url);
-                    if (response.data.status === "success") {
-                        this.selectedEmployee = response.data.employee;
-                        this.showPayrollModal = true;
-                    }
-                } catch (error) {
-                    toast("Error al cargar datos de nómina", "error");
-                } finally {
-                    this.payrollLoading = false;
-                }
-            },
-            searchTerm: "",
-            searchResults: [],
-            showSearchResults: false,
-            async fetchEmployeesSearch() {
-                if (this.searchTerm.length < 3) {
-                    this.searchResults = [];
-                    this.showSearchResults = false;
-                    return;
-                }
-                try {
-                    const response = await axios.get("{{ route('companies.employees.search', $company) }}", {
-                        params: {
-                            query: this.searchTerm
-                        }
-                    });
-                    this.searchResults = response.data;
-                    this.showSearchResults = true;
-                } catch (error) {
-                    console.error("Error searching employees:", error);
-                }
-            },
-            async updatePayroll() {
-                this.payrollLoading = true;
-                this.errors = {};
-                try {
-                    const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}".replace(":id", this.selectedEmployee.id);
-                    const response = await axios.put(url, this.selectedEmployee);
-                    if (response.data.status === "success") {
-                        toast(response.data.message || "Datos de nómina actualizados", "success");
-                        if (response.data.employee) {
-                            this.selectedEmployee = response.data.employee;
-                        }
-                    }
-                } catch (error) {
-                    console.error(error);
-                    if (error.response?.status === 422) {
-                        this.errors = error.response.data.errors;
-                        toast("Hay errores de validación en el formulario", "error");
-                    } else {
-                        toast("Error al actualizar datos de nómina", "error");
-                    }
-                } finally {
-                    this.payrollLoading = false;
-                }
-            }
-    }'>
+    <div class="max-w-7xl mx-auto" x-data="employeeComponent()">
 
         {{-- Header con Acciones --}}
         <div class="flex justify-between items-center mb-6">
@@ -309,7 +170,8 @@
                                 <td colspan="3" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center opacity-30">
                                         <i class="fas fa-users-slash text-5xl mb-4"></i>
-                                        <p class="text-sm font-medium">No hay empleados registrados en esta empresa</p>
+                                        <p class="text-sm font-medium">No hay empleados registrados en esta empresa
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -386,4 +248,188 @@
 
         @include('companies::partials.payroll_modal')
     </div>
+
+    @push('scripts')
+        <script>
+            window.employeeComponent = function() {
+                return {
+                    showAddEmployeeModal: false,
+                    showPayrollModal: false,
+                    payrollLoading: false,
+                    activePayrollTab: "personal",
+                    loading: false,
+                    afps: @json($afps),
+                    isapres: @json($isapres),
+                    ccafs: @json($ccafs),
+                    bancos: @json($bancos),
+                    costCenters: @json($costCenters),
+                    isNewEmployee: false,
+                    init() {
+                        this.$watch("showPayrollModal", value => {
+                            if (!value && this.isNewEmployee) {
+                                window.location.reload();
+                            }
+                        });
+                    },
+                    selectedEmployee: {
+                        id: null,
+                        first_name: "",
+                        last_name: "",
+                        rut: "",
+                        email: "",
+                        phone: "",
+                        position: "",
+                        birth_date: "",
+                        nationality: "",
+                        marital_status: "",
+                        num_dependents: 0,
+                        hire_date: "",
+                        work_schedule: "",
+                        cost_center_id: "",
+                        afp_id: "",
+                        isapre_id: "",
+                        ccaf_id: "",
+                        health_contribution: "",
+                        apv_amount: "",
+                        salary: "",
+                        salary_type: "",
+                        contract_type: "",
+                        status: "",
+                        bank_id: "",
+                        bank_account_number: "",
+                        bank_account_type: "",
+                        emergency_contact_name: "",
+                        emergency_contact_phone: "",
+                        address: "",
+                        user: {
+                            name: "",
+                            email: ""
+                        }
+                    },
+                    errors: {},
+                    newEmployee: {
+                        name: "",
+                        email: "",
+                        password: ""
+                    },
+                    async addEmployee() {
+                        this.loading = true;
+                        this.errors = {};
+                        try {
+                            const response = await axios.post("{{ route('companies.employees.store', $company) }}",
+                                this
+                                .newEmployee);
+                            if (response.data.status === "success") {
+                                // Mark as new employee so when modal closes, we reload
+                                this.isNewEmployee = true;
+                                // Close add modal
+                                this.showAddEmployeeModal = false;
+                                // Clear form
+                                this.newEmployee = {
+                                    name: "",
+                                    email: "",
+                                    password: ""
+                                };
+                                // Open payroll/details modal immediately
+                                // Use a small timeout to ensure transitions don't conflict, though not strictly necessary
+                                setTimeout(() => {
+                                    this.openPayrollModal(response.data.employee.id);
+                                }, 300);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            if (error.response?.status === 422) {
+                                this.errors = error.response.data.errors;
+                            } else {
+                                toast(error.response?.data?.message || "Error al crear empleado", "error");
+                            }
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                    async removeEmployee(userId) {
+                        if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
+                        try {
+                            const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(
+                                ":id",
+                                userId);
+                            const response = await axios.delete(url);
+                            if (response.data.status === "success") {
+                                window.location.reload();
+                            }
+                        } catch (error) {
+                            toast("Error al desvincular empleado", "error");
+                        }
+                    },
+                    async openPayrollModal(employeeId) {
+                        this.payrollLoading = true;
+                        this.activePayrollTab = "personal";
+                        this.errors = {};
+                        try {
+                            const url = "{{ route('companies.employees.payroll', [$company, ':id']) }}"
+                                .replace(":id",
+                                    employeeId);
+                            const response = await axios.get(url);
+                            if (response.data.status === "success") {
+                                this.selectedEmployee = response.data.employee;
+                                this.showPayrollModal = true;
+                            }
+                        } catch (error) {
+                            toast("Error al cargar datos de nómina", "error");
+                        } finally {
+                            this.payrollLoading = false;
+                        }
+                    },
+                    searchTerm: "",
+                    searchResults: [],
+                    showSearchResults: false,
+                    async fetchEmployeesSearch() {
+                        if (this.searchTerm.length < 3) {
+                            this.searchResults = [];
+                            this.showSearchResults = false;
+                            return;
+                        }
+                        try {
+                            const response = await axios.get(
+                                "{{ route('companies.employees.search', $company) }}", {
+                                    params: {
+                                        query: this.searchTerm
+                                    }
+                                });
+                            this.searchResults = response.data;
+                            this.showSearchResults = true;
+                        } catch (error) {
+                            console.error("Error searching employees:", error);
+                        }
+                    },
+                    async updatePayroll() {
+                        this.payrollLoading = true;
+                        this.errors = {};
+                        try {
+                            const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}"
+                                .replace(
+                                    ":id", this.selectedEmployee.id);
+                            const response = await axios.put(url, this.selectedEmployee);
+                            if (response.data.status === "success") {
+                                toast(response.data.message || "Datos de nómina actualizados", "success");
+                                if (response.data.employee) {
+                                    this.selectedEmployee = response.data.employee;
+                                }
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            if (error.response?.status === 422) {
+                                this.errors = error.response.data.errors;
+                                toast("Hay errores de validación en el formulario", "error");
+                            } else {
+                                toast("Error al actualizar datos de nómina", "error");
+                            }
+                        } finally {
+                            this.payrollLoading = false;
+                        }
+                    }
+                }
+            }
+        </script>
+    @endpush
 </x-layouts.company>

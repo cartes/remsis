@@ -33,7 +33,7 @@ class CompanyEmployeeController extends Controller
         $user->assignRole('employee');
 
         // 3. Vincular a la empresa vía el modelo Employee
-        Employee::create([
+        $employee = Employee::create([
             'user_id' => $user->id,
             'company_id' => $company->id,
         ]);
@@ -44,6 +44,7 @@ class CompanyEmployeeController extends Controller
             'status' => 'success',
             'message' => 'Empleado creado y vinculado correctamente.',
             'employee' => [
+                'id' => $employee->id, // Add this line
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
