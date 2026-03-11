@@ -31,7 +31,11 @@ Consolidar `Payroll` como modelo canonico y unico punto principal de acceso a la
 
 `Modules\\Payroll\\Models\\PayrollLine` dejara de ser el modelo principal.
 
-En esta fase quedara solo como capa legacy de compatibilidad para evitar rupturas inmediatas en referencias internas o codigo auxiliar aun no migrado. Su retiro definitivo se abordara en una fase posterior, una vez comprobado que no quedan consumidores reales.
+En esta fase quedara solo como capa legacy de compatibilidad para evitar rupturas inmediatas en referencias internas o codigo auxiliar aun no migrado.
+
+El mecanismo esperado de compatibilidad es explicito: `PayrollLine` debe heredar de `Payroll`, sin mantener un esquema, relaciones, scopes ni reglas distintas. En otras palabras, debe comportarse como una subclase legacy del modelo canonico, no como una segunda fuente de verdad.
+
+Su retiro definitivo se abordara en una fase posterior, una vez comprobado que no quedan consumidores reales.
 
 ## Alcance de esta fase
 
@@ -74,8 +78,15 @@ Con esto desaparece la separacion artificial entre "linea operativa" e "historia
 ### Paso 2: dejar compatibilidad controlada
 
 - Reducir `PayrollLine` a una clase legacy minima.
+- Hacer que `PayrollLine` extienda directamente a `Payroll`.
 - Evitar que introduzca schema, relaciones o reglas distintas a `Payroll`.
 - Documentar en el codigo que su uso es transitorio.
+
+### Paso 2.5: auditar consumidores restantes
+
+- Ejecutar una busqueda repo-wide de referencias a `PayrollLine`.
+- Migrar en esta fase los consumidores directos del flujo operativo y documentar cualquier referencia legacy que se mantenga.
+- Dejar claro que las referencias fuera del flujo wizard/calculo que permanezcan vivas quedan fuera del retiro inmediato, pero no fuera de la auditoria.
 
 ### Paso 3: asegurar consistencia
 
@@ -94,7 +105,8 @@ Con esto desaparece la separacion artificial entre "linea operativa" e "historia
 Se agregaran o ajustaran pruebas para cubrir:
 
 - calculo de un periodo persiste registros usando `Payroll`,
-- edicion de una linea desde el wizard actualiza el mismo registro `Payroll`,
+- una prueba feature debe cubrir el flujo completo: calculo de periodo, edicion desde wizard y lectura posterior del mismo registro `Payroll`,
+- `PayrollLine` sigue resolviendo compatibilidad basica sobre la misma fila y la misma tabla mientras exista la capa legacy,
 - los tests existentes de tenancy siguen pasando sobre el modelo canonico,
 - la vista y controladores siguen resolviendo correctamente el flujo company-owned.
 
