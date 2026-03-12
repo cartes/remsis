@@ -80,9 +80,9 @@ En `companies::employees`, el listado mostrara una miniatura al lado del nombre.
 El flujo esperado sera:
 
 1. validar datos del empleado y el archivo;
-2. actualizar el registro `Employee` con los campos laborales/personales actuales;
-3. si existe archivo, guardar primero la nueva imagen en `profile-photos/` del disco `public`;
-4. persistir la ruta nueva en `users.profile_photo`;
+2. si existe archivo, guardar primero la nueva imagen en `profile-photos/` del disco `public`;
+3. ejecutar la actualizacion de `Employee` y `User` dentro de una transaccion de base de datos para que el request sea logicamente atomico;
+4. persistir la ruta nueva en `users.profile_photo` dentro de esa transaccion, junto a los cambios de la ficha;
 5. solo despues de una persistencia exitosa, eliminar la foto previa del `User` en disco `public`;
 6. devolver `employee->fresh('user')`.
 
@@ -110,7 +110,7 @@ No se creara un endpoint nuevo si el `PUT` actual puede absorber el cambio de ma
   - `Cambiar foto` cuando ya exista.
 - La carga de foto ocurre junto con el boton actual de guardar, sin introducir un segundo paso.
 - Los errores de validacion del archivo se mostraran dentro del esquema actual de errores del modal.
-- El frontend no debe consumir directamente la ruta cruda guardada en `users.profile_photo`; debe usar `employee.user.profile_photo_url` como contrato estable de render.
+- El frontend no debe consumir directamente la ruta cruda guardada en `users.profile_photo`; debe usar `employee.user.profile_photo_url` como contrato estable de render tanto en el modal como en el listado.
 
 ## Validacion y seguridad
 
@@ -119,7 +119,7 @@ No se creara un endpoint nuevo si el `PUT` actual puede absorber el cambio de ma
 - La implementacion debe preservar el chequeo de acceso del usuario autenticado al `company`/`employee` ya enlazado por tenancy y no introducir rutas paralelas fuera de ese contexto.
 - Tanto `getPayroll()` como `updatePayroll()` deben conservar el comportamiento de scoped route binding del modulo: si el `employee` no pertenece a la `company` del contexto, la respuesta esperada es `404`, no `403`.
 - La eliminacion del archivo anterior ocurrira solo cuando exista una nueva imagen valida para persistir.
-- Si la nueva imagen ya fue subida al disco pero la persistencia en BD falla antes de completar el cambio, la implementacion debe eliminar ese archivo nuevo como accion compensatoria y re-lanzar el error para no dejar basura ni esconder la falla.
+- Si la nueva imagen ya fue subida al disco pero la persistencia en BD falla antes de completar el cambio, la implementacion debe revertir la transaccion, eliminar ese archivo nuevo como accion compensatoria y re-lanzar el error para no dejar basura ni esconder la falla.
 - No se agregaran catches silenciosos; errores de validacion o storage deben emerger como respuesta fallida del request.
 
 ## Testing
@@ -142,7 +142,7 @@ Se agregaran pruebas para cubrir:
 
 - El modal actual usa JSON plano con Alpine; migrarlo a `FormData` debe hacerse sin romper validaciones ni toasts existentes.
 - `Modules\Users\Models\User` hoy no expone `profile_photo` en `$fillable`; si la actualizacion usa asignacion masiva, habra que ajustarlo o asignar el atributo de forma explicita.
-- El listado deberia consumir la foto desde `employee.user.profile_photo`, no desde `employee`, para mantener una sola fuente de verdad.
+- El listado deberia consumir la foto desde `employee.user.profile_photo_url`, no desde `employee`, para mantener una sola fuente de verdad y un contrato de render consistente.
 - Las consultas que hoy cargan `user:id,name,email,status` tendran que incluir `profile_photo` y, si se expone, el valor derivado para URL publica.
 
 ## Resultado esperado
