@@ -123,6 +123,11 @@
                                                 class="font-bold text-gray-800 hover:text-blue-600 transition-colors text-left">
                                                 {{ $emp->user->name }}
                                             </button>
+                                            <button type="button" @click="openPayrollModal({{ $emp->id }})"
+                                                class="inline-flex items-center justify-center w-7 h-7 rounded-md text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100 self-center"
+                                                title="Editar ficha / remuneraciones">
+                                                <i class="fas fa-pen-to-square text-[12px]"></i>
+                                            </button>
                                             <div class="flex gap-1">
                                                 @foreach ($emp->user->roles as $role)
                                                     <span
@@ -155,22 +160,19 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button" @click="openPayrollModal({{ $emp->id }})"
-                                            class="p-2 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all border border-blue-50"
-                                            title="Ver Ficha / Remuneraciones">
-                                            <i class="fas fa-pen-to-square"></i>
-                                        </button>
-                                        <button type="button" @click="removeEmployee({{ $emp->user->id }})"
-                                            class="p-2 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-50"
-                                            title="Eliminar / Desvincular">
-                                            <i class="fas fa-trash-can"></i>
+                                        <button type="button"
+                                            @click="removeEmployee({{ $emp->user->id }}, @js($emp->user->name))"
+                                            class="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-100 bg-red-50/60 text-xs font-semibold"
+                                            title="Desvincular empleado">
+                                            <i class="fas fa-trash-can text-[11px]"></i>
+                                            <span>Desvincular</span>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-6 py-20 text-center">
+                                <td colspan="4" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center opacity-30">
                                         <i class="fas fa-users-slash text-5xl mb-4"></i>
                                         <p class="text-sm font-medium">No hay empleados registrados en esta empresa
@@ -350,8 +352,8 @@
                             this.loading = false;
                         }
                     },
-                    async removeEmployee(userId) {
-                        if (!confirm("¿Seguro que deseas desvincular a este empleado?")) return;
+                    async removeEmployee(userId, employeeName = "este empleado") {
+                        if (!confirm(`¿Seguro que deseas desvincular a ${employeeName}?`)) return;
                         try {
                             const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(
                                 ":id",

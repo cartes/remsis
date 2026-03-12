@@ -62,8 +62,7 @@ Modules/{Name}/
 - `App\Models\User` – Auth model with `company_id`, `user_type`, Spatie permissions
 - `Modules\Employees\Models\Employee` – `$appends = ['full_name', 'completion_percentage']`, SoftDeletes
 - `Modules\Payroll\Models\PayrollPeriod` – Lifecycle: `STATUS_DRAFT → STATUS_OPEN → STATUS_CLOSED → STATUS_PAID`
-- `Modules\Payroll\Models\Payroll` – Individual slip; contains haberes and descuentos
-- `Modules\Payroll\Models\PayrollLine` – Individual line items per payroll
+- `Modules\Payroll\Models\Payroll` – Canonical payroll record; wizard, calculation and history all persist on `payrolls`
 - `Modules\Companies\Models\Company` – `gratification_system`, `weekly_hours`, `allows_overtime`
 - `Modules\AdminPanel\Models\LegalParameter` – Configurable legal thresholds (UF, UTM, AFP rates)
 

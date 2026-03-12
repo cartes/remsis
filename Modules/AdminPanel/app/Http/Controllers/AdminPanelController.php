@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
 
 class AdminPanelController extends Controller
 {
@@ -14,9 +15,22 @@ class AdminPanelController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        $isSuperAdmin = $user->hasRole('super-admin');
+        $companyId = $user->company_id;
+
+        $activeCompanies = $isSuperAdmin
+            ? Company::count()
+            : ($companyId ? Company::whereKey($companyId)->count() : 0);
+
+        $activeEmployees = Employee::query()
+            ->when(! $isSuperAdmin, fn ($query) => $query->where('company_id', $companyId))
+            ->where('status', 'active')
+            ->count();
+
         $stats = [
-            'active_companies' => ['label' => 'Empresas Activas', 'value' => Company::count(), 'change' => '+1', 'trend' => 'up'],
-            'active_employees' => ['label' => 'Empleados Activos', 'value' => '1.240', 'change' => '+12', 'trend' => 'up'],
+            'active_companies' => ['label' => 'Empresas Activas', 'value' => number_format($activeCompanies, 0, ',', '.'), 'change' => 'Actual', 'trend' => 'up'],
+            'active_employees' => ['label' => 'Empleados Activos', 'value' => number_format($activeEmployees, 0, ',', '.'), 'change' => 'Actual', 'trend' => 'up'],
             'social_security' => ['label' => 'Previred Pendiente', 'value' => '$ 12.450.320', 'change' => '-5.1%', 'trend' => 'down'],
         ];
 

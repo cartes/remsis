@@ -84,4 +84,88 @@ class AdminTenantScopingTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_non_super_admin_cannot_access_global_settings_routes(): void
+    {
+        $adminRole = Role::create([
+            'name' => 'admin',
+            'guard_name' => 'web',
+        ]);
+
+        $company = Company::create([
+            'name' => 'Empresa A',
+            'razon_social' => 'Empresa A SpA',
+            'rut' => '11111111-1',
+        ]);
+
+        $admin = User::factory()->create([
+            'company_id' => $company->id,
+        ]);
+        $admin->assignRole($adminRole);
+
+        $this->actingAs($admin)->get(route('settings.index'))->assertForbidden();
+        $this->actingAs($admin)->get(route('settings.legal'))->assertForbidden();
+    }
+
+    public function test_super_admin_can_access_global_settings_routes(): void
+    {
+        $superAdminRole = Role::create([
+            'name' => 'super-admin',
+            'guard_name' => 'web',
+        ]);
+
+        $superAdmin = User::factory()->create();
+        $superAdmin->assignRole($superAdminRole);
+
+        $this->actingAs($superAdmin)->get(route('settings.index'))->assertOk();
+        $this->actingAs($superAdmin)->get(route('settings.legal'))->assertOk();
+    }
+
+    public function test_non_super_admin_dashboard_stats_are_scoped_to_its_company(): void
+    {
+        $adminRole = Role::create([
+            'name' => 'admin',
+            'guard_name' => 'web',
+        ]);
+
+        $companyA = Company::create([
+            'name' => 'Empresa A',
+            'razon_social' => 'Empresa A SpA',
+            'rut' => '11111111-1',
+        ]);
+
+        $companyB = Company::create([
+            'name' => 'Empresa B',
+            'razon_social' => 'Empresa B SpA',
+            'rut' => '22222222-2',
+        ]);
+
+        $admin = User::factory()->create([
+            'company_id' => $companyA->id,
+        ]);
+        $admin->assignRole($adminRole);
+
+        $employeeAUser = User::factory()->create();
+        $employeeBUser = User::factory()->create();
+
+        Employee::create([
+            'user_id' => $employeeAUser->id,
+            'company_id' => $companyA->id,
+            'status' => 'active',
+        ]);
+
+        Employee::create([
+            'user_id' => $employeeBUser->id,
+            'company_id' => $companyB->id,
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+
+        $response->assertOk()
+            ->assertViewHas('stats', function (array $stats) {
+                return $stats['active_companies']['value'] === '1'
+                    && $stats['active_employees']['value'] === '1';
+            });
+    }
 }

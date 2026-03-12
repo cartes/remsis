@@ -22,7 +22,7 @@ Route::middleware(['web', 'auth', 'role:super-admin|admin'])->prefix('admin')->g
 });
 
 Route::prefix('settings')
-    ->middleware(['web', 'auth', 'blockEmployeeOnAdmin', 'role:super-admin|admin'])
+    ->middleware(['web', 'auth', 'blockEmployeeOnAdmin', 'role:super-admin'])
     ->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/afps', [SettingsController::class, 'storeAfp'])->name('afps.store');
@@ -60,14 +60,12 @@ Route::prefix('settings')
 
         Route::get('/codigos-sii', [SettingsController::class, 'siiCodes'])->name('settings.sii_codes');
 
-        // API para empresas
-    
-        Route::prefix('admin')
-            ->middleware(['web', 'auth', 'role:super-admin|admin'])
-            ->group(function () {
-                Route::get('companies', [CompaniesApiController::class, 'index'])->name('admin.companies.index'); // ?search= & page=
-            });
+    });
 
+Route::prefix('settings/admin')
+    ->middleware(['web', 'auth', 'role:super-admin|admin'])
+    ->group(function () {
+        Route::get('companies', [CompaniesApiController::class, 'index'])->name('admin.companies.index');
     });
 
 Route::middleware(['auth', 'role:super-admin|admin'])->prefix('api/settings')->group(function () {
