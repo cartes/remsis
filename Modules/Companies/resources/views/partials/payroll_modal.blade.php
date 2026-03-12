@@ -196,7 +196,7 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <span class="text-xs font-semibold">Empresa sin centros de costo creados</span>
                             </div>
-                            <a href="{{ route('companies.edit', ['company' => $company->id, 'tab' => 'cost-centers']) }}"
+                            <a href="{{ route('companies.edit', ['company' => $company->id, 'section' => 'remunerations', 'tab' => 'cost-centers']) }}"
                                 class="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm">
                                 <i class="fas fa-plus-circle"></i> Crear Centros de Costo
                             </a>

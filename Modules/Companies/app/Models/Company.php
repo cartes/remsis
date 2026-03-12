@@ -101,6 +101,11 @@ class Company extends Model
         return $this->hasMany(\Modules\Payroll\Models\PayrollPeriod::class);
     }
 
+    public function periods()
+    {
+        return $this->payrollPeriods();
+    }
+
     protected static function booted()
     {
         static::creating(function ($company) {

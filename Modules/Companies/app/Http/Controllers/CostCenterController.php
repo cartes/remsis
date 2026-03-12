@@ -76,10 +76,6 @@ class CostCenterController extends Controller
             abort(403);
         }
 
-        if ($costCenter->company_id !== $company->id) {
-            abort(403, 'Este centro de costo no pertenece a la empresa.');
-        }
-
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50'],
             'name' => ['required', 'string', 'max:255'],
@@ -117,10 +113,6 @@ class CostCenterController extends Controller
         $user = auth()->user();
         if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
-        }
-
-        if ($costCenter->company_id !== $company->id) {
-            abort(403, 'Este centro de costo no pertenece a la empresa.');
         }
 
         $costCenter->delete();

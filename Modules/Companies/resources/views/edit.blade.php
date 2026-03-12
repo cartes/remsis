@@ -1,10 +1,31 @@
-<x-layouts.company :company="$company" activeTab="accounting">
-    @section('title', 'Editar Empresa')
+@php
+    $requestedSection = old('section', request('section'));
+    $requestedTab = old('tab', request('tab'));
+    $companyDataTabs = ['ident', 'dir'];
+    $remunerationTabs = ['remu', 'cost-centers', 'banco', 'rep', 'meta'];
+    $initialSection = in_array($requestedSection, ['company-data', 'remunerations'], true)
+        ? $requestedSection
+        : (in_array($requestedTab, $remunerationTabs, true) ? 'remunerations' : 'company-data');
+    $allowedTabs = $initialSection === 'remunerations' ? $remunerationTabs : $companyDataTabs;
+    $initialTab = in_array($requestedTab, $allowedTabs, true)
+        ? $requestedTab
+        : ($initialSection === 'remunerations' ? 'remu' : 'ident');
+    $sidebarActiveTab = $initialSection === 'remunerations' ? 'accounting-remunerations' : 'accounting-data';
+    $sectionTitle = $initialSection === 'remunerations' ? 'Remuneraciones' : 'Datos empresa';
+    $sectionDescription = $initialSection === 'remunerations'
+        ? 'Parámetros de pago, centros de costo, banco, representante y notas operativas.'
+        : 'Identificación base y dirección de la empresa.';
+@endphp
+
+<x-layouts.company :company="$company" :activeTab="$sidebarActiveTab">
+    @section('title', $sectionTitle . ' - ' . $company->razon_social)
     <script>
         (function() {
             const initCompanyForm = () => {
                 Alpine.data('companyForm', () => ({
-                    activeTab: @json(request('tab', 'ident')),
+                    section: @json($initialSection),
+                    availableTabs: @json($allowedTabs),
+                    activeTab: @json($initialTab),
                     diaPago: @json(old('dia_pago', $company->dia_pago)),
                     showEssentialsModal: false,
                     loadingEssentials: false,
@@ -66,8 +87,13 @@
                         },
                     },
                     init() {
+                        if (!this.availableTabs.includes(this.activeTab)) {
+                            this.activeTab = this.availableTabs[0];
+                        }
+
                         this.$watch('activeTab', value => {
                             const url = new URL(window.location);
+                            url.searchParams.set('section', this.section);
                             url.searchParams.set('tab', value);
                             window.history.replaceState(null, '', url);
                         });
@@ -138,13 +164,16 @@
         {{-- Subheader with specific actions for accounting --}}
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Datos de Contabilidad</h2>
-                <p class="text-sm text-gray-500 mt-1">Configuración técnica y legal de la empresa.</p>
+                <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">Contabilidad</p>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">{{ $sectionTitle }}</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ $sectionDescription }}</p>
             </div>
-            <button @click="showEssentialsModal = true"
-                class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg hover:bg-amber-600 transition-colors shadow-sm font-semibold text-sm">
-                <i class="fas fa-pen-to-square"></i> Editar Esenciales
-            </button>
+            @if ($initialSection === 'company-data')
+                <button @click="showEssentialsModal = true"
+                    class="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-lg hover:bg-amber-600 transition-colors shadow-sm font-semibold text-sm">
+                    <i class="fas fa-pen-to-square"></i> Editar Esenciales
+                </button>
+            @endif
         </div>
 
         {{-- Tabbed Form --}}
@@ -152,70 +181,72 @@
 
             {{-- Tab Navigation (Folder Style) --}}
             <div class="flex overflow-x-auto border-b border-gray-200 pl-2 bg-gray-100/70">
-                <button @click="activeTab = 'ident'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'ident',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'ident'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-id-card"></i>
-                    Identificación
-                </button>
-                <button @click="activeTab = 'dir'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'dir',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'dir'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Dirección
-                </button>
-                <button @click="activeTab = 'remu'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'remu',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'remu'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-money-bill-wave"></i>
-                    Remuneraciones
-                </button>
-                {{-- Cost Centers Tab --}}
-                <button @click="activeTab = 'cost-centers'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'cost-centers',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'cost-centers'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-sitemap"></i>
-                    Centros de Costos
-                </button>
-                <button @click="activeTab = 'banco'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'banco',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'banco'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-university"></i>
-                    Banco
-                </button>
-                <button @click="activeTab = 'rep'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'rep',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'rep'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-user-tie"></i>
-                    Representante
-                </button>
-                <button @click="activeTab = 'meta'"
-                    :class="{
-                        'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'meta',
-                        'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'meta'
-                    }"
-                    class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
-                    <i class="fas fa-sticky-note"></i>
-                    Notas
-                </button>
+                @if ($initialSection === 'company-data')
+                    <button @click="activeTab = 'ident'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'ident',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'ident'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-id-card"></i>
+                        Identificación
+                    </button>
+                    <button @click="activeTab = 'dir'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'dir',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'dir'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Dirección
+                    </button>
+                @else
+                    <button @click="activeTab = 'remu'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'remu',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'remu'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Configuración de Remuneraciones
+                    </button>
+                    <button @click="activeTab = 'cost-centers'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'cost-centers',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'cost-centers'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-sitemap"></i>
+                        Centros de Costos
+                    </button>
+                    <button @click="activeTab = 'banco'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'banco',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'banco'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-university"></i>
+                        Banco
+                    </button>
+                    <button @click="activeTab = 'rep'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'rep',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'rep'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-user-tie"></i>
+                        Representante
+                    </button>
+                    <button @click="activeTab = 'meta'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'meta',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'meta'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-sticky-note"></i>
+                        Notas
+                    </button>
+                @endif
             </div>
 
 
@@ -232,6 +263,7 @@
                 <form method="POST" action="{{ route('companies.update', $company) }}" class="p-6">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="section" value="{{ $initialSection }}">
                     <input type="hidden" name="tab" x-model="activeTab">
 
                     {{-- Identificación Tab --}}

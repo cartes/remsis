@@ -2,6 +2,7 @@
 
 namespace Modules\Payroll\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Employees\Models\Employee;
@@ -15,6 +16,7 @@ use Modules\AdminPanel\Models\Ccaf;
 
 class Payroll extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     /**
@@ -25,6 +27,7 @@ class Payroll extends Model
         'employee_id',
         'company_id',
         'bank_id',
+        'bank_name',
         'bank_account_number',
         'bank_account_type',
         'payroll_period_id',
@@ -32,7 +35,9 @@ class Payroll extends Model
         'period_month',
         'worked_days',
         'overtime_hours',
+        'overtime_amount',
         'base_salary',
+        'gratification_amount',
         'gross_salary',
         'afp_id',
         'afp_amount',
@@ -94,5 +99,9 @@ class Payroll extends Model
         return $this->belongsTo(User::class, 'processed_by');
     }
 
+    public function getTypeAttribute(): string
+    {
+        return 'normal';
+    }
 
 }

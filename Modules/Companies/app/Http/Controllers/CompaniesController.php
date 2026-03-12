@@ -151,6 +151,9 @@ class CompaniesController extends Controller
         $company->update($data);
 
         $params = ['company' => $company];
+        if ($request->has('section')) {
+            $params['section'] = $request->input('section');
+        }
         if ($request->has('tab')) {
             $params['tab'] = $request->input('tab');
         }

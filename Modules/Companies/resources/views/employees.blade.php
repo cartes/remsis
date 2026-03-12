@@ -119,7 +119,10 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-bold text-gray-800">{{ $emp->user->name }}</span>
+                                            <button type="button" @click="openPayrollModal({{ $emp->id }})"
+                                                class="font-bold text-gray-800 hover:text-blue-600 transition-colors text-left">
+                                                {{ $emp->user->name }}
+                                            </button>
                                             <div class="flex gap-1">
                                                 @foreach ($emp->user->roles as $role)
                                                     <span
