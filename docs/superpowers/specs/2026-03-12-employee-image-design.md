@@ -24,6 +24,8 @@ Se reutilizara el campo existente `users.profile_photo`, ya que:
 - el sistema ya tiene migracion, almacenamiento y vistas que consumen ese campo,
 - evita duplicar estado entre perfil de usuario y ficha laboral.
 
+La ruta persistida se organizara bajo un namespace tenant-aware en el disco `public`: `companies/{company_id}/profile-photos/...`.
+
 ### Punto de edicion
 
 La carga y cambio de foto ocurrira dentro del modal `Ficha de Nomina`, en la pestana `Personales`.
@@ -80,7 +82,7 @@ En `companies::employees`, el listado mostrara una miniatura al lado del nombre.
 El flujo esperado sera:
 
 1. validar datos del empleado y el archivo;
-2. si existe archivo, guardar primero la nueva imagen en `profile-photos/` del disco `public`;
+2. si existe archivo, guardar primero la nueva imagen en `companies/{company_id}/profile-photos/` del disco `public`;
 3. ejecutar la actualizacion de `Employee` y `User` dentro de una transaccion de base de datos para que el request sea logicamente atomico;
 4. persistir la ruta nueva en `users.profile_photo` dentro de esa transaccion, junto a los cambios de la ficha;
 5. solo despues de una persistencia exitosa, eliminar la foto previa del `User` en disco `public`;
@@ -118,6 +120,7 @@ No se creara un endpoint nuevo si el `PUT` actual puede absorber el cambio de ma
 - Solo se permitira operar sobre el `user` relacionado al `Employee` ya resuelto por ruta scopeada.
 - La implementacion debe preservar el chequeo de acceso del usuario autenticado al `company`/`employee` ya enlazado por tenancy y no introducir rutas paralelas fuera de ese contexto.
 - Tanto `getPayroll()` como `updatePayroll()` deben conservar el comportamiento de scoped route binding del modulo: si el `employee` no pertenece a la `company` del contexto, la respuesta esperada es `404`, no `403`.
+- El `company_id` usado para construir la carpeta de almacenamiento debe salir del `Company` enlazado por ruta, no de un valor libre enviado por frontend.
 - La eliminacion del archivo anterior ocurrira solo cuando exista una nueva imagen valida para persistir.
 - Si la nueva imagen ya fue subida al disco pero la persistencia en BD falla antes de completar el cambio, la implementacion debe revertir la transaccion, eliminar ese archivo nuevo como accion compensatoria y re-lanzar el error para no dejar basura ni esconder la falla.
 - No se agregaran catches silenciosos; errores de validacion o storage deben emerger como respuesta fallida del request.
