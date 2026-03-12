@@ -288,6 +288,7 @@
                     payrollFormFields: [
                         "first_name", "last_name", "rut", "email", "phone", "birth_date", "nationality",
                         "marital_status", "address", "position", "hire_date", "contract_type", "work_schedule",
+                        "work_schedule_type", "part_time_hours", "part_time_schedule",
                         "cost_center_id", "afp_id", "isapre_id", "ccaf_id", "health_contribution", "apv_amount",
                         "salary", "salary_type", "num_dependents", "bank_id", "bank_account_number",
                         "bank_account_type", "emergency_contact_name", "emergency_contact_phone", "status"
@@ -323,6 +324,9 @@
                         num_dependents: 0,
                         hire_date: "",
                         work_schedule: "",
+                        work_schedule_type: "",
+                        part_time_hours: "",
+                        part_time_schedule: null,
                         cost_center_id: "",
                         afp_id: "",
                         isapre_id: "",
@@ -364,6 +368,17 @@
                             .join("")
                             .toUpperCase();
                     },
+                    getDefaultSchedule() {
+                        return {
+                            mon: { label: 'Lunes', active: true, start: '09:00', end: '18:30', break: 60 },
+                            tue: { label: 'Martes', active: true, start: '09:00', end: '18:30', break: 60 },
+                            wed: { label: 'Miércoles', active: true, start: '09:00', end: '18:30', break: 60 },
+                            thu: { label: 'Jueves', active: true, start: '09:00', end: '18:30', break: 60 },
+                            fri: { label: 'Viernes', active: true, start: '09:00', end: '16:30', break: 60 },
+                            sat: { label: 'Sábado', active: false, start: '10:00', end: '14:00', break: 0 },
+                            sun: { label: 'Domingo', active: false, start: '10:00', end: '14:00', break: 0 },
+                        };
+                    },
                     currentEmployeePhotoUrl() {
                         return this.selectedProfilePhotoPreview || this.selectedEmployee.user.profile_photo_url || null;
                     },
@@ -403,8 +418,16 @@
                         formData.append("_method", "PUT");
 
                         this.payrollFormFields.forEach(field => {
-                            const value = this.selectedEmployee[field];
-                            formData.append(field, value ?? "");
+                            if (field === 'part_time_schedule') {
+                                if (this.selectedEmployee.work_schedule_type === 'part_time' && this.selectedEmployee.part_time_schedule) {
+                                    formData.append(field, JSON.stringify(this.selectedEmployee.part_time_schedule));
+                                } else {
+                                    formData.append(field, "");
+                                }
+                            } else {
+                                const value = this.selectedEmployee[field];
+                                formData.append(field, value ?? "");
+                            }
                         });
 
                         if (this.selectedProfilePhoto) {
@@ -473,6 +496,9 @@
                             const response = await axios.get(url);
                             if (response.data.status === "success") {
                                 this.selectedEmployee = response.data.employee;
+                                if (!this.selectedEmployee.part_time_schedule) {
+                                    this.selectedEmployee.part_time_schedule = this.getDefaultSchedule();
+                                }
                                 this.shouldReloadAfterPayrollSave = false;
                                 this.resetProfilePhotoState();
                                 this.showPayrollModal = true;

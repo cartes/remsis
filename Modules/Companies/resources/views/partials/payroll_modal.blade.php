@@ -35,7 +35,7 @@
                 :class="activePayrollTab === 'laboral' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
                 class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
-                <i class="fas fa-briefcase mr-1"></i> Laborales
+                <i class="fas fa-briefcase mr-1"></i> Contrato
             </button>
             <button @click="activePayrollTab = 'prevision'"
                 :class="activePayrollTab === 'prevision' ? 'border-blue-500 text-blue-600 bg-blue-50' :
@@ -88,12 +88,14 @@
                     </div>
 
                     <div class="flex flex-col items-start gap-2 md:items-end">
-                        <input x-ref="profilePhotoInput" type="file" class="hidden" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        <input x-ref="profilePhotoInput" type="file" class="hidden"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                             @change="handleProfilePhotoChange($event)">
                         <button type="button" @click="$refs.profilePhotoInput.click()"
                             class="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-blue-600 transition-all hover:border-blue-200 hover:bg-blue-50">
                             <i class="fas fa-camera"></i>
-                            <span x-text="selectedEmployee.user.profile_photo_url ? 'Cambiar foto' : 'Subir foto'"></span>
+                            <span
+                                x-text="selectedEmployee.user.profile_photo_url ? 'Cambiar foto' : 'Subir foto'"></span>
                         </button>
                         <template x-if="selectedProfilePhoto">
                             <p class="text-[11px] text-gray-500" x-text="selectedProfilePhoto.name"></p>
@@ -135,7 +137,8 @@
                         </template>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha Nacimiento</label>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fecha
+                            Nacimiento</label>
                         <input type="date" x-model="selectedEmployee.birth_date"
                             :class="errors.birth_date ? 'border-red-500 ring-red-100' : 'border-gray-200'"
                             class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
@@ -219,9 +222,66 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Jornada Laboral</label>
-                        <input type="text" x-model="selectedEmployee.work_schedule"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: 45 hrs semanales">
+                        <select x-model="selectedEmployee.work_schedule_type"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccione...</option>
+                            <option value="full_time">Full Time</option>
+                            <option value="part_time">Part Time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div x-show="selectedEmployee.work_schedule_type === 'part_time'"
+                    class="space-y-4 pt-4 border-t border-gray-100" x-transition x-cloak>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Horas Semanales</label>
+                        <input type="number" step="0.5" x-model="selectedEmployee.part_time_hours"
+                            class="w-full md:w-1/2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                            placeholder="Ej: 20">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Horario en la
+                            semana</label>
+                        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-3 py-2 font-bold w-24">Día</th>
+                                        <th class="px-3 py-2 font-bold text-center">Activo</th>
+                                        <th class="px-3 py-2 font-bold">Entrada</th>
+                                        <th class="px-3 py-2 font-bold">Salida</th>
+                                        <th class="px-3 py-2 font-bold">Colación (min)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 bg-white">
+                                    <template x-for="(day, key) in selectedEmployee.part_time_schedule"
+                                        :key="key">
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-3 py-2 font-medium text-gray-800 capitalize"
+                                                x-text="day.label"></td>
+                                            <td class="px-3 py-2 text-center">
+                                                <input type="checkbox" x-model="day.active"
+                                                    class="rounded text-blue-600 focus:ring-blue-500 border-gray-300">
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <input type="time" x-model="day.start" :disabled="!day.active"
+                                                    class="border-gray-200 rounded-md text-xs p-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 w-24">
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <input type="time" x-model="day.end" :disabled="!day.active"
+                                                    class="border-gray-200 rounded-md text-xs p-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 w-24">
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <input type="number" x-model="day.break" :disabled="!day.active"
+                                                    min="0" step="1"
+                                                    class="border-gray-200 rounded-md text-xs p-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400 w-16">
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 <div>

@@ -121,6 +121,9 @@ class CompanyEmployeeController extends Controller
             'hire_date' => 'nullable|date',
             'contract_type' => 'nullable|string',
             'work_schedule' => 'nullable|string',
+            'work_schedule_type' => 'nullable|in:full_time,part_time',
+            'part_time_hours' => 'nullable|numeric|min:0',
+            'part_time_schedule' => 'nullable|json',
             'cost_center_id' => 'nullable|exists:cost_centers,id',
             
             // Previsión social
@@ -163,6 +166,9 @@ class CompanyEmployeeController extends Controller
         try {
             DB::transaction(function () use ($employee, $user, $validated, $newProfilePhotoPath) {
                 $employeeData = $validated;
+                if (isset($employeeData['part_time_schedule']) && is_string($employeeData['part_time_schedule'])) {
+                    $employeeData['part_time_schedule'] = json_decode($employeeData['part_time_schedule'], true);
+                }
                 unset($employeeData['profile_photo']);
 
                 $employee->update($employeeData);

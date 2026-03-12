@@ -42,6 +42,9 @@ class Employee extends Model
         'num_dependents',
         'hire_date',
         'work_schedule',
+        'work_schedule_type',
+        'part_time_hours',
+        'part_time_schedule',
         'cost_center_id',
         'ccaf_id',
         'isapre_id',
@@ -59,6 +62,7 @@ class Employee extends Model
     protected $casts = [
         'hire_date' => 'date',
         'birth_date' => 'date',
+        'part_time_schedule' => 'array',
     ];
 
     /**
