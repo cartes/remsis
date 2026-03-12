@@ -28,10 +28,16 @@
                             <template x-for="emp in searchResults" :key="emp.id">
                                 <button @click="openPayrollModal(emp.id); showSearchResults = false; searchTerm = ''"
                                     class="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold uppercase">
-                                        <span x-text="emp.user.name.substring(0,2)"></span>
-                                    </div>
+                                    <template x-if="emp.user.profile_photo_url">
+                                        <img :src="emp.user.profile_photo_url" :alt="`Foto de ${emp.user.name}`"
+                                            class="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm">
+                                    </template>
+                                    <template x-if="!emp.user.profile_photo_url">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold uppercase">
+                                            <span x-text="employeeInitials(emp.user.name)"></span>
+                                        </div>
+                                    </template>
                                     <div class="flex flex-col min-w-0">
                                         <span class="text-sm font-bold text-gray-800 truncate"
                                             x-text="emp.user.name"></span>
@@ -117,7 +123,19 @@
                         @forelse($employees as $emp)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="flex flex-col">
+                                    <div class="flex items-start gap-3">
+                                        @if ($emp->user->profile_photo_url)
+                                            <img src="{{ $emp->user->profile_photo_url }}"
+                                                alt="Foto de {{ $emp->user->name }}"
+                                                class="h-10 w-10 rounded-full object-cover border border-gray-200 shadow-sm">
+                                        @else
+                                            <div
+                                                class="flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-blue-100 text-xs font-bold uppercase text-blue-700 shadow-sm">
+                                                {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($emp->user->name, 0, 2)) }}
+                                            </div>
+                                        @endif
+
+                                        <div class="flex flex-col min-w-0">
                                         <div class="flex items-center gap-2">
                                             <button type="button" @click="openPayrollModal({{ $emp->id }})"
                                                 class="font-bold text-gray-800 hover:text-blue-600 transition-colors text-left">
@@ -138,6 +156,7 @@
                                             </div>
                                         </div>
                                         <span class="text-[11px] text-gray-500 mt-0.5">{{ $emp->user->email }}</span>
+                                    </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -263,6 +282,16 @@
                     payrollLoading: false,
                     activePayrollTab: "personal",
                     loading: false,
+                    shouldReloadAfterPayrollSave: false,
+                    selectedProfilePhoto: null,
+                    selectedProfilePhotoPreview: null,
+                    payrollFormFields: [
+                        "first_name", "last_name", "rut", "email", "phone", "birth_date", "nationality",
+                        "marital_status", "address", "position", "hire_date", "contract_type", "work_schedule",
+                        "cost_center_id", "afp_id", "isapre_id", "ccaf_id", "health_contribution", "apv_amount",
+                        "salary", "salary_type", "num_dependents", "bank_id", "bank_account_number",
+                        "bank_account_type", "emergency_contact_name", "emergency_contact_phone", "status"
+                    ],
                     afps: @json($afps),
                     isapres: @json($isapres),
                     ccafs: @json($ccafs),
@@ -271,7 +300,11 @@
                     isNewEmployee: false,
                     init() {
                         this.$watch("showPayrollModal", value => {
-                            if (!value && this.isNewEmployee) {
+                            if (!value) {
+                                this.resetProfilePhotoState();
+                            }
+
+                            if (!value && (this.isNewEmployee || this.shouldReloadAfterPayrollSave)) {
                                 window.location.reload();
                             }
                         });
@@ -308,7 +341,9 @@
                         address: "",
                         user: {
                             name: "",
-                            email: ""
+                            email: "",
+                            profile_photo: null,
+                            profile_photo_url: null,
                         }
                     },
                     errors: {},
@@ -316,6 +351,67 @@
                         name: "",
                         email: "",
                         password: ""
+                    },
+                    employeeInitials(name) {
+                        if (!name) return "--";
+
+                        return name
+                            .trim()
+                            .split(/\s+/)
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map(part => part.charAt(0))
+                            .join("")
+                            .toUpperCase();
+                    },
+                    currentEmployeePhotoUrl() {
+                        return this.selectedProfilePhotoPreview || this.selectedEmployee.user.profile_photo_url || null;
+                    },
+                    resetProfilePhotoState() {
+                        if (this.selectedProfilePhotoPreview) {
+                            URL.revokeObjectURL(this.selectedProfilePhotoPreview);
+                        }
+
+                        this.selectedProfilePhoto = null;
+                        this.selectedProfilePhotoPreview = null;
+
+                        if (this.$refs.profilePhotoInput) {
+                            this.$refs.profilePhotoInput.value = "";
+                        }
+                    },
+                    handleProfilePhotoChange(event) {
+                        const [file] = event.target.files || [];
+
+                        this.errors = {
+                            ...this.errors,
+                            profile_photo: undefined,
+                        };
+
+                        if (this.selectedProfilePhotoPreview) {
+                            URL.revokeObjectURL(this.selectedProfilePhotoPreview);
+                            this.selectedProfilePhotoPreview = null;
+                        }
+
+                        this.selectedProfilePhoto = file || null;
+
+                        if (file) {
+                            this.selectedProfilePhotoPreview = URL.createObjectURL(file);
+                        }
+                    },
+                    buildPayrollFormData() {
+                        const formData = new FormData();
+                        formData.append("_method", "PUT");
+
+                        this.payrollFormFields.forEach(field => {
+                            const value = this.selectedEmployee[field];
+                            formData.append(field, value ?? "");
+                        });
+
+                        if (this.selectedProfilePhoto) {
+                            formData.append("profile_photo", this.selectedProfilePhoto);
+                        }
+
+                        return formData;
                     },
                     async addEmployee() {
                         this.loading = true;
@@ -377,6 +473,8 @@
                             const response = await axios.get(url);
                             if (response.data.status === "success") {
                                 this.selectedEmployee = response.data.employee;
+                                this.shouldReloadAfterPayrollSave = false;
+                                this.resetProfilePhotoState();
                                 this.showPayrollModal = true;
                             }
                         } catch (error) {
@@ -414,12 +512,18 @@
                             const url = "{{ route('companies.employees.payroll.update', [$company, ':id']) }}"
                                 .replace(
                                     ":id", this.selectedEmployee.id);
-                            const response = await axios.put(url, this.selectedEmployee);
+                            const response = await axios.post(url, this.buildPayrollFormData(), {
+                                headers: {
+                                    Accept: "application/json",
+                                }
+                            });
                             if (response.data.status === "success") {
                                 toast(response.data.message || "Datos de nómina actualizados", "success");
                                 if (response.data.employee) {
                                     this.selectedEmployee = response.data.employee;
                                 }
+                                this.shouldReloadAfterPayrollSave = true;
+                                this.resetProfilePhotoState();
                             }
                         } catch (error) {
                             console.error(error);

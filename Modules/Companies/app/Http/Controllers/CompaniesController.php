@@ -76,7 +76,7 @@ class CompaniesController extends Controller
 
         // Cargar empleados de esta empresa
         $employees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
-            ->with(['user:id,name,email,status', 'user.roles:id,name'])
+            ->with(['user:id,name,email,status,profile_photo', 'user.roles:id,name'])
             ->get();
 
         // Cargar centros de costo
@@ -99,7 +99,7 @@ class CompaniesController extends Controller
 
         // Cargar empleados de esta empresa
         $employees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
-            ->with(['user:id,name,email,status', 'user.roles:id,name'])
+            ->with(['user:id,name,email,status,profile_photo', 'user.roles:id,name'])
             ->get();
 
         // Cargar centros de costo activos

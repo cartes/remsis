@@ -4,17 +4,21 @@ namespace Modules\Companies\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Modules\Users\Models\User;
 use Modules\Employees\Models\Employee;
 use Modules\Companies\Models\Company;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 use App\Rules\Rut;
 
 class CompanyEmployeeController extends Controller
 {
     public function store(Request $request, Company $company)
     {
+        $this->authorizeCompanyAccess($company);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -55,6 +59,8 @@ class CompanyEmployeeController extends Controller
 
     public function destroy(Company $company, User $user)
     {
+        $this->authorizeCompanyAccess($company);
+
         // En este sistema, "Nómina" gestiona al usuario como empleado.
         // Desvincular implica borrar el registro en 'employees'.
         // Si el usuario SOLO tiene el rol employee, podríamos borrar al usuario también,
@@ -80,7 +86,9 @@ class CompanyEmployeeController extends Controller
 
     public function getPayroll(Company $company, Employee $employee)
     {
-        $employee->load('user');
+        $this->authorizeCompanyAccess($company);
+
+        $employee->load(['user.roles']);
 
         return response()->json([
             'status' => 'success',
@@ -90,6 +98,8 @@ class CompanyEmployeeController extends Controller
 
     public function updatePayroll(Request $request, Company $company, Employee $employee)
     {
+        $this->authorizeCompanyAccess($company);
+
         $validated = $request->validate([
             // Datos personales
             'first_name' => 'nullable|string|max:255',
@@ -136,43 +146,80 @@ class CompanyEmployeeController extends Controller
             
             // Estado
             'status' => 'nullable|in:active,inactive',
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $employee->update($validated);
+        $user = $employee->user()->firstOrFail();
+        $newProfilePhotoPath = null;
+        $previousProfilePhotoPath = $user->profile_photo;
 
-        // También actualizar el nombre y email en el usuario si cambiaron
-        $user = $employee->user;
-        if ($user) {
-            $changed = false;
-            
-            // Actualizar nombre si ambos están presentes
-            if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
-                $newName = trim("{$validated['first_name']} {$validated['last_name']}");
-                if ($user->name !== $newName) {
-                    $user->name = $newName;
+        if ($request->hasFile('profile_photo')) {
+            $newProfilePhotoPath = $request->file('profile_photo')->store(
+                "companies/{$company->id}/profile-photos",
+                'public'
+            );
+        }
+
+        try {
+            DB::transaction(function () use ($employee, $user, $validated, $newProfilePhotoPath) {
+                $employeeData = $validated;
+                unset($employeeData['profile_photo']);
+
+                $employee->update($employeeData);
+
+                $changed = false;
+
+                if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+                    $newName = trim("{$validated['first_name']} {$validated['last_name']}");
+
+                    if ($user->name !== $newName) {
+                        $user->name = $newName;
+                        $changed = true;
+                    }
+                }
+
+                if (!empty($validated['email']) && $user->email !== $validated['email']) {
+                    $user->email = $validated['email'];
                     $changed = true;
                 }
-            }
-            
-            // Actualizar email si está presente y es distinto
-            if (!empty($validated['email']) && $user->email !== $validated['email']) {
-                $user->email = $validated['email'];
-                $changed = true;
+
+                if ($newProfilePhotoPath !== null) {
+                    $user->profile_photo = $newProfilePhotoPath;
+                    $changed = true;
+                }
+
+                if ($changed) {
+                    $user->save();
+                }
+            });
+        } catch (Throwable $exception) {
+            if ($newProfilePhotoPath !== null && Storage::disk('public')->exists($newProfilePhotoPath)) {
+                Storage::disk('public')->delete($newProfilePhotoPath);
             }
 
-            if ($changed) {
-                $user->save();
-            }
+            throw $exception;
+        }
+
+        if (
+            $newProfilePhotoPath !== null
+            && !empty($previousProfilePhotoPath)
+            && $previousProfilePhotoPath !== $newProfilePhotoPath
+            && Storage::disk('public')->exists($previousProfilePhotoPath)
+        ) {
+            Storage::disk('public')->delete($previousProfilePhotoPath);
         }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Datos de nómina actualizados correctamente.',
-            'employee' => $employee->fresh('user')
+            'employee' => $employee->fresh(['user.roles'])
         ]);
     }
+
     public function search(Request $request, Company $company)
     {
+        $this->authorizeCompanyAccess($company);
+
         $term = $request->query('query');
 
         if (strlen($term) < 3) {
@@ -184,10 +231,19 @@ class CompanyEmployeeController extends Controller
                 $query->where('name', 'like', "%{$term}%")
                     ->orWhere('email', 'like', "%{$term}%");
             })
-            ->with(['user', 'user.roles'])
+            ->with(['user:id,name,email,status,profile_photo', 'user.roles:id,name'])
             ->limit(10)
             ->get();
 
         return response()->json($employees);
+    }
+
+    private function authorizeCompanyAccess(Company $company): void
+    {
+        $user = auth()->user();
+
+        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+            abort(403);
+        }
     }
 }

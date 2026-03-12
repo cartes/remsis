@@ -67,6 +67,43 @@
         <div class="flex-1 overflow-y-auto p-6">
             {{-- Tab: Datos Personales --}}
             <div x-show="activePayrollTab === 'personal'" class="space-y-4">
+                <div
+                    class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4 md:flex-row md:items-center md:justify-between">
+                    <div class="flex items-center gap-4">
+                        <template x-if="currentEmployeePhotoUrl()">
+                            <img :src="currentEmployeePhotoUrl()" :alt="`Foto de ${selectedEmployee.user.name}`"
+                                class="h-16 w-16 rounded-full border border-gray-200 object-cover shadow-sm">
+                        </template>
+                        <template x-if="!currentEmployeePhotoUrl()">
+                            <div
+                                class="flex h-16 w-16 items-center justify-center rounded-full border border-blue-100 bg-blue-100 text-lg font-bold uppercase text-blue-700 shadow-sm">
+                                <span x-text="employeeInitials(selectedEmployee.user.name)"></span>
+                            </div>
+                        </template>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-gray-900" x-text="selectedEmployee.user.name"></p>
+                            <p class="text-xs text-gray-500" x-text="selectedEmployee.user.email"></p>
+                            <p class="mt-1 text-[11px] text-gray-500">JPG, PNG o WEBP hasta 2 MB.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-start gap-2 md:items-end">
+                        <input x-ref="profilePhotoInput" type="file" class="hidden" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                            @change="handleProfilePhotoChange($event)">
+                        <button type="button" @click="$refs.profilePhotoInput.click()"
+                            class="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs font-semibold text-blue-600 transition-all hover:border-blue-200 hover:bg-blue-50">
+                            <i class="fas fa-camera"></i>
+                            <span x-text="selectedEmployee.user.profile_photo_url ? 'Cambiar foto' : 'Subir foto'"></span>
+                        </button>
+                        <template x-if="selectedProfilePhoto">
+                            <p class="text-[11px] text-gray-500" x-text="selectedProfilePhoto.name"></p>
+                        </template>
+                        <template x-if="errors.profile_photo">
+                            <p class="text-[10px] font-bold text-red-500" x-text="errors.profile_photo[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombres</label>

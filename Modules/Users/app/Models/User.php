@@ -2,6 +2,7 @@
 
 namespace Modules\Users\Models;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use \Modules\Companies\Models\Company;
@@ -35,6 +36,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
     protected $casts = [
         'metadata' => 'array',
         'email_verified_at' => 'datetime',
@@ -52,5 +57,14 @@ class User extends Authenticatable
     public function employee()
     {
         return $this->hasOne(Employee::class, 'user_id');
+    }
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if (empty($this->profile_photo)) {
+            return null;
+        }
+
+        return Storage::url($this->profile_photo);
     }
 }
