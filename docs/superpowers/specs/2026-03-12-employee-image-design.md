@@ -86,12 +86,14 @@ El flujo esperado sera:
 5. solo despues de una persistencia exitosa, eliminar la foto previa del `User` en disco `public`;
 6. devolver `employee->fresh('user')`.
 
+La respuesta JSON de `getPayroll()` y `updatePayroll()` debera mantener `employee.user.profile_photo` como ruta cruda persistida y agregar de forma explicita `employee.user.profile_photo_url` como URL publica lista para renderizar. Esa sera la propiedad que consumira Alpine y el listado.
+
 No se creara un endpoint nuevo si el `PUT` actual puede absorber el cambio de manera clara. La meta es preservar la UX y el contrato del modal, ampliandolo de forma compatible.
 
 ## Flujo de datos
 
 1. El usuario abre la ficha desde el listado de nomina.
-2. `getPayroll()` devuelve `employee` con su `user`, incluida la ruta actual de foto si existe.
+2. `getPayroll()` devuelve `employee` con su `user`, incluida la ruta actual de foto si existe, junto a `profile_photo_url`.
 3. El modal muestra preview o fallback.
 4. El usuario selecciona una imagen y guarda.
 5. El frontend envia `multipart/form-data`.
@@ -108,14 +110,16 @@ No se creara un endpoint nuevo si el `PUT` actual puede absorber el cambio de ma
   - `Cambiar foto` cuando ya exista.
 - La carga de foto ocurre junto con el boton actual de guardar, sin introducir un segundo paso.
 - Los errores de validacion del archivo se mostraran dentro del esquema actual de errores del modal.
-- El frontend no debe consumir directamente la ruta cruda guardada en `users.profile_photo`; debe trabajar con una URL resoluble para imagen publica, idealmente exponiendo `profile_photo_url` o transformando la ruta con `Storage::url(...)` en el punto donde se serializa la respuesta.
+- El frontend no debe consumir directamente la ruta cruda guardada en `users.profile_photo`; debe usar `employee.user.profile_photo_url` como contrato estable de render.
 
 ## Validacion y seguridad
 
 - `profile_photo`: nullable, image, mimes:jpg,jpeg,png,webp, max:2048.
 - Solo se permitira operar sobre el `user` relacionado al `Employee` ya resuelto por ruta scopeada.
 - La implementacion debe preservar el chequeo de acceso del usuario autenticado al `company`/`employee` ya enlazado por tenancy y no introducir rutas paralelas fuera de ese contexto.
+- Tanto `getPayroll()` como `updatePayroll()` deben conservar el comportamiento de scoped route binding del modulo: si el `employee` no pertenece a la `company` del contexto, la respuesta esperada es `404`, no `403`.
 - La eliminacion del archivo anterior ocurrira solo cuando exista una nueva imagen valida para persistir.
+- Si la nueva imagen ya fue subida al disco pero la persistencia en BD falla antes de completar el cambio, la implementacion debe eliminar ese archivo nuevo como accion compensatoria y re-lanzar el error para no dejar basura ni esconder la falla.
 - No se agregaran catches silenciosos; errores de validacion o storage deben emerger como respuesta fallida del request.
 
 ## Testing
@@ -127,10 +131,12 @@ Se agregaran pruebas para cubrir:
 - eliminacion de la imagen anterior al reemplazarla;
 - respuesta JSON con `employee.user.profile_photo`;
 - respuesta JSON con un valor utilizable para renderizar la imagen publica;
+- `getPayroll()` devuelve `profile_photo_url` cuando ya existe foto;
 - preservacion del comportamiento actual cuando no se envia archivo.
 - error `422` cuando el archivo no cumple reglas;
 - no eliminacion de la foto anterior si la nueva persistencia falla;
-- rechazo del flujo si existe un mismatch de tenancy/acceso.
+- limpieza del archivo nuevo si se sube pero falla la persistencia posterior;
+- rechazo del flujo si existe un mismatch de tenancy/acceso con `404` tanto en `GET` como en `PUT`.
 
 ## Riesgos y notas
 
