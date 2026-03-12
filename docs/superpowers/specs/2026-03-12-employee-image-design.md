@@ -24,7 +24,9 @@ Se reutilizara el campo existente `users.profile_photo`, ya que:
 - el sistema ya tiene migracion, almacenamiento y vistas que consumen ese campo,
 - evita duplicar estado entre perfil de usuario y ficha laboral.
 
-La ruta persistida se organizara bajo un namespace tenant-aware en el disco `public`: `companies/{company_id}/profile-photos/...`.
+La ruta persistida para las cargas realizadas desde la ficha de nomina se organizara bajo un namespace tenant-aware en el disco `public`: `companies/{company_id}/profile-photos/...`.
+
+Esta fase no reescribe ni migra rutas historicas ya presentes en `users.profile_photo` desde otros flujos. El contrato nuevo aplica al upload gestionado desde empresa/nomina; el frontend debe seguir resolviendo correctamente fotos previas aunque no vengan bajo ese namespace.
 
 ### Punto de edicion
 
