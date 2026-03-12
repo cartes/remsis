@@ -80,11 +80,6 @@ class CompanyEmployeeController extends Controller
 
     public function getPayroll(Company $company, Employee $employee)
     {
-        // Asegurar que el empleado pertenece a la empresa
-        if ($employee->company_id !== $company->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
         $employee->load('user');
 
         return response()->json([
@@ -95,10 +90,6 @@ class CompanyEmployeeController extends Controller
 
     public function updatePayroll(Request $request, Company $company, Employee $employee)
     {
-        if ($employee->company_id !== $company->id) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
         $validated = $request->validate([
             // Datos personales
             'first_name' => 'nullable|string|max:255',

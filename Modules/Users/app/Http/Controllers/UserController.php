@@ -19,14 +19,23 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $auth = $request->user();
+        $isSuperAdmin = $auth->hasRole('super-admin');
+        $companyFilter = $isSuperAdmin ? $request->company_id : $auth->company_id;
 
         $query = User::query()
-            ->whereHas('roles', function($q) {
-                $q->whereIn('name', ['super-admin', 'admin', 'contador', 'recursos-humanos']);
+            ->whereHas('roles', function($q) use ($isSuperAdmin) {
+                $roles = ['admin', 'contador', 'recursos-humanos'];
+
+                if ($isSuperAdmin) {
+                    $roles[] = 'super-admin';
+                }
+
+                $q->whereIn('name', $roles);
             })
-            ->when($request->company_id, function($q) use ($request) {
-                $q->whereHas('employee', function($eq) use ($request) {
-                    $eq->where('company_id', $request->company_id);
+            ->when(! $isSuperAdmin && ! $auth->company_id, fn ($q) => $q->whereRaw('1 = 0'))
+            ->when($companyFilter, function($q) use ($companyFilter) {
+                $q->whereHas('employee', function($eq) use ($companyFilter) {
+                    $eq->where('company_id', $companyFilter);
                 });
             })
             ->with(['roles:id,name', 'employee.company:id,name'])
@@ -35,13 +44,20 @@ class UserController extends Controller
         $users = $query->orderByDesc('id')->get();
 
         // Roles visibles/seleccionables en UI para gestión administrativa
-        $roles = Role::whereIn('name', ['super-admin', 'admin', 'contador', 'recursos-humanos'])
+        $visibleRoles = $isSuperAdmin
+            ? ['super-admin', 'admin', 'contador', 'recursos-humanos']
+            : ['admin', 'contador', 'recursos-humanos'];
+
+        $roles = Role::whereIn('name', $visibleRoles)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         // Cargamos empresas para el filtro y para vincular
-        $companies = Company::orderBy('razon_social')->get(['id', 'razon_social as name']);
-        $companyId = $request->company_id;
+        $companies = Company::query()
+            ->when(! $isSuperAdmin, fn ($q) => $q->whereKey($auth->company_id))
+            ->orderBy('razon_social')
+            ->get(['id', 'razon_social as name']);
+        $companyId = $companyFilter;
 
         return view('users::index', compact('users', 'roles', 'companies', 'companyId'));
     }
@@ -59,12 +75,17 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $auth = $request->user();
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'role' => 'required|string|exists:roles,name',
         ]);
+
+        if (! $auth->hasRole('super-admin') && $validated['role'] === 'super-admin') {
+            abort(403);
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -102,7 +123,9 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $auth = $request->user();
         $user = User::findOrFail($id);
+        $this->authorizeManagedUser($auth, $user);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -121,11 +144,17 @@ class UserController extends Controller
 
         $user->save();
 
-        if ($validated['role']) {
+        if (!empty($validated['role'])) {
+            if (! $auth->hasRole('super-admin') && $validated['role'] === 'super-admin') {
+                abort(403);
+            }
+
             $user->syncRoles([$validated['role']]);
         }
 
         if (isset($validated['company_id'])) {
+            $this->authorizeCompanyAssignment($auth, (int) $validated['company_id']);
+
             if ($validated['company_id']) {
                 \Modules\Employees\Models\Employee::updateOrCreate(
                     ['user_id' => $user->id],
@@ -148,6 +177,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $this->authorizeManagedUser(request()->user(), $user);
+
         $user->delete();
 
         return response()->json([
@@ -158,11 +189,13 @@ class UserController extends Controller
     public function showJson($id)
     {
         $user = User::with('roles')->findOrFail($id);
+        $this->authorizeManagedUser(request()->user(), $user);
         return response()->json($user);
     }
 
     public function toggleStatus(User $user)
     {
+        $this->authorizeManagedUser(request()->user(), $user);
         $user->status = !$user->status;
         $user->save();
 
@@ -177,6 +210,9 @@ class UserController extends Controller
      */
     public function attachCompany(Request $request, User $user)
     {
+        $auth = $request->user();
+        $this->authorizeManagedUser($auth, $user);
+
         // Opcional: restringe a roles que pueden tener empresa
         if (!$user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos'])) {
             return response()->json(['message' => 'Este usuario no admite vínculo a empresa.'], 403);
@@ -185,6 +221,8 @@ class UserController extends Controller
         $validated = $request->validate([
             'company_id' => ['required', 'integer', 'exists:companies,id'],
         ]);
+
+        $this->authorizeCompanyAssignment($auth, (int) $validated['company_id']);
 
         // 🔒 Upsert por user_id: si existe, actualiza; si no, crea
         $employee = Employee::updateOrCreate(
@@ -201,5 +239,33 @@ class UserController extends Controller
                 'name' => $employee->company->name,
             ],
         ]);
+    }
+
+    protected function authorizeManagedUser(User $auth, User $target): void
+    {
+        if ($auth->hasRole('super-admin')) {
+            return;
+        }
+
+        if ($target->hasRole('super-admin')) {
+            abort(403);
+        }
+
+        $targetCompanyId = $target->employee?->company_id ?? $target->company_id;
+
+        if ((int) $targetCompanyId !== (int) $auth->company_id) {
+            abort(403);
+        }
+    }
+
+    protected function authorizeCompanyAssignment(User $auth, ?int $companyId): void
+    {
+        if ($companyId === null || $auth->hasRole('super-admin')) {
+            return;
+        }
+
+        if ((int) $companyId !== (int) $auth->company_id) {
+            abort(403);
+        }
     }
 }

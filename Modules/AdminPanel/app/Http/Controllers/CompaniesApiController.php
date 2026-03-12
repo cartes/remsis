@@ -13,12 +13,20 @@ class CompaniesApiController extends Controller
      */
     public function index(Request $request)
     {
+        $auth = $request->user();
         $q = trim((string) $request->get('search', ''));
-        $query = Company::query()->orderBy('nombre');
+        $query = Company::query()
+            ->orderBy('razon_social')
+            ->orderBy('name');
+
+        if (! $auth->hasRole('super-admin')) {
+            $query->whereKey($auth->company_id);
+        }
 
         if ($q !== '') {
             $query->where(function ($sub) use ($q) {
                 $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('razon_social', 'like', "%{$q}%")
                     ->orWhere('rut', 'like', "%{$q}%");
             });
         }

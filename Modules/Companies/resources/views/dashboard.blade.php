@@ -102,15 +102,23 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h4 class="text-sm font-bold text-gray-800 mb-4">Acciones Rápidas</h4>
                     <div class="space-y-3">
-                        <a href="{{ route('companies.edit', $company) }}"
+                        <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
                             class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-all group">
                             <div
                                 class="w-10 h-10 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center transition-all group-hover:bg-amber-500 group-hover:text-white">
                                 <i class="fas fa-cog"></i>
                             </div>
-                            <span class="text-sm font-bold text-gray-700">Configuración</span>
+                            <span class="text-sm font-bold text-gray-700">Datos empresa</span>
                         </a>
-                        <a href="{{ route('companies.cost-centers', $company) }}"
+                        <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
+                            class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-all group">
+                            <div
+                                class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center transition-all group-hover:bg-emerald-600 group-hover:text-white">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700">Remuneraciones</span>
+                        </a>
+                        <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'cost-centers']) }}"
                             class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-all group">
                             <div
                                 class="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center transition-all group-hover:bg-purple-600 group-hover:text-white">

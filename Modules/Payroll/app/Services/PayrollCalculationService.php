@@ -2,11 +2,10 @@
 
 namespace Modules\Payroll\Services;
 
+use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
-use Modules\Payroll\Models\PayrollLine;
 use Modules\Employees\Models\Employee;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 use Modules\AdminPanel\Models\LegalParameter;
 
@@ -48,9 +47,9 @@ class PayrollCalculationService
      *
      * @param Employee $employee
      * @param PayrollPeriod $period
-     * @return PayrollLine
+     * @return Payroll
      */
-    public function calculateEmployee(Employee $employee, PayrollPeriod $period): PayrollLine
+    public function calculateEmployee(Employee $employee, PayrollPeriod $period): Payroll
     {
         $company = $period->company;
         
@@ -63,7 +62,7 @@ class PayrollCalculationService
         $overtimeHours = 0;
 
         // If updating an existing line, preserve entered overtime values
-        $existingLine = PayrollLine::where('employee_id', $employee->id)
+        $existingLine = Payroll::where('employee_id', $employee->id)
             ->where('payroll_period_id', $period->id)
             ->first();
 
@@ -84,6 +83,8 @@ class PayrollCalculationService
         // 3. Gratificación
         // Default to existing value (allows manual edit for 'convencional' or others)
         $gratificationAmount = ($existingLine) ? $existingLine->gratification_amount : 0;
+        $anticiposAmount = ($existingLine) ? $existingLine->anticipos_amount : 0;
+        $otrosDescuentos = ($existingLine) ? $existingLine->otros_descuentos : 0;
 
         if ($company->gratification_system === 'art_50') {
             // 25% del sueldo base con tope de 4.75 IMM anual (prorrateado mensual)
@@ -115,13 +116,13 @@ class PayrollCalculationService
         $cesantiaAmount = round($imponible * 0.006);
 
         // total_deductions
-        $totalDeductions = $afpAmount + $saludAmount + $cesantiaAmount;
+        $totalDeductions = $afpAmount + $saludAmount + $cesantiaAmount + $anticiposAmount + $otrosDescuentos;
 
         // total_neto: imponible - deducciones
         $totalNeto = $imponible - $totalDeductions;
 
-        // Create or Update PayrollLine
-        return PayrollLine::updateOrCreate(
+        // Create or update the canonical payroll row for this employee and period.
+        return Payroll::updateOrCreate(
             [
                 'employee_id' => $employee->id,
                 'payroll_period_id' => $period->id,
@@ -151,8 +152,8 @@ class PayrollCalculationService
                 
                 'cesantia_amount' => $cesantiaAmount,
                 'impuesto_unico_amount' => 0,
-                'anticipos_amount' => 0,
-                'otros_descuentos' => 0,
+                'anticipos_amount' => $anticiposAmount,
+                'otros_descuentos' => $otrosDescuentos,
                 
                 'total_deductions' => $totalDeductions,
                 'net_salary' => $totalNeto,

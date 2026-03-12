@@ -51,28 +51,54 @@
                 </div>
             </div>
 
+            @php
+                $currentCompanyTab = $activeTab ?? '';
+                $isAccountingSection = in_array($currentCompanyTab, ['accounting', 'accounting-data', 'accounting-remunerations', 'cost-centers', 'employees'], true);
+                $isCompanyDataActive = in_array($currentCompanyTab, ['accounting', 'accounting-data', 'cost-centers'], true);
+                $isRemunerationsActive = $currentCompanyTab === 'accounting-remunerations';
+                $isEmployeesActive = $currentCompanyTab === 'employees';
+            @endphp
+
             {{-- Company Section --}}
             <div>
                 <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Gestión de Empresa
                 </p>
-                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}' }">
-                    <a href="{{ route('companies.edit', $company) }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-                        :class="activeTab === 'accounting' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-calculator w-5 text-center transition-colors"
-                            :class="activeTab === 'accounting' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
-                        Contabilidad
-                    </a>
+                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}', accountingOpen: @js($isAccountingSection) }">
+                    <div class="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-1">
+                        <button type="button" @click="accountingOpen = !accountingOpen"
+                            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-all"
+                            :class="accountingOpen || {{ $isAccountingSection ? 'true' : 'false' }} ?
+                                'bg-white text-slate-900 shadow-sm border border-slate-200' :
+                                'text-slate-600 hover:bg-white group'">
+                            <i class="fas fa-calculator w-5 text-center transition-colors"
+                                :class="accountingOpen || {{ $isAccountingSection ? 'true' : 'false' }} ?
+                                    'text-blue-600' :
+                                    'text-slate-400 group-hover:text-blue-500'"></i>
+                            <span class="flex-1">Contabilidad</span>
+                            <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform"
+                                :class="{ 'rotate-180': accountingOpen }"></i>
+                        </button>
 
-                    <a href="{{ route('companies.employees', $company) }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-                        :class="activeTab === 'employees' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-users-viewfinder w-5 text-center transition-colors"
-                            :class="activeTab === 'employees' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
-                        Nómina de Empleados
-                    </a>
+                        <div x-show="accountingOpen" x-transition class="mt-1 space-y-1 px-2 pb-2">
+                            <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
+                                <i class="fas fa-building w-4 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                Datos empresa
+                            </a>
+
+                            <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isRemunerationsActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
+                                <i class="fas fa-money-bill-wave w-4 text-center {{ $isRemunerationsActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                Remuneraciones
+                            </a>
+
+                            <a href="{{ route('companies.employees', $company) }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
+                                <i class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                Nómina de empleados
+                            </a>
+                        </div>
+                    </div>
 
                     <a href="{{ route('companies.transactions', $company) }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -83,14 +109,6 @@
                         Movimientos
                     </a>
 
-                    <a href="{{ route('companies.cost-centers', $company) }}"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-                        :class="activeTab === 'cost-centers' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            'text-slate-600 hover:bg-slate-50 group'">
-                        <i class="fas fa-folder-tree w-5 text-center transition-colors"
-                            :class="activeTab === 'cost-centers' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
-                        Centros de Costo
-                    </a>
                 </div>
             </div>
 

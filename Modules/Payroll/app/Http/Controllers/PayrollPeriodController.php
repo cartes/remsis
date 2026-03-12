@@ -5,7 +5,9 @@ namespace Modules\Payroll\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Companies\Models\Company;
+use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
+use Modules\Payroll\Services\PayrollCalculationService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -114,12 +116,10 @@ class PayrollPeriodController extends Controller
     /**
      * Show the wizard for managing payroll lines.
      */
-    public function wizard(Request $request, Company $company, $periodId)
+    public function wizard(Request $request, Company $company, PayrollPeriod $period)
     {
-        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
-        
         // Get lines with employee data
-        $lines = \Modules\Payroll\Models\PayrollLine::with(['employee.costCenter'])
+        $lines = Payroll::with(['employee.costCenter'])
             ->where('payroll_period_id', $period->id)
             ->get();
             
@@ -139,10 +139,8 @@ class PayrollPeriodController extends Controller
     /**
      * Calculate payroll for the period.
      */
-    public function calculate(Request $request, Company $company, $periodId, \Modules\Payroll\Services\PayrollCalculationService $service)
+    public function calculate(Request $request, Company $company, PayrollPeriod $period, PayrollCalculationService $service)
     {
-        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
-        
         try {
             $count = $service->calculatePeriod($period);
             
@@ -157,9 +155,8 @@ class PayrollPeriodController extends Controller
     /**
      * Update the status of a period.
      */
-    public function updateStatus(Request $request, Company $company, $id)
+    public function updateStatus(Request $request, Company $company, PayrollPeriod $period)
     {
-        $period = PayrollPeriod::findOrFail($id);
         $user = auth()->user();
 
         $validated = $request->validate([
@@ -217,10 +214,9 @@ class PayrollPeriodController extends Controller
     /**
      * Update a specific payroll line and recalculate.
      */
-    public function updateLine(Request $request, Company $company, $periodId, $lineId, \Modules\Payroll\Services\PayrollCalculationService $service)
+    public function updateLine(Request $request, Company $company, PayrollPeriod $period, $lineId, PayrollCalculationService $service)
     {
-        $period = PayrollPeriod::where('company_id', $company->id)->findOrFail($periodId);
-        $line = \Modules\Payroll\Models\PayrollLine::where('payroll_period_id', $period->id)->findOrFail($lineId);
+        $line = Payroll::where('payroll_period_id', $period->id)->findOrFail($lineId);
 
         $validated = $request->validate([
             'overtime_hours' => 'nullable|numeric|min:0',
