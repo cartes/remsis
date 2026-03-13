@@ -139,4 +139,55 @@
             </div>
         </div>
     </div>
+
+    <!-- Admin Required Modal -->
+    <div x-data="{ showAdminModal: @js(!$hasAdmin) }" x-show="showAdminModal" style="display: none;" class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="showAdminModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div x-show="showAdminModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+                <form action="{{ route('companies.users.store', $company) }}" method="POST">
+                    @csrf
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-6 text-center shadow-inner">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-white/20 backdrop-blur border border-white/20 mb-4">
+                            <i class="fas fa-user-shield text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl leading-6 font-black text-white" id="modal-title">Administrador Requerido</h3>
+                        <p class="text-blue-100 text-sm mt-2 opacity-90 mx-auto">Para continuar utilizando el dashboard y gestionar funciones clave de la empresa, debes designar a un administrador principal.</p>
+                    </div>
+                    <div class="bg-white px-6 pt-5 pb-6">
+                        <input type="hidden" name="role" value="admin">
+                        <div class="space-y-4 text-sm w-full">
+                            <div class="space-y-1">
+                                <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Nombre Completo</label>
+                                <input type="text" name="name" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Ej. Administrador">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Correo Electrónico (Acceso)</label>
+                                <input type="email" name="email" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="admin@empresa.com">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Contraseña</label>
+                                <input type="password" name="password" required minlength="6" class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Mínimo 6 caracteres">
+                            </div>
+                            <div class="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-start gap-3">
+                                <div class="flex items-center h-5">
+                                    <input id="is_in_payroll" name="is_in_payroll" type="checkbox" value="1" class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500">
+                                </div>
+                                <div class="ml-2 text-sm">
+                                    <label for="is_in_payroll" class="font-bold text-gray-700">¿Será parte de la nómina de la empresa?</label>
+                                    <p class="text-[11px] font-medium text-gray-500 mt-1">Marca esta casilla si el administrador recibirá pagos o generará liquidaciones como empleado de <strong>{{ $company->razon_social }}</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-4 rounded-b-2xl border-t border-gray-100 text-right">
+                        <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Guardar Administrador <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </x-layouts.company>

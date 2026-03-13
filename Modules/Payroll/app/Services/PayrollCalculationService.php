@@ -24,6 +24,7 @@ class PayrollCalculationService
         // You might want to filter by hire_date <= period_end_date and termination_date >= period_start_date
         $employees = Employee::where('company_id', $period->company_id)
             ->where('status', 'active') // Assuming 'active' is the status
+            ->where('is_in_payroll', true)
             ->get();
 
         $count = 0;

@@ -55,6 +55,7 @@ class Employee extends Model
         'salary_type',
         'contract_type',
         'status',
+        'is_in_payroll',
         'emergency_contact_name',
         'emergency_contact_phone',
     ];
@@ -63,6 +64,7 @@ class Employee extends Model
         'hire_date' => 'date',
         'birth_date' => 'date',
         'part_time_schedule' => 'array',
+        'is_in_payroll' => 'boolean',
     ];
 
     /**

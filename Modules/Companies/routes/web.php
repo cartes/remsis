@@ -44,6 +44,16 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::get('companies/{company}/transactions', [CompaniesController::class, 'transactions'])
         ->name('companies.transactions');
 
+    // Gestión de Usuarios de la Empresa (Admins, RRHH, Contabilidad)
+    Route::get('companies/{company}/users', [\Modules\Companies\Http\Controllers\CompanyUserController::class, 'index'])
+        ->name('companies.users.index');
+    Route::post('companies/{company}/users', [\Modules\Companies\Http\Controllers\CompanyUserController::class, 'store'])
+        ->name('companies.users.store');
+    Route::put('companies/{company}/users/{user}', [\Modules\Companies\Http\Controllers\CompanyUserController::class, 'update'])
+        ->name('companies.users.update');
+    Route::delete('companies/{company}/users/{user}', [\Modules\Companies\Http\Controllers\CompanyUserController::class, 'destroy'])
+        ->name('companies.users.destroy');
+
     // Payroll Periods nested under companies
     Route::prefix('companies/{company}/payroll-periods')->name('companies.payroll-periods.')->group(function () {
         Route::get('/', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'index'])->name('index');

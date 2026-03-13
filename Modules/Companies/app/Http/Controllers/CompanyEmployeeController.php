@@ -149,8 +149,13 @@ class CompanyEmployeeController extends Controller
             
             // Estado
             'status' => 'nullable|in:active,inactive',
+            'is_in_payroll' => 'nullable|boolean',
             'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if (array_key_exists('is_in_payroll', $validated)) {
+            $validated['is_in_payroll'] = filter_var($validated['is_in_payroll'], FILTER_VALIDATE_BOOLEAN);
+        }
 
         $user = $employee->user()->firstOrFail();
         $newProfilePhotoPath = null;

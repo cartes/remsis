@@ -291,7 +291,7 @@
                         "work_schedule_type", "part_time_hours", "part_time_schedule",
                         "cost_center_id", "afp_id", "isapre_id", "ccaf_id", "health_contribution", "apv_amount",
                         "salary", "salary_type", "num_dependents", "bank_id", "bank_account_number",
-                        "bank_account_type", "emergency_contact_name", "emergency_contact_phone", "status"
+                        "bank_account_type", "emergency_contact_name", "emergency_contact_phone", "status", "is_in_payroll"
                     ],
                     afps: @json($afps),
                     isapres: @json($isapres),
@@ -343,6 +343,7 @@
                         emergency_contact_name: "",
                         emergency_contact_phone: "",
                         address: "",
+                        is_in_payroll: true,
                         user: {
                             name: "",
                             email: "",

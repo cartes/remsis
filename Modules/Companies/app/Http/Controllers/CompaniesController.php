@@ -255,7 +255,12 @@ class CompaniesController extends Controller
             ->get()
             ->avg('completion_percentage') ?? 0;
 
-        return view('companies::dashboard', compact('company', 'totalEmployees', 'activeEmployees', 'completionAverage'));
+        // Verificar si la empresa tiene un admin
+        $hasAdmin = $company->users()->whereHas('roles', function($q) {
+            $q->where('name', 'admin');
+        })->exists();
+
+        return view('companies::dashboard', compact('company', 'totalEmployees', 'activeEmployees', 'completionAverage', 'hasAdmin'));
     }
 
     public function transactions(Company $company)

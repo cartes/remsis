@@ -231,6 +231,16 @@
                     </div>
                 </div>
 
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-start gap-3 mt-4">
+                    <div class="flex items-center h-5">
+                        <input id="edit_is_in_payroll" type="checkbox" x-model="selectedEmployee.is_in_payroll" class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                    <div class="ml-2 text-sm">
+                        <label for="edit_is_in_payroll" class="font-bold text-gray-700">¿Es parte de la nómina de la empresa?</label>
+                        <p class="text-xs font-medium text-gray-500">Si desmarcas esta opción el empleado no se contabilizará ni aparecerá al momento de calcular los pagos del mes.</p>
+                    </div>
+                </div>
+
                 <div x-show="selectedEmployee.work_schedule_type === 'part_time'"
                     class="space-y-4 pt-4 border-t border-gray-100" x-transition x-cloak>
                     <div>

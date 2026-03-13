@@ -53,7 +53,7 @@
 
             @php
                 $currentCompanyTab = $activeTab ?? '';
-                $isAccountingSection = in_array($currentCompanyTab, ['accounting', 'accounting-data', 'accounting-remunerations', 'cost-centers', 'employees'], true);
+                $isAccountingSection = in_array($currentCompanyTab, ['accounting', 'accounting-data', 'accounting-remunerations', 'cost-centers', 'employees', 'honorarios'], true);
                 $isCompanyDataActive = in_array($currentCompanyTab, ['accounting', 'accounting-data', 'cost-centers'], true);
                 $isRemunerationsActive = $currentCompanyTab === 'accounting-remunerations';
                 $isEmployeesActive = $currentCompanyTab === 'employees';
@@ -97,6 +97,12 @@
                                 <i class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
                                 Nómina de empleados
                             </a>
+
+                            <a href="{{ route('companies.freelancers.index', $company) }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ ($activeTab ?? '') === 'honorarios' ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
+                                <i class="fas fa-file-invoice w-4 text-center {{ ($activeTab ?? '') === 'honorarios' ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                Colaboradores a Honorarios
+                            </a>
                         </div>
                     </div>
 
@@ -134,6 +140,18 @@
                         <i class="fas fa-file-invoice-dollar w-5 text-center transition-colors"
                             :class="activeTab === 'payrolls' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
                         Historial de Nóminas
+                    </a>
+                </div>
+            </div>
+
+            {{-- Access Section --}}
+            <div>
+                <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Configuración</p>
+                <div class="space-y-1">
+                    <a href="{{ route('companies.users.index', ['company' => $company]) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ ($activeTab ?? '') === 'users' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50' }} group">
+                        <i class="fas fa-user-shield w-5 text-center {{ ($activeTab ?? '') === 'users' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500' }} transition-colors"></i>
+                        Usuarios y Accesos
                     </a>
                 </div>
             </div>
