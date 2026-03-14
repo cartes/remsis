@@ -6,6 +6,7 @@ use Modules\AdminPanel\Http\Controllers\AdminPanelController;
 use Modules\AdminPanel\Http\Controllers\Auth\LogoutController;
 use Modules\AdminPanel\Http\Controllers\SettingsController;
 use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
+use Modules\AdminPanel\Http\Controllers\BancoCentralSettingsController;
 
 
 Route::middleware('guest')->group(function () {
@@ -57,6 +58,9 @@ Route::prefix('settings')
         
         Route::get('/legal-parameters', [SettingsController::class, 'legal'])->name('settings.legal');
         Route::put('/legal-parameters', [SettingsController::class, 'updateLegalParameters'])->name('legal_parameters.update');
+        Route::get('/banco-central', [BancoCentralSettingsController::class, 'index'])->name('settings.bcch');
+        Route::put('/banco-central/credentials', [BancoCentralSettingsController::class, 'updateCredentials'])->name('settings.bcch.credentials.update');
+        Route::post('/banco-central/sync-today', [BancoCentralSettingsController::class, 'syncToday'])->name('settings.bcch.sync_today');
 
         Route::get('/codigos-sii', [SettingsController::class, 'siiCodes'])->name('settings.sii_codes');
 

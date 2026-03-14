@@ -2,11 +2,13 @@
 
 namespace Modules\Core\Providers;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Modules\Core\Console\Commands\SyncIndicadoresCommand;
 
 class CoreServiceProvider extends ServiceProvider
 {
@@ -43,7 +45,9 @@ class CoreServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            SyncIndicadoresCommand::class,
+        ]);
     }
 
     /**
@@ -51,10 +55,12 @@ class CoreServiceProvider extends ServiceProvider
      */
     protected function registerCommandSchedules(): void
     {
-        // $this->app->booted(function () {
-        //     $schedule = $this->app->make(Schedule::class);
-        //     $schedule->command('inspire')->hourly();
-        // });
+        $this->app->booted(function (): void {
+            $schedule = $this->app->make(Schedule::class);
+
+            $schedule->command('remsis:sync-indicadores')->monthlyOn(8, '06:15')->withoutOverlapping();
+            $schedule->command('remsis:sync-indicadores')->monthlyOn(9, '06:15')->withoutOverlapping();
+        });
     }
 
     /**

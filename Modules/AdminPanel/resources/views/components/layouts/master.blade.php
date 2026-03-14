@@ -88,6 +88,12 @@
                                     class="fas fa-balance-scale w-5 text-center transition-colors {{ request()->routeIs('settings.legal') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
                                 Parámetros Legales
                             </a>
+                            <a href="{{ route('settings.bcch') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('settings.bcch*') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
+                                <i
+                                    class="fas fa-landmark w-5 text-center transition-colors {{ request()->routeIs('settings.bcch*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"></i>
+                                Banco Central e Indicadores
+                            </a>
                             <a href="{{ route('settings.sii_codes') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all {{ request()->routeIs('settings.sii_codes') ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100' : 'text-slate-600 hover:bg-slate-50 group' }}">
                                 <i

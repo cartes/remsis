@@ -3,6 +3,7 @@
 namespace Modules\AdminPanel\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
@@ -11,6 +12,8 @@ use Modules\AdminPanel\Models\LegalParameter;
 use Modules\AdminPanel\Models\CodigoSii;
 use Modules\AdminPanel\Models\Bank;
 use Modules\AdminPanel\Models\Mutual;
+use Modules\Core\Models\DailyUfValue;
+use Modules\Core\Models\MonthlyIpcValue;
 
 class SettingsController extends Controller
 {
@@ -30,8 +33,15 @@ class SettingsController extends Controller
 
     public function legal()
     {
+        $today = CarbonImmutable::now('America/Santiago')->startOfDay();
+
         return view('adminpanel::settings.legal', [
             'legalParameters' => LegalParameter::all(),
+            'latestSyncedIpc' => MonthlyIpcValue::query()->latest('reference_period')->first(),
+            'latestSyncedUf' => DailyUfValue::query()
+                ->whereDate('date', '<=', $today->toDateString())
+                ->orderByDesc('date')
+                ->first(),
         ]);
     }
 
@@ -231,11 +241,17 @@ class SettingsController extends Controller
     {
         $data = $request->except(['_token', '_method']);
         
+        $lockedKeys = ['uf_value', 'ipc_value'];
+
         foreach ($data as $key => $value) {
+            if (in_array($key, $lockedKeys, true)) {
+                continue;
+            }
+
             LegalParameter::where('key', $key)->update(['value' => $value]);
         }
 
-        return redirect()->route('settings.legal')->with('success_legal', 'Parámetros legales actualizados correctamente.');
+        return redirect()->route('settings.legal')->with('success_legal', 'Parámetros legales actualizados correctamente. UF e IPC se sincronizan desde Banco Central.');
     }
 
 }
