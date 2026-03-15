@@ -37,14 +37,14 @@ class UserController extends Controller
                     $eq->where('company_id', $companyFilter);
                 });
             })
-            ->with(['roles:id,name', 'employee.company:id,name'])
+            ->with(['roles:id,name', 'employee.company:id,name', 'companies:id,razon_social'])
             ->select('id', 'name', 'email', 'status');
 
         $users = $query->orderByDesc('id')->get();
 
         // Roles visibles/seleccionables en UI para gestión administrativa
         $visibleRoles = $isSuperAdmin
-            ? ['super-admin', 'admin', 'contador', 'recursos-humanos']
+            ? ['super-admin', 'admin', 'contador', 'recursos-humanos', 'multi-company']
             : ['admin', 'contador', 'recursos-humanos'];
 
         $roles = Role::whereIn('name', $visibleRoles)
@@ -132,6 +132,8 @@ class UserController extends Controller
             'role' => 'nullable|string|exists:roles,name',
             'password' => 'nullable|string|min:6',
             'company_id' => 'nullable|integer|exists:companies,id',
+            'company_ids' => 'nullable|array',
+            'company_ids.*' => 'integer|exists:companies,id',
         ]);
 
         $user->name = $validated['name'];
@@ -160,14 +162,17 @@ class UserController extends Controller
                     ['company_id' => $validated['company_id']]
                 );
             } else {
-                // Si viene nulo/vacio, desvincular (opcional)
                 \Modules\Employees\Models\Employee::where('user_id', $user->id)->delete();
             }
         }
 
+        if ($auth->hasRole('super-admin') && isset($validated['company_ids'])) {
+            $user->companies()->sync($validated['company_ids']);
+        }
+
         return response()->json([
             'message' => 'Usuario actualizado correctamente.',
-            'user' => $user->load(['roles', 'employee.company']),
+            'user' => $user->load(['roles', 'employee.company', 'companies']),
         ]);
     }
 

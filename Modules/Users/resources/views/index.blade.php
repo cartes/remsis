@@ -152,11 +152,21 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <template x-if="user.employee && user.employee.company">
-                                        <span class="font-medium text-gray-700" x-text="user.employee.company.name"></span>
+                                    <template x-if="user.roles.some(r => ['multi-company', 'contador'].includes(r.name)) && user.companies && user.companies.length > 1">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-indigo-600 text-xs uppercase tracking-tight">Multi-empresa</span>
+                                            <span class="text-[10px] text-gray-500" x-text="user.companies.length + ' empresas vinculadas'"></span>
+                                        </div>
                                     </template>
-                                    <template x-if="!user.employee || !user.employee.company">
-                                        <span class="text-gray-400 italic text-xs">Sin empresa</span>
+                                    <template x-if="!(user.roles.some(r => ['multi-company', 'contador'].includes(r.name)) && user.companies && user.companies.length > 1)">
+                                        <div>
+                                            <template x-if="user.employee && user.employee.company">
+                                                <span class="font-medium text-gray-700" x-text="user.employee.company.name"></span>
+                                            </template>
+                                            <template x-if="!user.employee || !user.employee.company">
+                                                <span class="text-gray-400 italic text-xs">Sin empresa</span>
+                                            </template>
+                                        </div>
                                     </template>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -328,9 +338,9 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div>
+                                <div x-show="!['multi-company', 'contador'].includes(form.role)">
                                     <label
-                                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Empresa</label>
+                                        class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Empresa Principal</label>
                                     <select x-model="form.company_id"
                                         class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
                                         <option value="">Ninguna / Sin Empresa</option>
@@ -339,6 +349,20 @@
                                                 :selected="form.company_id == comp.id"></option>
                                         </template>
                                     </select>
+                                </div>
+
+                                <div x-show="['multi-company', 'contador'].includes(form.role)" class="space-y-2">
+                                    <label class="block text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Empresas Vinculadas (Multi-empresa)</label>
+                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                                        <template x-for="comp in companiesList" :key="'multi-'+comp.id">
+                                            <label class="flex items-center gap-3 p-2 hover:bg-white rounded-md transition-colors cursor-pointer group">
+                                                <input type="checkbox" :value="comp.id" x-model="form.company_ids"
+                                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-xs font-medium text-gray-700 group-hover:text-indigo-900" x-text="comp.name"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 italic">Los usuarios con rol multi-empresa o contador pueden acceder a todas las empresas seleccionadas.</p>
                                 </div>
                             </div>
                         </template>
@@ -488,6 +512,7 @@
                             password: '',
                             passwordOnly: false,
                             company_id: '',
+                            company_ids: [],
                         },
                         users: @json($users),
                         companyModal: {
@@ -558,6 +583,8 @@
                                 role: '',
                                 password: '',
                                 passwordOnly: false,
+                                company_id: '',
+                                company_ids: [],
                             };
                         },
 
@@ -612,6 +639,7 @@
                                 this.form.email = user.email;
                                 this.form.role = user.roles.length > 0 ? user.roles[0].name : '';
                                 this.form.company_id = user.employee?.company_id ?? '';
+                                this.form.company_ids = user.companies ? user.companies.map(c => c.id) : [];
                                 this.form.passwordOnly = false;
                                 this.editModal = true;
                             }
@@ -637,6 +665,7 @@
                                     email: this.form.email,
                                     role: this.form.role,
                                     company_id: this.form.company_id,
+                                    company_ids: this.form.company_ids,
                                 });
 
                                 const index = this.users.findIndex(u => u.id === this.form.id);
@@ -647,6 +676,7 @@
                                         name: this.form.role
                                     }];
                                     this.users[index].employee = response.data.user.employee;
+                                    this.users[index].companies = response.data.user.companies;
                                 }
 
                                 this.editModal = false;
