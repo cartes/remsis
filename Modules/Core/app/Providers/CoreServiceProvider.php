@@ -4,8 +4,10 @@ namespace Modules\Core\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Modules\Core\Console\Commands\SyncIndicadoresCommand;
+use Modules\Core\Models\DailyUfValue;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -29,6 +31,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+        $this->registerViewComposers();
     }
 
     /**
@@ -136,6 +139,20 @@ class CoreServiceProvider extends ServiceProvider
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
         Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
+    }
+
+    /**
+     * Register view composers.
+     */
+    protected function registerViewComposers(): void
+    {
+        View::composer('layouts.company', function ($view) {
+            $dailyUf = DailyUfValue::query()
+                ->latest('date')
+                ->first();
+
+            $view->with('dailyUf', $dailyUf);
+        });
     }
 
     /**

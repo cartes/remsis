@@ -293,6 +293,18 @@
                                         class="font-mono font-black text-sm tracking-tight">{{ $company->rut }}</span>
                                 </div>
                                 <span class="opacity-30">|</span>
+                                @if (isset($dailyUf))
+                                    <div
+                                        class="flex items-center gap-2 bg-black/10 px-3 py-1 rounded-lg border border-white/5"
+                                        title="UF al {{ $dailyUf->date->format('d-m-Y') }}">
+                                        <span
+                                            class="text-[10px] font-bold uppercase opacity-50 tracking-widest">UF</span>
+                                        <span class="font-mono font-black text-sm tracking-tight">
+                                            ${{ number_format($dailyUf->value, 2, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    <span class="opacity-30">|</span>
+                                @endif
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-circle-check text-[10px] text-green-400"></i>
                                     <span class="text-xs font-bold uppercase tracking-widest opacity-80">Empresa
