@@ -51,7 +51,8 @@ class Company extends Model
         'notes',
         'weekly_hours',
         'work_schedule',
-        'allows_overtime'
+        'allows_overtime',
+        'slug',
     ];
 
     protected $casts = [
@@ -60,10 +61,20 @@ class Company extends Model
         'allows_overtime' => 'boolean',
     ];
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
 
     public function users()
     {
         return $this->hasManyThrough(User::class, Employee::class, 'company_id', 'id', 'id', 'user_id');
+    }
+
+    public function administrators()
+    {
+        return $this->belongsToMany(User::class, 'company_user');
     }
 
     public function bank()
@@ -111,6 +122,16 @@ class Company extends Model
         static::creating(function ($company) {
             if (empty($company->name) && !empty($company->razon_social)) {
                 $company->name = $company->razon_social;
+            }
+
+            if (empty($company->slug)) {
+                $company->slug = \Illuminate\Support\Str::slug($company->name);
+            }
+        });
+
+        static::updating(function ($company) {
+            if ($company->isDirty('name') && !$company->isDirty('slug')) {
+                $company->slug = \Illuminate\Support\Str::slug($company->name);
             }
         });
     }

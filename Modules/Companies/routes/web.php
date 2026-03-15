@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 use Modules\Companies\Http\Controllers\CompaniesController;
 
 Route::middleware(['auth'])->scopeBindings()->group(function () {
+    Route::get('select-company', [Modules\Companies\Http\Controllers\CompanySelectorController::class, 'index'])
+        ->name('companies.select');
+    Route::post('select-company/{company}', [Modules\Companies\Http\Controllers\CompanySelectorController::class, 'select'])
+        ->name('companies.selected');
+
     Route::resource('companies', CompaniesController::class)->names('companies');
 
     Route::get('companies/{company}/essentials/edit', [CompaniesController::class, 'editEssentials'])

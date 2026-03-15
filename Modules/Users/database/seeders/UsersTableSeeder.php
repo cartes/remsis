@@ -31,6 +31,11 @@ class UsersTableSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
+        $multiCompanyRole = Role::firstOrCreate([
+            'name' => 'multi-company',
+            'guard_name' => 'web',
+        ]);
+
         // Crear usuarios con metadata
         $admin = User::create([
             'name' => 'Admin General',

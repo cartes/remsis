@@ -59,6 +59,23 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class, 'user_id');
     }
 
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user');
+    }
+
+    public function getAllCompanies()
+    {
+        $companies = $this->companies()->get();
+        
+        $primaryCompany = $this->company;
+        if ($primaryCompany && ! $companies->contains('id', $primaryCompany->id)) {
+            $companies->push($primaryCompany);
+        }
+
+        return $companies;
+    }
+
     public function getProfilePhotoUrlAttribute(): ?string
     {
         if (empty($this->profile_photo)) {

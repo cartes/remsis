@@ -59,7 +59,7 @@
                                                 <div>
                                                     <div class="font-semibold text-gray-800">
                                                         <a class="text-blue-600 block hover:underline"
-                                                            href="{{ route('companies.edit', $company->id) }}">
+                                                            href="{{ route('companies.edit', $company) }}">
                                                             {{ $company->razon_social ?? $company->name }}
                                                             @if ($company->nombre_fantasia)
                                                                 <div class="text-xs text-gray-500 font-normal mt-0.5">
@@ -87,12 +87,12 @@
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <div class="flex items-center justify-center gap-2">
-                                                <a href="{{ route('companies.edit', $company->id) }}"
+                                                <a href="{{ route('companies.edit', $company) }}"
                                                     class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all">
                                                     <i class="fas fa-edit"></i>
                                                     Editar
                                                 </a>
-                                                <a href="{{ route('companies.employees', $company->id) }}"
+                                                <a href="{{ route('companies.employees', $company) }}"
                                                     class="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-green-50 transition-all">
                                                     <i class="fas fa-users"></i>
                                                     Empleados

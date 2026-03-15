@@ -17,7 +17,12 @@ class CompaniesController extends Controller
         $query = Company::orderBy('razon_social')->orderBy('name');
 
         if (!$user->hasRole('super-admin')) {
-            $query->where('id', $user->company_id);
+            $query->where(function($q) use ($user) {
+                $q->where('id', $user->company_id)
+                  ->orWhereHas('administrators', function($sq) use ($user) {
+                      $sq->where('users.id', $user->id);
+                  });
+            });
         }
 
         $companies = $query->get();

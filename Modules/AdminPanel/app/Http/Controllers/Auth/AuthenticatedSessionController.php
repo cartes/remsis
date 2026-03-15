@@ -30,12 +30,34 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
-        $redirectUrl = route('admin.dashboard');
-
-        if ($user->hasRole('employee')) {
+        if ($user->hasRole('super-admin')) {
+            $redirectUrl = route('admin.dashboard');
+        } elseif ($user->hasRole('multi-company')) {
+            $companies = $user->getAllCompanies();
+            if ($companies->count() > 1) {
+                $redirectUrl = route('companies.select');
+            } elseif ($companies->count() === 1) {
+                $company = $companies->first();
+                session(['selected_company_id' => $company->id]);
+                $redirectUrl = route('companies.dashboard', $company);
+            } else {
+                $redirectUrl = route('companies.index');
+            }
+        } elseif ($user->hasAnyRole('admin', 'contador', 'recursos-humanos')) {
+            $companies = $user->getAllCompanies();
+            if ($companies->count() > 1) {
+                $redirectUrl = route('companies.select');
+            } else {
+                $company = $user->company ?? $user->employee?->company;
+                if ($company) {
+                    session(['selected_company_id' => $company->id]);
+                    $redirectUrl = route('companies.dashboard', $company);
+                } else {
+                    $redirectUrl = route('admin.dashboard'); // Fallback or handle error
+                }
+            }
+        } elseif ($user->hasRole('employee')) {
             $redirectUrl = route('employee.profile.show');
-        } elseif ($user->hasAnyRole('super-admin', 'admin', 'contador')) {
-            $redirectUrl = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
         } else {
             auth()->logout();
             $request->session()->invalidate();
@@ -50,6 +72,8 @@ class AuthenticatedSessionController extends Controller
             
             return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
         }
+
+        $redirectUrl = redirect()->intended($redirectUrl)->getTargetUrl();
 
         if ($request->expectsJson()) {
             return response()->json(['redirect' => $redirectUrl]);

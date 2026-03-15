@@ -85,7 +85,7 @@
                                     </button>
                                     @if (Auth::id() !== $user->id)
                                         <form
-                                            action="{{ route('companies.users.destroy', ['company' => $company->id, 'user' => $user->id]) }}"
+                                            action="{{ route('companies.users.destroy', ['company' => $company, 'user' => $user->id]) }}"
                                             method="POST" class="inline-block"
                                             onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');">
                                             @csrf
@@ -238,6 +238,7 @@
                     showModal: false,
                     isEditing: false,
                     companyId: {{ $company->id }},
+                    companySlug: '{{ $company->slug }}',
                     form: {
                         id: null,
                         name: '',
@@ -247,9 +248,9 @@
                     },
                     get formAction() {
                         if (this.isEditing && this.form.id) {
-                            return `/companies/${this.companyId}/users/${this.form.id}`;
+                            return `/companies/${this.companySlug}/users/${this.form.id}`;
                         }
-                        return `/companies/${this.companyId}/users`;
+                        return `/companies/${this.companySlug}/users`;
                     },
                     openCreateModal() {
                         this.isEditing = false;

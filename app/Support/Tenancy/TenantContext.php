@@ -49,7 +49,13 @@ class TenantContext
             return;
         }
 
-        $this->setCompanyId($user->company_id ?? $user->employee?->company_id);
+        $selectedCompanyId = session('selected_company_id');
+        
+        if ($selectedCompanyId) {
+            $this->setCompanyId($selectedCompanyId);
+        } else {
+            $this->setCompanyId($user->company_id ?? $user->employee?->company_id);
+        }
     }
 
     public function clear(): void
