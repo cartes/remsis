@@ -17,10 +17,9 @@ class BankFactoryFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->unique()->company . ' Bank',
+            'name' => $this->faker->unique()->company.' Bank',
             'code' => $this->faker->unique()->swiftBicNumber,
             'status' => 'active',
         ];
     }
 }
-

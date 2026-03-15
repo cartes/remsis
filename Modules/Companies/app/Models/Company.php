@@ -3,19 +3,21 @@
 namespace Modules\Companies\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Users\Models\User;
 use Modules\AdminPanel\Models\Ccaf;
 use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\Payroll;
+use Modules\Users\Models\User;
 
 // use Modules\Companies\Database\Factories\CompanyFactory;
 
 class Company extends Model
 {
     const GRATIFICATION_SYSTEM_NONE = 'sin_gratificacion';
+
     const GRATIFICATION_SYSTEM_ART_47 = 'art_47';
+
     const GRATIFICATION_SYSTEM_ART_50 = 'art_50';
+
     const GRATIFICATION_SYSTEM_CONVENTIONAL = 'convencional';
 
     /**
@@ -65,7 +67,6 @@ class Company extends Model
     {
         return 'slug';
     }
-
 
     public function users()
     {
@@ -120,7 +121,7 @@ class Company extends Model
     protected static function booted()
     {
         static::creating(function ($company) {
-            if (empty($company->name) && !empty($company->razon_social)) {
+            if (empty($company->name) && ! empty($company->razon_social)) {
                 $company->name = $company->razon_social;
             }
 
@@ -130,10 +131,9 @@ class Company extends Model
         });
 
         static::updating(function ($company) {
-            if ($company->isDirty('name') && !$company->isDirty('slug')) {
+            if ($company->isDirty('name') && ! $company->isDirty('slug')) {
                 $company->slug = \Illuminate\Support\Str::slug($company->name);
             }
         });
     }
-
 }

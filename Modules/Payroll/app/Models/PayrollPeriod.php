@@ -3,8 +3,8 @@
 namespace Modules\Payroll\Models;
 
 use App\Models\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Companies\Models\Company;
 
@@ -37,8 +37,11 @@ class PayrollPeriod extends Model
      * Status constants
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_OPEN = 'open';
+
     const STATUS_CLOSED = 'closed';
+
     const STATUS_PAID = 'paid';
 
     /**
@@ -78,8 +81,9 @@ class PayrollPeriod extends Model
     public function scopeCurrent($query)
     {
         $now = now();
+
         return $query->where('year', $now->year)
-                    ->where('month', $now->month);
+            ->where('month', $now->month);
     }
 
     public function scopeOpen($query)
@@ -118,19 +122,20 @@ class PayrollPeriod extends Model
     public function canReopen(): bool
     {
         // Only super-admin can reopen closed periods
-        return auth()->user()?->hasRole('super-admin') && 
+        return auth()->user()?->hasRole('super-admin') &&
                in_array($this->status, [self::STATUS_CLOSED, self::STATUS_PAID]);
     }
 
     public function getDisplayName(): string
     {
-        $monthName = self::MONTH_NAMES[$this->month] ?? 'Mes ' . $this->month;
-        return $monthName . ' ' . $this->year;
+        $monthName = self::MONTH_NAMES[$this->month] ?? 'Mes '.$this->month;
+
+        return $monthName.' '.$this->year;
     }
 
     public function getStatusBadgeClass(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_DRAFT => 'bg-gray-100 text-gray-700 border-gray-200',
             self::STATUS_OPEN => 'bg-blue-100 text-blue-700 border-blue-200',
             self::STATUS_CLOSED => 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -141,7 +146,7 @@ class PayrollPeriod extends Model
 
     public function getStatusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_DRAFT => 'Borrador',
             self::STATUS_OPEN => 'Abierto',
             self::STATUS_CLOSED => 'Cerrado',
@@ -162,7 +167,7 @@ class PayrollPeriod extends Model
             if (empty($period->name)) {
                 $period->name = $period->getDisplayName();
             }
-            
+
             // Set default status if not provided
             if (empty($period->status)) {
                 $period->status = self::STATUS_DRAFT;

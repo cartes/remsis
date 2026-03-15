@@ -2,19 +2,14 @@
 
 namespace Modules\Payroll\Services;
 
-use Modules\Employees\Models\Employee;
-use Modules\Companies\Models\Company;
 use Carbon\Carbon;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
 
 class PayrollService
 {
     /**
      * Calcula el monto de gratificación legal para un empleado en un período determinado.
-     * 
-     * @param Employee $employee
-     * @param Company $company
-     * @param Carbon $period
-     * @return int
      */
     public function calculateGratification(Employee $employee, Company $company, Carbon $period): int
     {

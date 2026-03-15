@@ -62,14 +62,14 @@ class AuthenticatedSessionController extends Controller
             auth()->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'No tienes rol asignado para ingresar.',
-                    'errors' => ['email' => ['No tienes rol asignado para ingresar.']]
+                    'errors' => ['email' => ['No tienes rol asignado para ingresar.']],
                 ], 403);
             }
-            
+
             return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
         }
 

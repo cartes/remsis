@@ -4,7 +4,6 @@ namespace Modules\Payroll\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\Payroll\Models\PayrollPeriod;
-use Carbon\Carbon;
 
 class PayrollPeriodSeeder extends Seeder
 {

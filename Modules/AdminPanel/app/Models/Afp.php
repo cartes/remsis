@@ -2,9 +2,10 @@
 
 namespace Modules\AdminPanel\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Employees\Models\Employee;
+
 // use Modules\AdminPanel\Database\Factories\AfpFactory;
 
 class Afp extends Model

@@ -2,16 +2,16 @@
 
 namespace Modules\Companies\Http\Controllers;
 
+use App\Rules\Rut;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Modules\Users\Models\User;
-use Modules\Employees\Models\Employee;
-use Modules\Companies\Models\Company;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
+use Modules\Users\Models\User;
 use Throwable;
-use App\Rules\Rut;
 
 class CompanyEmployeeController extends Controller
 {
@@ -53,7 +53,7 @@ class CompanyEmployeeController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'status' => $user->status,
-            ]
+            ],
         ]);
     }
 
@@ -65,22 +65,22 @@ class CompanyEmployeeController extends Controller
         // Desvincular implica borrar el registro en 'employees'.
         // Si el usuario SOLO tiene el rol employee, podríamos borrar al usuario también,
         // pero para evitar pérdida de datos accidental, solo desvinculamos o borramos employee.
-        
+
         $employee = Employee::where('user_id', $user->id)
             ->where('company_id', $company->id)
             ->first();
 
         if ($employee) {
             $employee->delete();
-            
+
             // Opcional: si queremos borrar al usuario físico si no tiene otros roles
-            // $user->delete(); 
+            // $user->delete();
             session()->flash('success', 'Empleado desvinculado de la empresa.');
         }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Empleado desvinculado de la empresa.'
+            'message' => 'Empleado desvinculado de la empresa.',
         ]);
     }
 
@@ -92,7 +92,7 @@ class CompanyEmployeeController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'employee' => $employee
+            'employee' => $employee,
         ]);
     }
 
@@ -106,16 +106,16 @@ class CompanyEmployeeController extends Controller
             'last_name' => 'nullable|string|max:255',
             'rut' => ['nullable', 'string', new Rut],
             'email' => [
-                'nullable', 
-                'email', 
-                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($employee->user_id)
+                'nullable',
+                'email',
+                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($employee->user_id),
             ],
             'phone' => 'nullable|string',
             'birth_date' => 'nullable|date',
             'nationality' => 'nullable|string|max:100',
             'marital_status' => 'nullable|in:single,married,divorced,widowed,other',
             'address' => 'nullable|string',
-            
+
             // Datos laborales
             'position' => 'nullable|string',
             'hire_date' => 'nullable|date',
@@ -125,28 +125,28 @@ class CompanyEmployeeController extends Controller
             'part_time_hours' => 'nullable|numeric|min:0',
             'part_time_schedule' => 'nullable|json',
             'cost_center_id' => 'nullable|exists:cost_centers,id',
-            
+
             // Previsión social
             'afp_id' => 'nullable|exists:afps,id',
             'isapre_id' => 'nullable|exists:isapres,id',
             'ccaf_id' => 'nullable|exists:ccafs,id',
             'health_contribution' => 'nullable|numeric|min:0',
             'apv_amount' => 'nullable|numeric|min:0',
-            
+
             // Remuneración
             'salary' => 'nullable|numeric',
             'salary_type' => 'nullable|in:mensual,quincenal,semanal',
             'num_dependents' => 'nullable|integer|min:0',
-            
+
             // Datos bancarios
             'bank_id' => 'nullable|exists:banks,id',
             'bank_account_number' => 'nullable|string',
             'bank_account_type' => 'nullable|in:corriente,vista,ahorro',
-            
+
             // Contacto emergencia
             'emergency_contact_name' => 'nullable|string',
             'emergency_contact_phone' => 'nullable|string',
-            
+
             // Estado
             'status' => 'nullable|in:active,inactive',
             'is_in_payroll' => 'nullable|boolean',
@@ -180,7 +180,7 @@ class CompanyEmployeeController extends Controller
 
                 $changed = false;
 
-                if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+                if (! empty($validated['first_name']) && ! empty($validated['last_name'])) {
                     $newName = trim("{$validated['first_name']} {$validated['last_name']}");
 
                     if ($user->name !== $newName) {
@@ -189,7 +189,7 @@ class CompanyEmployeeController extends Controller
                     }
                 }
 
-                if (!empty($validated['email']) && $user->email !== $validated['email']) {
+                if (! empty($validated['email']) && $user->email !== $validated['email']) {
                     $user->email = $validated['email'];
                     $changed = true;
                 }
@@ -213,7 +213,7 @@ class CompanyEmployeeController extends Controller
 
         if (
             $newProfilePhotoPath !== null
-            && !empty($previousProfilePhotoPath)
+            && ! empty($previousProfilePhotoPath)
             && $previousProfilePhotoPath !== $newProfilePhotoPath
             && Storage::disk('public')->exists($previousProfilePhotoPath)
         ) {
@@ -223,7 +223,7 @@ class CompanyEmployeeController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Datos de nómina actualizados correctamente.',
-            'employee' => $employee->fresh(['user.roles'])
+            'employee' => $employee->fresh(['user.roles']),
         ]);
     }
 
@@ -253,7 +253,7 @@ class CompanyEmployeeController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
     }

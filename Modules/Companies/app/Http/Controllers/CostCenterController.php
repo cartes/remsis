@@ -15,7 +15,7 @@ class CostCenterController extends Controller
     public function index(Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -30,7 +30,7 @@ class CostCenterController extends Controller
     public function store(Request $request, Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -53,7 +53,7 @@ class CostCenterController extends Controller
         if ($exists) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'El código ya existe para esta empresa.'
+                'message' => 'El código ya existe para esta empresa.',
             ], 422);
         }
 
@@ -62,7 +62,7 @@ class CostCenterController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Centro de costo creado correctamente.',
-            'costCenter' => $costCenter
+            'costCenter' => $costCenter,
         ]);
     }
 
@@ -72,7 +72,7 @@ class CostCenterController extends Controller
     public function update(Request $request, Company $company, CostCenter $costCenter)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -92,7 +92,7 @@ class CostCenterController extends Controller
         if ($exists) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'El código ya existe para esta empresa.'
+                'message' => 'El código ya existe para esta empresa.',
             ], 422);
         }
 
@@ -101,7 +101,7 @@ class CostCenterController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Centro de costo actualizado correctamente.',
-            'costCenter' => $costCenter
+            'costCenter' => $costCenter,
         ]);
     }
 
@@ -111,7 +111,7 @@ class CostCenterController extends Controller
     public function destroy(Company $company, CostCenter $costCenter)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -119,7 +119,7 @@ class CostCenterController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Centro de costo eliminado correctamente.'
+            'message' => 'Centro de costo eliminado correctamente.',
         ]);
     }
 }

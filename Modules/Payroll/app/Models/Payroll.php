@@ -3,15 +3,16 @@
 namespace Modules\Payroll\Models;
 
 use App\Models\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Employees\Models\Employee;
-use Modules\Companies\Models\Company;
-use Modules\Users\Models\User; 
-use Modules\AdminPanel\Models\Bank;
+use Illuminate\Database\Eloquent\Model;
 use Modules\AdminPanel\Models\Afp;
-use Modules\AdminPanel\Models\Isapre;
+use Modules\AdminPanel\Models\Bank;
 use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\Isapre;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
+use Modules\Users\Models\User;
+
 // use Modules\Payroll\Database\Factories\PayrollFactory;
 
 class Payroll extends Model
@@ -55,45 +56,54 @@ class Payroll extends Model
         'status',
         'processed_at',
         'processed_by',
-        'notes'
+        'notes',
     ];
 
     public function employee()
     {
         return $this->belongsTo(Employee::class);
     }
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
+
     public function bank()
     {
         return $this->belongsTo(Bank::class);
     }
+
     public function afp()
     {
         return $this->belongsTo(Afp::class);
     }
+
     public function isapre()
     {
         return $this->belongsTo(Isapre::class);
     }
+
     public function ccaf()
     {
         return $this->belongsTo(Ccaf::class);
     }
+
     public function period()
     {
         return $this->belongsTo(PayrollPeriod::class, 'payroll_period_id');
     }
+
     public function details()
     {
         return $this->hasMany(PayrollDetail::class);
     }
+
     public function processedBy()
     {
         return $this->belongsTo(User::class, 'processed_by');
@@ -103,5 +113,4 @@ class Payroll extends Model
     {
         return 'normal';
     }
-
 }

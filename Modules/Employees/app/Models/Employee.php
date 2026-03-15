@@ -3,14 +3,15 @@
 namespace Modules\Employees\Models;
 
 use App\Models\Concerns\BelongsToTenant;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Modules\AdminPanel\Models\Afp;
+use Modules\AdminPanel\Models\Bank;
+use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\Isapre;
 use Modules\Companies\Models\Company;
 use Modules\Users\Models\User;
-use Modules\AdminPanel\Models\Ccaf;
-use Modules\AdminPanel\Models\Afp;
-use Modules\AdminPanel\Models\Isapre;
-use Modules\AdminPanel\Models\Bank;
+
 // use Modules\Employees\Database\Factories\EmployeeFactory;
 
 class Employee extends Model
@@ -70,7 +71,6 @@ class Employee extends Model
     /**
      * Prepare a date for array / JSON serialization.
      *
-     * @param  \DateTimeInterface  $date
      * @return string
      */
     protected function serializeDate(\DateTimeInterface $date)
@@ -128,17 +128,16 @@ class Employee extends Model
             'afp_id', 'isapre_id', 'ccaf_id', 'health_contribution',
             'salary', 'salary_type',
             'bank_id', 'bank_account_number', 'bank_account_type',
-            'emergency_contact_name', 'emergency_contact_phone'
+            'emergency_contact_name', 'emergency_contact_phone',
         ];
 
         $filled = 0;
         foreach ($fields as $field) {
-            if (!empty($this->{$field})) {
+            if (! empty($this->{$field})) {
                 $filled++;
             }
         }
 
         return round(($filled / count($fields)) * 100);
     }
-
 }

@@ -24,5 +24,4 @@ class CcafSeeder extends Seeder
             Ccaf::firstOrCreate(['nombre' => $nombre]);
         }
     }
-
 }

@@ -4,11 +4,11 @@ namespace Modules\Companies\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Companies\Models\Company;
-use Modules\Users\Models\User;
-use Modules\Employees\Models\Employee;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
+use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
 
 class CompanyUserController extends Controller
@@ -19,15 +19,15 @@ class CompanyUserController extends Controller
     public function index(Company $company, Request $request)
     {
         $auth = $request->user();
-        if (!$auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
             abort(403);
         }
 
         // We want all users who are linked to this company AND have admin, accountant, or HR roles.
         // Except super-admins, unless we want to show them? No.
-        $users = User::whereHas('employee', function($q) use ($company) {
+        $users = User::whereHas('employee', function ($q) use ($company) {
             $q->where('company_id', $company->id);
-        })->whereHas('roles', function($q) {
+        })->whereHas('roles', function ($q) {
             $q->whereIn('name', ['admin', 'contador', 'recursos-humanos']);
         })->with('roles')->get();
 
@@ -42,7 +42,7 @@ class CompanyUserController extends Controller
     public function store(Request $request, Company $company)
     {
         $auth = $request->user();
-        if (!$auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
             // A super-admin can create users for any company.
             // But if a company admin is creating, they must belong to this company.
             abort(403);
@@ -53,7 +53,7 @@ class CompanyUserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'role' => ['required', Rule::in(['admin', 'contador', 'recursos-humanos'])],
-            'is_in_payroll' => 'boolean'
+            'is_in_payroll' => 'boolean',
         ]);
 
         $user = User::create([
@@ -75,7 +75,7 @@ class CompanyUserController extends Controller
             'last_name' => explode(' ', $validated['name'])[1] ?? '',
             'status' => 'active',
             'email' => $validated['email'],
-            'contract_type' => 'indefinido'
+            'contract_type' => 'indefinido',
         ]);
 
         return redirect()->back()->with('success', 'Usuario creado correctamente.');
@@ -87,7 +87,7 @@ class CompanyUserController extends Controller
     public function update(Request $request, Company $company, User $user)
     {
         $auth = $request->user();
-        if (!$auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
             abort(403);
         }
 
@@ -96,13 +96,13 @@ class CompanyUserController extends Controller
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => 'nullable|min:6',
             'role' => ['required', Rule::in(['admin', 'contador', 'recursos-humanos'])],
-            'is_in_payroll' => 'boolean'
+            'is_in_payroll' => 'boolean',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
@@ -118,7 +118,7 @@ class CompanyUserController extends Controller
                 'is_in_payroll' => $isInPayroll,
                 'first_name' => explode(' ', $validated['name'])[0] ?? '',
                 'last_name' => explode(' ', $validated['name'])[1] ?? '',
-                'email' => $validated['email']
+                'email' => $validated['email'],
             ]
         );
 
@@ -131,7 +131,7 @@ class CompanyUserController extends Controller
     public function destroy(Company $company, User $user, Request $request)
     {
         $auth = $request->user();
-        if (!$auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
             abort(403);
         }
 

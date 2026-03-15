@@ -50,7 +50,7 @@ class TenantContext
         }
 
         $selectedCompanyId = session('selected_company_id');
-        
+
         if ($selectedCompanyId) {
             $this->setCompanyId($selectedCompanyId);
         } else {

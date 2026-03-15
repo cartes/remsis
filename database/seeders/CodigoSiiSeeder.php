@@ -49,7 +49,7 @@ class CodigoSiiSeeder extends Seeder
                     'glosa' => $glosa,
                     'utms_min' => $utms_min,
                     'categoria' => '2da',
-                    'activo' => true
+                    'activo' => true,
                 ]
             );
         }

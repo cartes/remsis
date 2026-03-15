@@ -1,10 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Payroll\Http\Controllers\PayrollController;
 use Modules\Payroll\Http\Controllers\FreelancerController;
 use Modules\Payroll\Http\Controllers\FreelancerReceiptController;
-use Modules\Payroll\Http\Controllers\PayrollPeriodController;
+use Modules\Payroll\Http\Controllers\PayrollController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +20,7 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::group([], function () {
         Route::resource('payroll', PayrollController::class)->names('payroll');
     });
-    
+
     // Freelancers / Honorarios under companies
     Route::prefix('companies/{company}/honorarios')->name('companies.freelancers.')->group(function () {
         // CRUD de Freelancers
@@ -31,7 +30,7 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
         Route::get('/{freelancer}', [FreelancerController::class, 'show'])->name('show');
         Route::put('/{freelancer}', [FreelancerController::class, 'update'])->name('update');
         Route::delete('/{freelancer}', [FreelancerController::class, 'destroy'])->name('destroy');
-        
+
         // CRUD de Boletas
         Route::post('/{freelancer}/receipts', [FreelancerReceiptController::class, 'store'])->name('receipts.store');
         Route::put('/{freelancer}/receipts/{receipt}', [FreelancerReceiptController::class, 'update'])->name('receipts.update');

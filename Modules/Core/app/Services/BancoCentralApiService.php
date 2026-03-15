@@ -9,7 +9,9 @@ use RuntimeException;
 class BancoCentralApiService
 {
     private const ENDPOINT = 'https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx';
+
     private const IPC_SERIES = 'G073.IPC.VAR.2023.M';
+
     private const UF_SERIES = 'F073.UFF.PRE.Z.D';
 
     public function fetchMonthlyIpcVariation(string $username, string $password, CarbonImmutable $referencePeriod): array

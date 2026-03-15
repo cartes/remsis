@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
-use Modules\Users\Models\User;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
-use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Users\Models\User;
 use Tests\TestCase;
-use App\Support\Tenancy\TenantContext;
 
 class GlobalTenantScopeTest extends TestCase
 {
@@ -18,7 +17,7 @@ class GlobalTenantScopeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Ensure roles exist
         \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     }
@@ -37,7 +36,7 @@ class GlobalTenantScopeTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'C1',
             'rut' => '11-1',
-            'email' => 'john@company1.com'
+            'email' => 'john@company1.com',
         ]);
 
         // Company 2 data
@@ -47,13 +46,13 @@ class GlobalTenantScopeTest extends TestCase
             'first_name' => 'Jane',
             'last_name' => 'C2',
             'rut' => '22-2',
-            'email' => 'jane@company2.com'
+            'email' => 'jane@company2.com',
         ]);
 
         // 3. Create a user and select Company 1 in session
         $user = User::factory()->create();
         $user->assignRole('admin');
-        
+
         // This is where the magic should happen: TenantContext reads from session
         session(['selected_company_id' => $company1->id]);
         $this->actingAs($user);
@@ -66,7 +65,7 @@ class GlobalTenantScopeTest extends TestCase
 
         // 5. Switch company in session and verify again
         session(['selected_company_id' => $company2->id]);
-        
+
         // Context needs to be re-initialized in the test environment if not handled by middleware
         app(TenantContext::class)->initializeForUser($user);
 
@@ -90,7 +89,7 @@ class GlobalTenantScopeTest extends TestCase
             'first_name' => 'Auto',
             'last_name' => 'Tenant',
             'rut' => '33-3',
-            'email' => 'auto@tenant.com'
+            'email' => 'auto@tenant.com',
         ]);
 
         $this->assertEquals($company->id, $employee->company_id);
@@ -108,7 +107,7 @@ class GlobalTenantScopeTest extends TestCase
             'month' => 1,
             'start_date' => '2024-01-01',
             'end_date' => '2024-01-31',
-            'status' => 'open'
+            'status' => 'open',
         ]);
 
         $period2 = PayrollPeriod::create([
@@ -118,7 +117,7 @@ class GlobalTenantScopeTest extends TestCase
             'month' => 1,
             'start_date' => '2024-01-01',
             'end_date' => '2024-01-31',
-            'status' => 'open'
+            'status' => 'open',
         ]);
 
         $user = User::factory()->create();

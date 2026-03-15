@@ -2,14 +2,14 @@
 
 namespace Modules\Payroll\Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Modules\AdminPanel\Models\Afp;
+use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\Isapre;
+use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
-use Modules\Employees\Models\Employee;
-use Modules\AdminPanel\Models\Afp;
-use Modules\AdminPanel\Models\Isapre;
-use Modules\AdminPanel\Models\Ccaf;
-use Carbon\Carbon;
 
 class PayrollSeeder extends Seeder
 {
@@ -20,17 +20,19 @@ class PayrollSeeder extends Seeder
     {
         // Obtener todos los empleados
         $employees = Employee::with(['user', 'company'])->get();
-        
+
         if ($employees->isEmpty()) {
             $this->command->warn('No hay empleados en la base de datos. Ejecuta primero CompanyUserSeeder.');
+
             return;
         }
 
         // Obtener períodos
         $periods = PayrollPeriod::where('status', 'closed')->get();
-        
+
         if ($periods->isEmpty()) {
             $this->command->warn('No hay períodos de nómina. Ejecuta primero PayrollPeriodSeeder.');
+
             return;
         }
 
@@ -44,18 +46,18 @@ class PayrollSeeder extends Seeder
         foreach ($employees as $employee) {
             // Crear nóminas para los últimos 6 períodos
             $recentPeriods = $periods->take(6);
-            
+
             foreach ($recentPeriods as $period) {
                 $baseSalary = rand(500000, 2500000);
                 $grossSalary = $baseSalary + rand(0, 200000); // Bonos, horas extra, etc.
-                
+
                 // Calcular descuentos (aproximados)
                 $afpAmount = $grossSalary * 0.1273; // 12.73% AFP
                 $isapreAmount = $grossSalary * 0.07; // 7% Isapre
                 $ccafAmount = 0; // CCAF no tiene descuento directo al trabajador
                 $cesantiaAmount = $grossSalary * 0.006; // 0.6% Seguro de Cesantía
                 $impuestoUnico = $this->calculateImpuestoUnico($grossSalary);
-                
+
                 $totalDeductions = $afpAmount + $isapreAmount + $cesantiaAmount + $impuestoUnico;
                 $netSalary = $grossSalary - $totalDeductions;
 
@@ -94,7 +96,7 @@ class PayrollSeeder extends Seeder
             }
         }
 
-        $this->command->info('Nóminas creadas exitosamente para ' . $employees->count() . ' empleados.');
+        $this->command->info('Nóminas creadas exitosamente para '.$employees->count().' empleados.');
     }
 
     /**

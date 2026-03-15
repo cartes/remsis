@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Modules\AdminPanel\Models\Afp;
-use Modules\AdminPanel\Models\Isapre;
-use Modules\AdminPanel\Models\Ccaf;
-use Modules\AdminPanel\Models\LegalParameter;
-use Modules\AdminPanel\Models\CodigoSii;
 use Modules\AdminPanel\Models\Bank;
+use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\CodigoSii;
+use Modules\AdminPanel\Models\Isapre;
+use Modules\AdminPanel\Models\LegalParameter;
 use Modules\AdminPanel\Models\Mutual;
 use Modules\Core\Models\DailyUfValue;
 use Modules\Core\Models\MonthlyIpcValue;
@@ -60,6 +60,7 @@ class SettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json($afp);
         }
+
         return redirect()->route('settings.index')->with('success_afp', 'AFP agregada.');
     }
 
@@ -71,6 +72,7 @@ class SettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json($isapre);
         }
+
         return redirect()->route('settings.index')->with('success_isapre', 'Isapre agregada.');
     }
 
@@ -82,6 +84,7 @@ class SettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json($ccaf);
         }
+
         return redirect()->route('settings.index')->with('success_ccaf', 'CCAF agregada.');
     }
 
@@ -93,6 +96,7 @@ class SettingsController extends Controller
         if ($request->wantsJson()) {
             return response()->json($mutual);
         }
+
         return redirect()->route('settings.index')->with('success_mutual', 'Mutual agregada.');
     }
 
@@ -100,17 +104,18 @@ class SettingsController extends Controller
     {
         $request->validate(['nombre' => 'required|string|max:255|unique:banks,name']);
         $banco = Bank::create(['name' => $request->nombre]);
-        
+
         if ($request->wantsJson()) {
             return response()->json(['id' => $banco->id, 'nombre' => $banco->name]);
         }
+
         return redirect()->route('settings.index')->with('success_banco', 'Banco agregado.');
     }
 
     public function updateAfp(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:afps,nombre,' . $id,
+            'nombre' => 'required|string|max:255|unique:afps,nombre,'.$id,
         ]);
 
         $afp = Afp::findOrFail($id);
@@ -123,7 +128,7 @@ class SettingsController extends Controller
     public function updateIsapre(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:isapres,nombre,' . $id,
+            'nombre' => 'required|string|max:255|unique:isapres,nombre,'.$id,
         ]);
 
         $isapre = Isapre::findOrFail($id);
@@ -136,7 +141,7 @@ class SettingsController extends Controller
     public function updateCcaf(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:ccafs,nombre,' . $id,
+            'nombre' => 'required|string|max:255|unique:ccafs,nombre,'.$id,
         ]);
 
         $ccaf = Ccaf::findOrFail($id);
@@ -149,7 +154,7 @@ class SettingsController extends Controller
     public function updateMutual(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:mutuales,nombre,' . $id,
+            'nombre' => 'required|string|max:255|unique:mutuales,nombre,'.$id,
         ]);
 
         $mutual = Mutual::findOrFail($id);
@@ -162,7 +167,7 @@ class SettingsController extends Controller
     public function updateBanco(Request $request, $id)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255|unique:banks,name,' . $id,
+            'nombre' => 'required|string|max:255|unique:banks,name,'.$id,
         ]);
 
         $banco = Bank::findOrFail($id);
@@ -214,12 +219,12 @@ class SettingsController extends Controller
 
     public function ccafJson()
     {
-        return Ccaf::orderBy('nombre')->get(['id', 'nombre']); 
+        return Ccaf::orderBy('nombre')->get(['id', 'nombre']);
     }
 
     public function mutualJson()
     {
-        return Mutual::orderBy('nombre')->get(['id', 'nombre']); 
+        return Mutual::orderBy('nombre')->get(['id', 'nombre']);
     }
 
     public function afpJson()
@@ -240,7 +245,7 @@ class SettingsController extends Controller
     public function updateLegalParameters(Request $request)
     {
         $data = $request->except(['_token', '_method']);
-        
+
         $lockedKeys = ['uf_value', 'ipc_value'];
 
         foreach ($data as $key => $value) {
@@ -253,5 +258,4 @@ class SettingsController extends Controller
 
         return redirect()->route('settings.legal')->with('success_legal', 'Parámetros legales actualizados correctamente. UF e IPC se sincronizan desde Banco Central.');
     }
-
 }

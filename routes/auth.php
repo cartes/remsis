@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\Auth\ConfirmablePasswordController;
 use Modules\AdminPanel\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -9,7 +10,6 @@ use Modules\AdminPanel\Http\Controllers\Auth\PasswordController;
 use Modules\AdminPanel\Http\Controllers\Auth\PasswordResetLinkController;
 use Modules\AdminPanel\Http\Controllers\Auth\RegisteredUserController;
 use Modules\AdminPanel\Http\Controllers\Auth\VerifyEmailController;
-use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');

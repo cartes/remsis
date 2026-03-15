@@ -2,11 +2,11 @@
 
 namespace Modules\Companies\Tests\Feature;
 
-use Tests\TestCase;
-use Modules\Users\Models\User;
-use Modules\Employees\Models\Employee;
-use Modules\Companies\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
+use Modules\Users\Models\User;
+use Tests\TestCase;
 
 class EmployeeSearchTest extends TestCase
 {
@@ -17,11 +17,11 @@ class EmployeeSearchTest extends TestCase
         $company = Company::factory()->create();
         $user = User::factory()->create();
         $user->assignRole('admin');
-        
+
         $employeeUser = User::factory()->create(['name' => 'John Doe Searchable']);
         $employee = Employee::create([
             'user_id' => $employeeUser->id,
-            'company_id' => $company->id
+            'company_id' => $company->id,
         ]);
 
         $this->actingAs($user);

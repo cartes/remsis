@@ -2,12 +2,11 @@
 
 namespace Modules\Companies\Http\Controllers;
 
+use App\Rules\Rut;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
-use Modules\AdminPanel\Models\Ccaf;
-use App\Rules\Rut;
 
 class CompaniesController extends Controller
 {
@@ -16,30 +15,32 @@ class CompaniesController extends Controller
         $user = auth()->user();
         $query = Company::orderBy('razon_social')->orderBy('name');
 
-        if (!$user->hasRole('super-admin')) {
-            $query->where(function($q) use ($user) {
+        if (! $user->hasRole('super-admin')) {
+            $query->where(function ($q) use ($user) {
                 $q->where('id', $user->company_id)
-                  ->orWhereHas('administrators', function($sq) use ($user) {
-                      $sq->where('users.id', $user->id);
-                  });
+                    ->orWhereHas('administrators', function ($sq) use ($user) {
+                        $sq->where('users.id', $user->id);
+                    });
             });
         }
 
         $companies = $query->get();
+
         return view('companies::index', compact('companies'));
     }
 
     public function create()
     {
-        if (!auth()->user()->hasRole('super-admin')) {
+        if (! auth()->user()->hasRole('super-admin')) {
             abort(403, 'No tiene permiso para crear empresas.');
         }
+
         return view('companies::create');
     }
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasRole('super-admin')) {
+        if (! auth()->user()->hasRole('super-admin')) {
             abort(403);
         }
         $validated = $request->validate(
@@ -70,7 +71,7 @@ class CompaniesController extends Controller
     public function edit(Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
@@ -93,7 +94,7 @@ class CompaniesController extends Controller
     public function employees(Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -116,7 +117,7 @@ class CompaniesController extends Controller
     public function update(Request $request, Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 
@@ -194,7 +195,7 @@ class CompaniesController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Datos esenciales actualizados.'
+                'message' => 'Datos esenciales actualizados.',
             ]);
         }
 
@@ -261,7 +262,7 @@ class CompaniesController extends Controller
             ->avg('completion_percentage') ?? 0;
 
         // Verificar si la empresa tiene un admin
-        $hasAdmin = $company->users()->whereHas('roles', function($q) {
+        $hasAdmin = $company->users()->whereHas('roles', function ($q) {
             $q->where('name', 'admin');
         })->exists();
 
@@ -271,7 +272,7 @@ class CompaniesController extends Controller
     public function transactions(Company $company)
     {
         $user = auth()->user();
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
 

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use Modules\Users\Models\User;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Users\Models\User;
 use Tests\TestCase;
-use App\Support\Tenancy\TenantContext;
 
 class CompanySelectionTest extends TestCase
 {

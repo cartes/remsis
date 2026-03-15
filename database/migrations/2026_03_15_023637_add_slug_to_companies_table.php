@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -21,12 +21,12 @@ return new class extends Migration
         $companies = DB::table('companies')->get();
         foreach ($companies as $company) {
             $slug = Str::slug($company->name ?: $company->razon_social);
-            
+
             // Handle duplicate slugs
             $originalSlug = $slug;
             $counter = 1;
             while (DB::table('companies')->where('slug', $slug)->exists()) {
-                $slug = $originalSlug . '-' . $counter;
+                $slug = $originalSlug.'-'.$counter;
                 $counter++;
             }
 

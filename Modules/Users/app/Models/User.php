@@ -2,15 +2,14 @@
 
 namespace Modules\Users\Models;
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use \Modules\Companies\Models\Company;
-use Modules\Employees\Models\Employee;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Modules\Companies\Models\Company;
 // use Modules\Users\Database\Factories\UserFactory;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Modules\Employees\Models\Employee;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -45,9 +44,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
     protected $guard_name = 'web';
 
-    protected $with = ['employee.company','roles'];
+    protected $with = ['employee.company', 'roles'];
 
     public function company()
     {
@@ -67,7 +67,7 @@ class User extends Authenticatable
     public function getAllCompanies()
     {
         $companies = $this->companies()->get();
-        
+
         $primaryCompany = $this->company;
         if ($primaryCompany && ! $companies->contains('id', $primaryCompany->id)) {
             $companies->push($primaryCompany);

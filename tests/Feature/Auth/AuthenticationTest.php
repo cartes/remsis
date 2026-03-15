@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
-use Modules\Users\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Users\Models\User;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -22,7 +22,7 @@ class AuthenticationTest extends TestCase
         $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $user = User::factory()->create();
         $user->assignRole($role);
-        
+
         $company = \Modules\Companies\Models\Company::create(['razon_social' => 'Test Company', 'rut' => '1-9', 'name' => 'Test Company']);
         \Modules\Employees\Models\Employee::create([
             'user_id' => $user->id,
@@ -68,7 +68,7 @@ class AuthenticationTest extends TestCase
         $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $user = User::factory()->create();
         $user->assignRole($role);
-        
+
         $company = \Modules\Companies\Models\Company::create(['razon_social' => 'Test Company', 'rut' => '1-10', 'name' => 'Test Company']);
         \Modules\Employees\Models\Employee::create([
             'user_id' => $user->id,

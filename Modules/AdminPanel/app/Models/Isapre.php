@@ -2,9 +2,10 @@
 
 namespace Modules\AdminPanel\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Employees\Models\Employee;
+
 // use Modules\AdminPanel\Database\Factories\IsapreFactory;
 
 class Isapre extends Model
@@ -20,5 +21,4 @@ class Isapre extends Model
     {
         return $this->hasMany(Employee::class);
     }
-  
 }

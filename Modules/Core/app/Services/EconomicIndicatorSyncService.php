@@ -12,9 +12,7 @@ use Throwable;
 
 class EconomicIndicatorSyncService
 {
-    public function __construct(private BancoCentralApiService $api)
-    {
-    }
+    public function __construct(private BancoCentralApiService $api) {}
 
     public function ensureTodayUfIsAvailable(bool $force = false): array
     {

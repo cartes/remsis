@@ -4,9 +4,9 @@ namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\AdminPanel\Models\Bank;
 use Modules\Companies\Models\Company;
 use Modules\Payroll\Models\Freelancer;
-use Modules\AdminPanel\Models\Bank;
 
 class FreelancerController extends Controller
 {
@@ -19,7 +19,7 @@ class FreelancerController extends Controller
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get();
-            
+
         $banks = Bank::orderBy('name')->get();
 
         return view('payroll::freelancers.index', compact('company', 'freelancers', 'banks'));
@@ -49,7 +49,7 @@ class FreelancerController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Colaborador creado exitosamente',
-            'freelancer' => $freelancer
+            'freelancer' => $freelancer,
         ]);
     }
 
@@ -64,11 +64,11 @@ class FreelancerController extends Controller
         }
 
         $freelancers = Freelancer::where('company_id', $company->id)
-            ->where(function($q) use ($query) {
+            ->where(function ($q) use ($query) {
                 $q->where('first_name', 'like', "%{$query}%")
-                  ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhere('rut', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%");
+                    ->orWhere('last_name', 'like', "%{$query}%")
+                    ->orWhere('rut', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%");
             })
             ->select('id', 'first_name', 'last_name', 'email', 'rut')
             ->take(10)
@@ -90,7 +90,7 @@ class FreelancerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'freelancer' => $freelancer
+            'freelancer' => $freelancer,
         ]);
     }
 
@@ -106,7 +106,7 @@ class FreelancerController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'rut' => 'required|string|unique:freelancers,rut,' . $freelancer->id,
+            'rut' => 'required|string|unique:freelancers,rut,'.$freelancer->id,
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
@@ -124,7 +124,7 @@ class FreelancerController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Ficha actualizada exitosamente',
-            'freelancer' => $freelancer
+            'freelancer' => $freelancer,
         ]);
     }
 
@@ -141,7 +141,7 @@ class FreelancerController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Colaborador desvinculado exitosamente'
+            'message' => 'Colaborador desvinculado exitosamente',
         ]);
     }
 }

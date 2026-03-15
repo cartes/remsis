@@ -53,7 +53,7 @@ class FreelancerReceiptController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Boleta registrada exitosamente',
-            'receipt' => $receipt
+            'receipt' => $receipt,
         ]);
     }
 
@@ -97,7 +97,7 @@ class FreelancerReceiptController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Boleta actualizada exitosamente',
-            'receipt' => $receipt
+            'receipt' => $receipt,
         ]);
     }
 
@@ -106,7 +106,7 @@ class FreelancerReceiptController extends Controller
      */
     public function destroy(Company $company, Freelancer $freelancer, FreelancerReceipt $receipt)
     {
-         if ($freelancer->company_id !== $company->id || $receipt->freelancer_id !== $freelancer->id) {
+        if ($freelancer->company_id !== $company->id || $receipt->freelancer_id !== $freelancer->id) {
             abort(403);
         }
 
@@ -114,7 +114,7 @@ class FreelancerReceiptController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Boleta eliminada exitosamente'
+            'message' => 'Boleta eliminada exitosamente',
         ]);
     }
 }

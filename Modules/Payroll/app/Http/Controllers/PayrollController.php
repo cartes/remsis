@@ -5,6 +5,7 @@ namespace Modules\Payroll\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Companies\Models\Company;
+
 class PayrollController extends Controller
 {
     /**
@@ -21,9 +22,11 @@ class PayrollController extends Controller
                 $payrolls = \Modules\Payroll\Models\Payroll::with(['employee', 'company', 'period'])
                     ->where('company_id', $company)
                     ->paginate(15);
+
                 return view('payroll::index', compact('payrolls', 'companyModel'));
             } else {
                 $companies = Company::withCount('payrolls')->get();
+
                 return view('payroll::index_companies', compact('companies'));
             }
         } else {
@@ -32,6 +35,7 @@ class PayrollController extends Controller
                 ->where('company_id', $user->company_id)
                 ->paginate(15);
             $companyModel = Company::find($user->company_id);
+
             return view('payroll::index', compact('payrolls', 'companyModel'));
         }
     }
@@ -47,9 +51,7 @@ class PayrollController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-    }
+    public function store(Request $request) {}
 
     /**
      * Show the specified resource.
@@ -70,14 +72,10 @@ class PayrollController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
-    }
+    public function update(Request $request, $id) {}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
-    {
-    }
+    public function destroy($id) {}
 }

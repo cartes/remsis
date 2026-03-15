@@ -2,9 +2,10 @@
 
 namespace Modules\AdminPanel\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Companies\Models\Company;
+
 // use Modules\AdminPanel\Database\Factories\CcafFactory;
 
 class Ccaf extends Model

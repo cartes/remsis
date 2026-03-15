@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Modules\AdminPanel\Models\Notification;
-use Carbon\Carbon;
 
 class NotificationSeeder extends Seeder
 {

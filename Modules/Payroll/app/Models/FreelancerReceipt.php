@@ -3,9 +3,9 @@
 namespace Modules\Payroll\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Companies\Models\Company;
 
 class FreelancerReceipt extends Model
@@ -23,7 +23,7 @@ class FreelancerReceipt extends Model
         'net_amount',
         'issuer',
         'status',
-        'document_path'
+        'document_path',
     ];
 
     protected $casts = [

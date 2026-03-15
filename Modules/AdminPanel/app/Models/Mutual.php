@@ -2,8 +2,9 @@
 
 namespace Modules\AdminPanel\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 // use Modules\Companies\Models\Company;
 
 class Mutual extends Model

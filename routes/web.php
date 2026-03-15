@@ -18,10 +18,11 @@ Route::get('/dashboard', function () {
         if ($companies->count() > 1 && ! session('selected_company_id')) {
             return redirect()->route('companies.select');
         }
-        
+
         if ($companies->count() === 1) {
             $company = $companies->first();
             session(['selected_company_id' => $company->id]);
+
             return redirect()->route('companies.dashboard', $company);
         }
 

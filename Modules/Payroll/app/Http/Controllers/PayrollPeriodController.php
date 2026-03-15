@@ -3,13 +3,12 @@
 namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Modules\Companies\Models\Company;
 use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
 use Modules\Payroll\Services\PayrollCalculationService;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class PayrollPeriodController extends Controller
 {
@@ -27,7 +26,7 @@ class PayrollPeriodController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->paginate(15);
-        
+
         // Get available years for filter
         $availableYears = PayrollPeriod::where('company_id', $company->id)
             ->select('year')
@@ -47,11 +46,11 @@ class PayrollPeriodController extends Controller
         $now = now();
         $defaultYear = $now->year;
         $defaultMonth = $now->month;
-        
+
         // Calculate period dates (first and last day of month)
         $startDate = Carbon::create($defaultYear, $defaultMonth, 1)->format('Y-m-d');
         $endDate = Carbon::create($defaultYear, $defaultMonth, 1)->endOfMonth()->format('Y-m-d');
-        
+
         // Suggest payment date (last day of month)
         $paymentDate = $endDate;
 
@@ -105,10 +104,10 @@ class PayrollPeriodController extends Controller
 
             return redirect()
                 ->route('companies.payroll-periods.index', ['company' => $company])
-                ->with('success', 'Período de nómina creado exitosamente: ' . $period->getDisplayName());
+                ->with('success', 'Período de nómina creado exitosamente: '.$period->getDisplayName());
         } catch (\Exception $e) {
             return back()
-                ->withErrors(['error' => 'Error al crear el período: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Error al crear el período: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -122,14 +121,14 @@ class PayrollPeriodController extends Controller
         $lines = Payroll::with(['employee.costCenter'])
             ->where('payroll_period_id', $period->id)
             ->get();
-            
+
         // Filter by Cost Center if requested
         if ($request->has('cost_center_id') && $request->cost_center_id) {
             $lines = $lines->filter(function ($line) use ($request) {
                 return $line->employee->cost_center_id == $request->cost_center_id;
             });
         }
-        
+
         // Load cost centers for filter
         $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
 
@@ -143,12 +142,12 @@ class PayrollPeriodController extends Controller
     {
         try {
             $count = $service->calculatePeriod($period);
-            
+
             return redirect()
                 ->route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $period->id])
                 ->with('success', "Cálculo realizado exitosamente para $count empleados.");
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Error al calcular la nómina: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Error al calcular la nómina: '.$e->getMessage()]);
         }
     }
 
@@ -174,19 +173,19 @@ class PayrollPeriodController extends Controller
             'calculated' => [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_OPEN],
             PayrollPeriod::STATUS_CLOSED => [PayrollPeriod::STATUS_PAID],
         ];
-        
+
         // ... rest of the method logic
-        
+
         // Check if transition is allowed
-        $isAllowed = isset($allowedTransitions[$currentStatus]) && 
+        $isAllowed = isset($allowedTransitions[$currentStatus]) &&
                      in_array($newStatus, $allowedTransitions[$currentStatus]);
 
         // Super-admin can reopen periods
-        if (!$isAllowed && $user->hasRole('super-admin')) {
+        if (! $isAllowed && $user->hasRole('super-admin')) {
             $isAllowed = true;
         }
 
-        if (!$isAllowed) {
+        if (! $isAllowed) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transición de estado no permitida.',
@@ -207,10 +206,11 @@ class PayrollPeriodController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar el estado: ' . $e->getMessage(),
+                'message' => 'Error al actualizar el estado: '.$e->getMessage(),
             ], 500);
         }
     }
+
     /**
      * Update a specific payroll line and recalculate.
      */
@@ -253,7 +253,7 @@ class PayrollPeriodController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar la línea: ' . $e->getMessage(),
+                'message' => 'Error al actualizar la línea: '.$e->getMessage(),
             ], 500);
         }
     }

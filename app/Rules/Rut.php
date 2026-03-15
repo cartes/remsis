@@ -14,16 +14,13 @@ class Rut implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->isValidRut($value)) {
+        if (! $this->isValidRut($value)) {
             $fail('El RUT ingresado no es válido.');
         }
     }
 
     /**
      * Validates a Chilean RUT.
-     *
-     * @param string|null $rut
-     * @return bool
      */
     protected function isValidRut(?string $rut): bool
     {
@@ -41,7 +38,7 @@ class Rut implements ValidationRule
         $dv = substr($rut, -1);
         $numero = substr($rut, 0, strlen($rut) - 1);
 
-        if (!is_numeric($numero)) {
+        if (! is_numeric($numero)) {
             return false;
         }
 

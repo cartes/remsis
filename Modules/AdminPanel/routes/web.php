@@ -1,13 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\AdminPanelController;
-use Modules\AdminPanel\Http\Controllers\Auth\LogoutController;
-use Modules\AdminPanel\Http\Controllers\SettingsController;
-use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
+use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\BancoCentralSettingsController;
-
+use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
+use Modules\AdminPanel\Http\Controllers\SettingsController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('admin.login');
@@ -41,21 +39,19 @@ Route::prefix('settings')
         Route::get('/isapres/{isapre}/edit', [SettingsController::class, 'editIsapre'])->name('isapres.edit');
         Route::delete('/isapres/{isapre}', [SettingsController::class, 'destroyIsapre'])->name('isapres.destroy');
 
-        //CCaf
+        // CCaf
         Route::get('/ccafs/{ccaf}/edit', [SettingsController::class, 'editCcaf'])->name('ccafs.edit');
         Route::delete('/ccafs/{ccaf}', [SettingsController::class, 'destroyCcaf'])->name('ccafs.destroy');
 
-        //Mutuales
+        // Mutuales
         Route::post('/mutuales', [SettingsController::class, 'storeMutual'])->name('mutuales.store');
         Route::put('/mutuales/{mutual}', [SettingsController::class, 'updateMutual'])->name('mutuales.update');
         Route::delete('/mutuales/{mutual}', [SettingsController::class, 'destroyMutual'])->name('mutuales.destroy');
 
-
         Route::put('/afps/{afp}', [SettingsController::class, 'updateAfp'])->name('afps.update');
         Route::put('/isapres/{isapre}', [SettingsController::class, 'updateIsapre'])->name('isapres.update');
         Route::put('/ccafs/{ccaf}', [SettingsController::class, 'updateCcaf'])->name('ccafs.update');
-        
-        
+
         Route::get('/legal-parameters', [SettingsController::class, 'legal'])->name('settings.legal');
         Route::put('/legal-parameters', [SettingsController::class, 'updateLegalParameters'])->name('legal_parameters.update');
         Route::get('/banco-central', [BancoCentralSettingsController::class, 'index'])->name('settings.bcch');

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Modules\Users\Models\User;
-use Modules\Companies\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Modules\Companies\Models\Company;
+use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class MultiCompanyTest extends TestCase
 {
@@ -16,7 +16,7 @@ class MultiCompanyTest extends TestCase
     {
         // 1. Setup roles
         $multiRole = Role::create(['name' => 'multi-company', 'guard_name' => 'web']);
-        
+
         // 2. Create user
         $user = User::factory()->create();
         $user->assignRole($multiRole);
@@ -31,7 +31,7 @@ class MultiCompanyTest extends TestCase
 
         // 5. Authenticate and check redirection
         $response = $this->actingAs($user)->get('/dashboard');
-        $response->assertRedirect(route('companies.index'));
+        $response->assertRedirect(route('companies.select'));
 
         // 6. Check companies index
         $response = $this->actingAs($user)->get(route('companies.index'));

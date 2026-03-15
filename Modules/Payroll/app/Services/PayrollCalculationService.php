@@ -2,19 +2,17 @@
 
 namespace Modules\Payroll\Services;
 
+use Illuminate\Support\Facades\DB;
+use Modules\AdminPanel\Models\LegalParameter;
+use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
-use Modules\Employees\Models\Employee;
-use Illuminate\Support\Facades\DB;
-
-use Modules\AdminPanel\Models\LegalParameter;
 
 class PayrollCalculationService
 {
     /**
      * Calculate payroll for all active employees in the given period.
      *
-     * @param PayrollPeriod $period
      * @return int Number of payroll lines created/updated
      */
     public function calculatePeriod(PayrollPeriod $period): int
@@ -45,18 +43,14 @@ class PayrollCalculationService
 
     /**
      * Calculate payroll for a single employee.
-     *
-     * @param Employee $employee
-     * @param PayrollPeriod $period
-     * @return Payroll
      */
     public function calculateEmployee(Employee $employee, PayrollPeriod $period): Payroll
     {
         $company = $period->company;
-        
+
         // 1. Sueldo Base
         $haberBase = $employee->salary ?? 0;
-        
+
         // 2. Horas Extras
         // Check if company allows overtime
         $overtimeAmount = 0;
@@ -68,17 +62,19 @@ class PayrollCalculationService
             ->first();
 
         if ($company->allows_overtime && $existingLine) {
-             $overtimeHours = $existingLine->overtime_hours;
-             // Calculate overtime amount: (Sueldo Base / 30 * 28 / 180) * 1.5 * hours (Standard formula, simplified here)
-             // Formula standard 45hrs: (Sueldo / 30 * 7 / 45 * 1.5) ?? 
-             // Let's use simplified: (Base / 30 / 8) * 1.5 * hours for now or specific factor
-             // Factor for 44 hours = 0.0079545
-             // Factor for 45 hours = 0.0077777
-             $factor = 0.0077777; // Asumimos 45 hrs por defecto o parametrizable
-             if($company->weekly_hours == 44) $factor = 0.0079545;
-             
-             // If manual amount was set? For now auto-calc from hours
-             $overtimeAmount = round($haberBase * $factor * $overtimeHours);
+            $overtimeHours = $existingLine->overtime_hours;
+            // Calculate overtime amount: (Sueldo Base / 30 * 28 / 180) * 1.5 * hours (Standard formula, simplified here)
+            // Formula standard 45hrs: (Sueldo / 30 * 7 / 45 * 1.5) ??
+            // Let's use simplified: (Base / 30 / 8) * 1.5 * hours for now or specific factor
+            // Factor for 44 hours = 0.0079545
+            // Factor for 45 hours = 0.0077777
+            $factor = 0.0077777; // Asumimos 45 hrs por defecto o parametrizable
+            if ($company->weekly_hours == 44) {
+                $factor = 0.0079545;
+            }
+
+            // If manual amount was set? For now auto-calc from hours
+            $overtimeAmount = round($haberBase * $factor * $overtimeHours);
         }
 
         // 3. Gratificación
@@ -90,16 +86,16 @@ class PayrollCalculationService
         if ($company->gratification_system === 'art_50') {
             // 25% del sueldo base con tope de 4.75 IMM anual (prorrateado mensual)
             // IMM dinámico desde parámetros legales
-             $immParam = LegalParameter::where('key', 'monthly_minimum_wage')->value('value');
-             $imm = (is_numeric($immParam) && $immParam > 0) ? $immParam : 500000;
-             $topeAnual = 4.75 * $imm;
-             $topeMensual = $topeAnual / 12;
-             
-             $calc25 = ($haberBase + $overtimeAmount) * 0.25;
-             $gratificationAmount = round(min($calc25, $topeMensual));
-             
+            $immParam = LegalParameter::where('key', 'monthly_minimum_wage')->value('value');
+            $imm = (is_numeric($immParam) && $immParam > 0) ? $immParam : 500000;
+            $topeAnual = 4.75 * $imm;
+            $topeMensual = $topeAnual / 12;
+
+            $calc25 = ($haberBase + $overtimeAmount) * 0.25;
+            $gratificationAmount = round(min($calc25, $topeMensual));
+
         } elseif ($company->gratification_system === 'sin_gratificacion') {
-             $gratificationAmount = 0;
+            $gratificationAmount = 0;
         }
         // For 'art_47' and 'convencional', we keep the manual/existing value.
 
@@ -134,32 +130,32 @@ class PayrollCalculationService
                 'period_year' => $period->year,
                 'period_month' => $period->month,
                 'worked_days' => 30,
-                
+
                 'overtime_hours' => $overtimeHours,
                 'overtime_amount' => $overtimeAmount,
-                
+
                 'base_salary' => $haberBase,
                 'gratification_amount' => $gratificationAmount,
                 'gross_salary' => $imponible,
-                
+
                 'afp_id' => $employee->afp_id,
                 'afp_amount' => $afpAmount,
-                
+
                 'isapre_id' => $employee->isapre_id,
                 'isapre_amount' => $saludAmount,
-                
+
                 'ccaf_id' => $employee->ccaf_id,
                 'ccaf_amount' => 0,
-                
+
                 'cesantia_amount' => $cesantiaAmount,
                 'impuesto_unico_amount' => 0,
                 'anticipos_amount' => $anticiposAmount,
                 'otros_descuentos' => $otrosDescuentos,
-                
+
                 'total_deductions' => $totalDeductions,
                 'net_salary' => $totalNeto,
-                
-                'status' => 'pending', 
+
+                'status' => 'pending',
             ]
         );
     }

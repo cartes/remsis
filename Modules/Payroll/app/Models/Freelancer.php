@@ -3,11 +3,11 @@
 namespace Modules\Payroll\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Companies\Models\Company;
 use Modules\AdminPanel\Models\Bank;
+use Modules\Companies\Models\Company;
 
 class Freelancer extends Model
 {
@@ -46,7 +46,7 @@ class Freelancer extends Model
     {
         return $this->belongsTo(Bank::class);
     }
-    
+
     public function receipts()
     {
         return $this->hasMany(FreelancerReceipt::class);

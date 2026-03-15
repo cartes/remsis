@@ -4,12 +4,11 @@ namespace Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Modules\Companies\Models\Company;
+use Modules\Employees\Models\Employee;
 use Modules\Users\Models\User;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
-use Modules\Employees\Models\Employee;
-use Modules\Companies\Models\Company;
-
 
 class UserController extends Controller
 {
@@ -23,7 +22,7 @@ class UserController extends Controller
         $companyFilter = $isSuperAdmin ? $request->company_id : $auth->company_id;
 
         $query = User::query()
-            ->whereHas('roles', function($q) use ($isSuperAdmin) {
+            ->whereHas('roles', function ($q) use ($isSuperAdmin) {
                 $roles = ['admin', 'contador', 'recursos-humanos'];
 
                 if ($isSuperAdmin) {
@@ -33,8 +32,8 @@ class UserController extends Controller
                 $q->whereIn('name', $roles);
             })
             ->when(! $isSuperAdmin && ! $auth->company_id, fn ($q) => $q->whereRaw('1 = 0'))
-            ->when($companyFilter, function($q) use ($companyFilter) {
-                $q->whereHas('employee', function($eq) use ($companyFilter) {
+            ->when($companyFilter, function ($q) use ($companyFilter) {
+                $q->whereHas('employee', function ($eq) use ($companyFilter) {
                     $eq->where('company_id', $companyFilter);
                 });
             })
@@ -129,7 +128,7 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'role' => 'nullable|string|exists:roles,name',
             'password' => 'nullable|string|min:6',
             'company_id' => 'nullable|integer|exists:companies,id',
@@ -138,13 +137,13 @@ class UserController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
         $user->save();
 
-        if (!empty($validated['role'])) {
+        if (! empty($validated['role'])) {
             if (! $auth->hasRole('super-admin') && $validated['role'] === 'super-admin') {
                 abort(403);
             }
@@ -190,13 +189,14 @@ class UserController extends Controller
     {
         $user = User::with('roles')->findOrFail($id);
         $this->authorizeManagedUser(request()->user(), $user);
+
         return response()->json($user);
     }
 
     public function toggleStatus(User $user)
     {
         $this->authorizeManagedUser(request()->user(), $user);
-        $user->status = !$user->status;
+        $user->status = ! $user->status;
         $user->save();
 
         return response()->json([
@@ -214,7 +214,7 @@ class UserController extends Controller
         $this->authorizeManagedUser($auth, $user);
 
         // Opcional: restringe a roles que pueden tener empresa
-        if (!$user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos'])) {
+        if (! $user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos'])) {
             return response()->json(['message' => 'Este usuario no admite vínculo a empresa.'], 403);
         }
 
