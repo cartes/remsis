@@ -111,7 +111,12 @@ class CompaniesController extends Controller
         // Cargar centros de costo activos
         $costCenters = $company->costCenters()->active()->orderBy('code')->get(['id', 'code', 'name']);
 
-        return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters'));
+        // Contar administradores de la empresa (rol 'admin')
+        $adminCount = \Modules\Users\Models\User::whereHas('employee', function ($q) use ($company) {
+            $q->where('company_id', $company->id);
+        })->role('admin')->count();
+
+        return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'adminCount'));
     }
 
     public function update(Request $request, Company $company)

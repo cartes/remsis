@@ -65,7 +65,28 @@
         </div>
 
         {{-- Employees Table Section --}}
-        <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+        @if($adminCount === 0)
+        <div class="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-100 p-2 rounded-full">
+                    <i class="fas fa-user-shield text-amber-600 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-bold text-amber-800">No se ha creado un Administrador General</h4>
+                    <p class="text-xs text-amber-700 mt-0.5">La empresa no cuenta con un administrador asignado. Esto es necesario para gestionar accesos y configuraciones críticas.</p>
+                </div>
+                <div>
+                    <a href="{{ route('companies.users.index', $company) }}" 
+                       class="inline-flex items-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm gap-2">
+                        <i class="fas fa-user-plus"></i>
+                        Configurar Administrador
+                    </a>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
             {{-- Employees Table --}}
             <div class="overflow-x-auto">
@@ -464,7 +485,7 @@
                         } catch (error) {
                             console.error(error);
                             if (error.response?.status === 422) {
-                                this.errors = error.response.data.errors;
+                                this.errors = Object.assign({}, error.response.data.errors);
                             } else {
                                 toast(error.response?.data?.message || "Error al crear empleado", "error");
                             }
@@ -496,6 +517,7 @@
                                     employeeId);
                             const response = await axios.get(url);
                             if (response.data.status === "success") {
+                                this.errors = {}; // Reset errors before loading new data
                                 this.selectedEmployee = response.data.employee;
                                 if (!this.selectedEmployee.part_time_schedule) {
                                     this.selectedEmployee.part_time_schedule = this.getDefaultSchedule();
@@ -555,7 +577,9 @@
                         } catch (error) {
                             console.error(error);
                             if (error.response?.status === 422) {
-                                this.errors = error.response.data.errors;
+                                // Explicitly update the errors object to trigger reactivity
+                                this.errors = Object.assign({}, error.response.data.errors);
+                                console.log("Validation Errors:", this.errors);
                                 toast("Hay errores de validación en el formulario", "error");
                             } else {
                                 toast("Error al actualizar datos de nómina", "error");
@@ -563,6 +587,18 @@
                         } finally {
                             this.payrollLoading = false;
                         }
+                    },
+                    sectionFields: {
+                        personal: ['first_name', 'last_name', 'rut', 'birth_date', 'email', 'phone', 'nationality', 'marital_status', 'address', 'profile_photo'],
+                        laboral: ['position', 'hire_date', 'contract_type', 'work_schedule_type', 'part_time_hours', 'cost_center_id'],
+                        prevision: ['afp_id', 'isapre_id', 'ccaf_id', 'health_contribution', 'apv_amount'],
+                        remuneracion: ['salary', 'salary_type', 'num_dependents'],
+                        banco: ['bank_id', 'bank_account_number', 'bank_account_type'],
+                        emergencia: ['emergency_contact_name', 'emergency_contact_phone']
+                    },
+                    hasSectionErrors(section) {
+                        const fields = this.sectionFields[section] || [];
+                        return fields.some(field => this.errors && this.errors[field] && this.errors[field].length > 0);
                     }
                 }
             }

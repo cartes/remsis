@@ -10,10 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('afps', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre')->unique();
-            $table->timestamps();
+        Schema::table('afps', function (Blueprint $table) {
+            $table->decimal('rate', 5, 2)->default(10.00)->after('nombre');
+            $table->decimal('commission', 5, 2)->default(0.00)->after('rate');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('afps');
+        Schema::table('afps', function (Blueprint $table) {
+            $table->dropColumn(['rate', 'commission']);
+        });
     }
 };

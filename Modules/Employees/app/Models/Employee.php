@@ -59,6 +59,8 @@ class Employee extends Model
         'is_in_payroll',
         'emergency_contact_name',
         'emergency_contact_phone',
+        'meal_allowance',
+        'mobility_allowance',
     ];
 
     protected $casts = [

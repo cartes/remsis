@@ -226,8 +226,8 @@
                                                             <div class="flex justify-between border-b pb-2 mb-2">
                                                                 <span class="text-sm font-medium text-gray-500">Sueldo
                                                                     Base (Contrato)</span>
-                                                                <span class="text-sm font-bold text-gray-900"
-                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(selectedLine.base_salary)"></span>
+                                                                 <span class="text-sm font-bold text-gray-900"
+                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.base_salary))"></span>
                                                             </div>
 
                                                             <!-- Editable Fields -->
@@ -245,7 +245,7 @@
                                                                             class="text-xs text-gray-500 self-center">hrs</span>
                                                                         <span
                                                                             class="text-xs font-bold text-indigo-600 self-center ml-auto"
-                                                                            x-text="'$' + new Intl.NumberFormat('es-CL').format(selectedLine.overtime_amount)"></span>
+                                                                             x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.overtime_amount))"></span>
                                                                     </div>
                                                                 </div>
                                                             @endif
@@ -273,25 +273,25 @@
                                                                 class="flex justify-between border-b pb-2 mb-2 bg-gray-50 -mx-4 px-4 py-2">
                                                                 <span class="text-sm font-bold text-gray-700">Total
                                                                     Haberes (Imponible)</span>
-                                                                <span class="text-sm font-bold text-indigo-600"
-                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(selectedLine.gross_salary)"></span>
+                                                                 <span class="text-sm font-bold text-indigo-600"
+                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gross_salary))"></span>
                                                             </div>
 
                                                             <div class="space-y-2 mb-4">
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">AFP</span>
-                                                                    <span class="text-red-500"
-                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(selectedLine.afp_amount)"></span>
+                                                                     <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.afp_amount))"></span>
                                                                 </div>
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">Salud</span>
-                                                                    <span class="text-red-500"
-                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(selectedLine.isapre_amount)"></span>
+                                                                     <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.isapre_amount))"></span>
                                                                 </div>
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">Seguro Cesantía</span>
-                                                                    <span class="text-red-500"
-                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(selectedLine.cesantia_amount)"></span>
+                                                                     <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.cesantia_amount))"></span>
                                                                 </div>
                                                             </div>
 
@@ -308,16 +308,16 @@
                                                             <div class="flex justify-between border-t pt-2 mb-2">
                                                                 <span class="text-sm font-medium text-gray-500">Total
                                                                     Descuentos</span>
-                                                                <span class="text-sm font-bold text-red-600"
-                                                                    x-text="'-$' + new Intl.NumberFormat('es-CL').format(selectedLine.total_deductions)"></span>
+                                                                 <span class="text-sm font-bold text-red-600"
+                                                                    x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.total_deductions))"></span>
                                                             </div>
 
                                                             <div
                                                                 class="flex justify-between border-t border-gray-200 pt-3 mt-2 bg-indigo-50 -mx-4 px-4 py-3 rounded-b-lg">
                                                                 <span class="text-base font-bold text-gray-900">Líquido
                                                                     a Pagar</span>
-                                                                <span class="text-base font-black text-indigo-700"
-                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(selectedLine.net_salary)"></span>
+                                                                 <span class="text-base font-black text-indigo-700"
+                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.net_salary))"></span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -352,8 +352,8 @@
                                             },
                                             body: JSON.stringify({
                                                 overtime_hours: this.selectedLine.overtime_hours,
-                                                otros_descuentos: this.selectedLine.otros_descuentos,
-                                                gratification_amount: this.selectedLine.gratification_amount
+                                                otros_descuentos: Math.round(this.selectedLine.otros_descuentos),
+                                                gratification_amount: Math.round(this.selectedLine.gratification_amount)
                                             })
                                         })
                                         .then(response => response.json())

@@ -74,14 +74,14 @@ class PayrollCalculationService
             }
 
             // If manual amount was set? For now auto-calc from hours
-            $overtimeAmount = round($haberBase * $factor * $overtimeHours);
+            $overtimeAmount = (int)round($haberBase * $factor * $overtimeHours);
         }
 
         // 3. Gratificación
         // Default to existing value (allows manual edit for 'convencional' or others)
-        $gratificationAmount = ($existingLine) ? $existingLine->gratification_amount : 0;
-        $anticiposAmount = ($existingLine) ? $existingLine->anticipos_amount : 0;
-        $otrosDescuentos = ($existingLine) ? $existingLine->otros_descuentos : 0;
+        $gratificationAmount = ($existingLine) ? (int)$existingLine->gratification_amount : 0;
+        $anticiposAmount = ($existingLine) ? (int)$existingLine->anticipos_amount : 0;
+        $otrosDescuentos = ($existingLine) ? (int)$existingLine->otros_descuentos : 0;
 
         if ($company->gratification_system === 'art_50') {
             // 25% del sueldo base con tope de 4.75 IMM anual (prorrateado mensual)
@@ -92,7 +92,7 @@ class PayrollCalculationService
             $topeMensual = $topeAnual / 12;
 
             $calc25 = ($haberBase + $overtimeAmount) * 0.25;
-            $gratificationAmount = round(min($calc25, $topeMensual));
+            $gratificationAmount = (int)round(min($calc25, $topeMensual));
 
         } elseif ($company->gratification_system === 'sin_gratificacion') {
             $gratificationAmount = 0;
@@ -100,23 +100,23 @@ class PayrollCalculationService
         // For 'art_47' and 'convencional', we keep the manual/existing value.
 
         // 4. Total Imponible
-        $imponible = $haberBase + $overtimeAmount + $gratificationAmount;
+        $imponible = (int)($haberBase + $overtimeAmount + $gratificationAmount);
 
         // 5. Deducciones Legales
         // afp: imponible * 0.10 (Simulado)
-        $afpAmount = round($imponible * 0.10);
+        $afpAmount = (int)round($imponible * 0.10);
 
         // salud: imponible * 0.07
-        $saludAmount = round($imponible * 0.07);
+        $saludAmount = (int)round($imponible * 0.07);
 
         // cesantia: imponible * 0.006 (0.6%)
-        $cesantiaAmount = round($imponible * 0.006);
+        $cesantiaAmount = (int)round($imponible * 0.006);
 
         // total_deductions
-        $totalDeductions = $afpAmount + $saludAmount + $cesantiaAmount + $anticiposAmount + $otrosDescuentos;
+        $totalDeductions = (int)($afpAmount + $saludAmount + $cesantiaAmount + $anticiposAmount + $otrosDescuentos);
 
         // total_neto: imponible - deducciones
-        $totalNeto = $imponible - $totalDeductions;
+        $totalNeto = (int)($imponible - $totalDeductions);
 
         // Create or update the canonical payroll row for this employee and period.
         return Payroll::updateOrCreate(

@@ -48,6 +48,13 @@ class CompanyUserController extends Controller
             abort(403);
         }
 
+        // Normalizar booleanos desde strings (FormData)
+        if ($request->has('is_in_payroll')) {
+            $val = $request->input('is_in_payroll');
+            if ($val === 'true') $request->merge(['is_in_payroll' => true]);
+            if ($val === 'false') $request->merge(['is_in_payroll' => false]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -89,6 +96,13 @@ class CompanyUserController extends Controller
         $auth = $request->user();
         if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
             abort(403);
+        }
+
+        // Normalizar booleanos desde strings (FormData)
+        if ($request->has('is_in_payroll')) {
+            $val = $request->input('is_in_payroll');
+            if ($val === 'true') $request->merge(['is_in_payroll' => true]);
+            if ($val === 'false') $request->merge(['is_in_payroll' => false]);
         }
 
         $validated = $request->validate([

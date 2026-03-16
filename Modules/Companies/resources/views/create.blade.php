@@ -18,6 +18,7 @@
                     <div>
                         <label class="block font-medium mb-1">RUT <span class="text-red-500">*</span></label>
                         <input x-model="formEssential.rut"
+                            x-on:input="formEssential.rut = formatRut($event.target.value)"
                             class="w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-300"
                             :disabled="savingEssential || companyId">
                     </div>
@@ -187,7 +188,9 @@
                         </div>
                         <div>
                             <label class="block font-medium mb-1">RUT</label>
-                            <input x-model="formDetails.representante_rut" class="w-full border rounded p-2">
+                            <input x-model="formDetails.representante_rut"
+                                x-on:input="formDetails.representante_rut = formatRut($event.target.value)"
+                                class="w-full border rounded p-2">
                         </div>
                         <div>
                             <label class="block font-medium mb-1">Cargo</label>

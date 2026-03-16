@@ -28,43 +28,67 @@
             <button @click="activePayrollTab = 'personal'"
                 :class="activePayrollTab === 'personal' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-user mr-1"></i> Personales
+                <span x-show="hasSectionErrors('personal')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
             <button @click="activePayrollTab = 'laboral'"
                 :class="activePayrollTab === 'laboral' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-briefcase mr-1"></i> Contrato
+                <span x-show="hasSectionErrors('laboral')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
             <button @click="activePayrollTab = 'prevision'"
                 :class="activePayrollTab === 'prevision' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-shield-alt mr-1"></i> Previsión
+                <span x-show="hasSectionErrors('prevision')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
             <button @click="activePayrollTab = 'remuneracion'"
                 :class="activePayrollTab === 'remuneracion' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-money-bill-wave mr-1"></i> Remuneración
+                <span x-show="hasSectionErrors('remuneracion')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
             <button @click="activePayrollTab = 'banco'"
                 :class="activePayrollTab === 'banco' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-university mr-1"></i> Bancarios
+                <span x-show="hasSectionErrors('banco')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
             <button @click="activePayrollTab = 'emergencia'"
                 :class="activePayrollTab === 'emergencia' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                     'border-transparent text-gray-500 hover:text-gray-700'"
-                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap">
+                class="flex-1 py-3 px-4 text-center border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap relative">
                 <i class="fas fa-phone-alt mr-1"></i> Emergencia
+                <span x-show="hasSectionErrors('emergencia')" class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
             </button>
         </div>
 
         {{-- Body --}}
         <div class="flex-1 overflow-y-auto p-6">
+            {{-- Resumen Global de Errores --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        <h4 class="text-sm font-bold text-red-800">Se encontraron errores de validación:</h4>
+                    </div>
+                    <ul class="space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <li class="flex items-start gap-2 text-[11px] text-red-700">
+                                <span class="font-bold uppercase" x-text="`${field.replace(/_/g, ' ')}:`"></span>
+                                <span x-text="messages[0]"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
             {{-- Tab: Datos Personales --}}
             <div x-show="activePayrollTab === 'personal'" class="space-y-4">
                 <div
@@ -130,6 +154,7 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">RUT</label>
                         <input type="text" x-model="selectedEmployee.rut"
+                            x-on:input="selectedEmployee.rut = formatRut($event.target.value)"
                             :class="errors.rut ? 'border-red-500 ring-red-100' : 'border-gray-200'"
                             class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
                         <template x-if="errors.rut">
@@ -151,24 +176,37 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email</label>
                         <input type="email" x-model="selectedEmployee.email"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.email ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.email">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.email[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Teléfono</label>
                         <input type="text" x-model="selectedEmployee.phone"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.phone ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.phone">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.phone[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nacionalidad</label>
                         <input type="text" x-model="selectedEmployee.nationality"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.nationality ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <template x-if="errors.nationality">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.nationality[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Estado Civil</label>
                         <select x-model="selectedEmployee.marital_status"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.marital_status ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">Seleccione...</option>
                             <option value="single">Soltero/a</option>
                             <option value="married">Casado/a</option>
@@ -176,6 +214,9 @@
                             <option value="widowed">Viudo/a</option>
                             <option value="other">Otro</option>
                         </select>
+                        <template x-if="errors.marital_status">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.marital_status[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div>
@@ -217,17 +258,25 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Contrato</label>
                         <input type="text" x-model="selectedEmployee.contract_type"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                            :class="errors.contract_type ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                             placeholder="Ej: Indefinido, Plazo Fijo">
+                        <template x-if="errors.contract_type">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.contract_type[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Jornada Laboral</label>
                         <select x-model="selectedEmployee.work_schedule_type"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.work_schedule_type ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">Seleccione...</option>
                             <option value="full_time">Full Time</option>
                             <option value="part_time">Part Time</option>
                         </select>
+                        <template x-if="errors.work_schedule_type">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.work_schedule_type[0]"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -246,8 +295,12 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Horas Semanales</label>
                         <input type="number" step="0.5" x-model="selectedEmployee.part_time_hours"
-                            class="w-full md:w-1/2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                            :class="errors.part_time_hours ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full md:w-1/2 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                             placeholder="Ej: 20">
+                        <template x-if="errors.part_time_hours">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.part_time_hours[0]"></p>
+                        </template>
                     </div>
 
                     <div>
@@ -311,13 +364,19 @@
                     </template>
 
                     <template x-if="costCenters && costCenters.length > 0">
-                        <select x-model="selectedEmployee.cost_center_id"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                            <option value="">Sin asignar</option>
-                            <template x-for="cc in costCenters" :key="cc.id">
-                                <option :value="cc.id" x-text="`${cc.code} - ${cc.name}`"></option>
+                        <div>
+                            <select x-model="selectedEmployee.cost_center_id"
+                                :class="errors.cost_center_id ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="">Sin asignar</option>
+                                <template x-for="cc in costCenters" :key="cc.id">
+                                    <option :value="cc.id" x-text="`${cc.code} - ${cc.name}`"></option>
+                                </template>
+                            </select>
+                            <template x-if="errors.cost_center_id">
+                                <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.cost_center_id[0]"></p>
                             </template>
-                        </select>
+                        </div>
                     </template>
                 </div>
             </div>
@@ -327,48 +386,68 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">AFP</label>
                     <select x-model="selectedEmployee.afp_id"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.afp_id ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">Seleccione AFP</option>
                         <template x-for="afp in afps" :key="afp.id">
                             <option :value="afp.id" x-text="afp.nombre"></option>
                         </template>
                     </select>
+                    <template x-if="errors.afp_id">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.afp_id[0]"></p>
+                    </template>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Salud
                         (Isapre/Fonasa)</label>
                     <select x-model="selectedEmployee.isapre_id"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.isapre_id ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">Seleccione Salud</option>
                         <template x-for="isa in isapres" :key="isa.id">
                             <option :value="isa.id" x-text="isa.nombre"></option>
                         </template>
                     </select>
+                    <template x-if="errors.isapre_id">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.isapre_id[0]"></p>
+                    </template>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Monto Adicional
                         Salud</label>
                     <input type="number" step="0.01" x-model="selectedEmployee.health_contribution"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        :class="errors.health_contribution ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                         placeholder="0.00">
+                    <template x-if="errors.health_contribution">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.health_contribution[0]"></p>
+                    </template>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Caja de Compensación
                         (CCAF)</label>
                     <select x-model="selectedEmployee.ccaf_id"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.ccaf_id ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">Seleccione CCAF</option>
                         <template x-for="ccaf in ccafs" :key="ccaf.id">
                             <option :value="ccaf.id" x-text="ccaf.nombre"></option>
                         </template>
                     </select>
+                    <template x-if="errors.ccaf_id">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.ccaf_id[0]"></p>
+                    </template>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">APV (Ahorro Previsional
                         Voluntario)</label>
                     <input type="number" step="0.01" x-model="selectedEmployee.apv_amount"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        :class="errors.apv_amount ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                         placeholder="0.00">
+                    <template x-if="errors.apv_amount">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.apv_amount[0]"></p>
+                    </template>
                 </div>
             </div>
 
@@ -387,18 +466,26 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Sueldo</label>
                         <select x-model="selectedEmployee.salary_type"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.salary_type ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">Seleccione...</option>
                             <option value="mensual">Mensual</option>
                             <option value="quincenal">Quincenal</option>
                             <option value="semanal">Semanal</option>
                         </select>
+                        <template x-if="errors.salary_type">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.salary_type[0]"></p>
+                        </template>
                     </div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Cargas Familiares</label>
                     <input type="number" min="0" x-model="selectedEmployee.num_dependents"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.num_dependents ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <template x-if="errors.num_dependents">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.num_dependents[0]"></p>
+                    </template>
                 </div>
             </div>
 
@@ -407,28 +494,40 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Banco</label>
                     <select x-model="selectedEmployee.bank_id"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.bank_id ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">Seleccione Banco</option>
                         <template x-for="banco in bancos" :key="banco.id">
                             <option :value="banco.id" x-text="banco.nombre"></option>
                         </template>
                     </select>
+                    <template x-if="errors.bank_id">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.bank_id[0]"></p>
+                    </template>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nº Cuenta</label>
                         <input type="text" x-model="selectedEmployee.bank_account_number"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
+                            :class="errors.bank_account_number ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono">
+                        <template x-if="errors.bank_account_number">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.bank_account_number[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo Cuenta</label>
                         <select x-model="selectedEmployee.bank_account_type"
-                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            :class="errors.bank_account_type ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">Seleccione...</option>
                             <option value="corriente">Corriente</option>
                             <option value="vista">Vista / RUT</option>
                             <option value="ahorro">Ahorro</option>
                         </select>
+                        <template x-if="errors.bank_account_type">
+                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.bank_account_type[0]"></p>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -438,12 +537,20 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre Contacto</label>
                     <input type="text" x-model="selectedEmployee.emergency_contact_name"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.emergency_contact_name ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <template x-if="errors.emergency_contact_name">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.emergency_contact_name[0]"></p>
+                    </template>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Teléfono Contacto</label>
                     <input type="text" x-model="selectedEmployee.emergency_contact_phone"
-                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        :class="errors.emergency_contact_phone ? 'border-red-500 ring-red-100' : 'border-gray-200'"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <template x-if="errors.emergency_contact_phone">
+                        <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.emergency_contact_phone[0]"></p>
+                    </template>
                 </div>
             </div>
         </div>

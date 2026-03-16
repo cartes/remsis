@@ -15,7 +15,7 @@ class Isapre extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = ['name', 'code'];
+    protected $fillable = ['nombre', 'code'];
 
     public function employees()
     {

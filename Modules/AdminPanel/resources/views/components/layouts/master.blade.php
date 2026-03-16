@@ -403,6 +403,18 @@
                     toast(@json(implode("\n", $errors->all())), 'error');
                 @endif
             });
+
+            // Formateador de RUT global (Formato: xxxxxxxx-x)
+            window.formatRut = function(value) {
+                if (!value) return '';
+                let raw = value.replace(/[^0-9kK]/g, "");
+                if (raw.length === 0) return "";
+                if (raw.length === 1) return raw.toUpperCase();
+                let dv = raw.slice(-1).toUpperCase();
+                let body = raw.slice(0, -1);
+                if (body.length > 8) body = body.slice(0, 8);
+                return body + "-" + dv;
+            }
         })();
     </script>
 

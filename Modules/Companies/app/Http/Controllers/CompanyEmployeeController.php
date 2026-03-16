@@ -100,6 +100,22 @@ class CompanyEmployeeController extends Controller
     {
         $this->authorizeCompanyAccess($company);
 
+        // Limpiar strings vacíos para que las reglas 'nullable' funcionen incluso si el middleware central no está activo
+        $input = $request->all();
+        foreach ($input as $key => $value) {
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed === '') {
+                    $input[$key] = null;
+                } elseif ($key === 'is_in_payroll') {
+                    // Handle boolean strings from FormData
+                    if ($trimmed === 'true') $input[$key] = true;
+                    if ($trimmed === 'false') $input[$key] = false;
+                }
+            }
+        }
+        $request->merge($input);
+
         $validated = $request->validate([
             // Datos personales
             'first_name' => 'nullable|string|max:255',
@@ -134,7 +150,7 @@ class CompanyEmployeeController extends Controller
             'apv_amount' => 'nullable|numeric|min:0',
 
             // Remuneración
-            'salary' => 'nullable|numeric',
+            'salary' => 'nullable|numeric|min:0',
             'salary_type' => 'nullable|in:mensual,quincenal,semanal',
             'num_dependents' => 'nullable|integer|min:0',
 

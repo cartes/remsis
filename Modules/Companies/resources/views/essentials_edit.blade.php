@@ -17,6 +17,7 @@
       <div>
         <label class="block font-medium mb-1">RUT <span class="text-red-500">*</span></label>
         <input name="rut" value="{{ old('rut',$company->rut) }}"
+               oninput="this.value = formatRut(this.value)"
                class="w-full border rounded p-2">
         @error('rut') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
       </div>
