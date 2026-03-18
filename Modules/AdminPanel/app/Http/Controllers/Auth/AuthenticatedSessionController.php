@@ -73,13 +73,20 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
         }
 
-        $redirectUrl = redirect()->intended($redirectUrl)->getTargetUrl();
-
-        if ($request->expectsJson()) {
-            return response()->json(['redirect' => $redirectUrl]);
+        // Limpiamos cualquier URL "intended" que pueda haber quedado de intentos previos fallidos (como /login-admin)
+        // si no es una ruta de dashboard o perfil válida.
+        $intended = session()->get('url.intended');
+        if ($intended && (str_contains($intended, 'login') || str_contains($intended, 'register'))) {
+            session()->forget('url.intended');
         }
 
-        return redirect()->to($redirectUrl);
+        $finalUrl = redirect()->intended($redirectUrl)->getTargetUrl();
+
+        if ($request->expectsJson()) {
+            return response()->json(['redirect' => $finalUrl]);
+        }
+
+        return redirect()->to($finalUrl);
     }
 
     /**

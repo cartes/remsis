@@ -74,6 +74,8 @@ class CompaniesController extends Controller
         if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
+        $company->load('economicActivity');
+        
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
         $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
         $afps = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get(['id', 'nombre']);
@@ -155,6 +157,7 @@ class CompaniesController extends Controller
             'weekly_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
             'work_schedule' => ['nullable', 'array'],
             'allows_overtime' => ['nullable', 'boolean'],
+            'economic_activity_id' => ['nullable', 'exists:economic_activities,id'],
         ], [
             'dia_pago_dia.required_if' => 'Debes indicar el día cuando el pago es “Día fijo”.',
         ]);

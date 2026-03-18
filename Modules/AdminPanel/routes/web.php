@@ -7,10 +7,7 @@ use Modules\AdminPanel\Http\Controllers\BancoCentralSettingsController;
 use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
 use Modules\AdminPanel\Http\Controllers\SettingsController;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('admin.login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-});
+// Rutas de autenticación movidas a routes/auth.php para evitar conflictos de nombres
 
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
     Route::post('logout', [AdminPanelController::class, 'logout'])->name('admin.logout');

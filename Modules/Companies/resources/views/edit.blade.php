@@ -297,6 +297,20 @@
                                 @enderror
                             </div>
                             <div>
+                                <x-core::searchable-select 
+                                    name="economic_activity_id" 
+                                    label="Actividad Económica (SII)"
+                                    placeholder="Buscar código o actividad..."
+                                    :value="old('economic_activity_id', $company->economic_activity_id)"
+                                    :endpoint="route('economic-activities.search')"
+                                    :initialLabel="$company->economicActivity ? $company->economicActivity->code . ' - ' . $company->economicActivity->name : ''"
+                                />
+                                @error('economic_activity_id')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

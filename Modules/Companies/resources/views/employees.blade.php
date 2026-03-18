@@ -330,6 +330,13 @@
                                 window.location.reload();
                             }
                         });
+
+                        // Watch check for work_schedule_type to initialize schedule if it becomes part_time
+                        this.$watch("selectedEmployee.work_schedule_type", value => {
+                            if (value === 'part_time' && (!this.selectedEmployee.part_time_schedule || Object.keys(this.selectedEmployee.part_time_schedule).length === 0)) {
+                                this.selectedEmployee.part_time_schedule = this.getDefaultSchedule();
+                            }
+                        });
                     },
                     selectedEmployee: {
                         id: null,
@@ -519,7 +526,10 @@
                             if (response.data.status === "success") {
                                 this.errors = {}; // Reset errors before loading new data
                                 this.selectedEmployee = response.data.employee;
-                                if (!this.selectedEmployee.part_time_schedule) {
+                                // Robust check: null, empty array, or empty object
+                                if (!this.selectedEmployee.part_time_schedule || 
+                                    (Array.isArray(this.selectedEmployee.part_time_schedule) && this.selectedEmployee.part_time_schedule.length === 0) ||
+                                    (typeof this.selectedEmployee.part_time_schedule === 'object' && Object.keys(this.selectedEmployee.part_time_schedule).length === 0)) {
                                     this.selectedEmployee.part_time_schedule = this.getDefaultSchedule();
                                 }
                                 this.shouldReloadAfterPayrollSave = false;

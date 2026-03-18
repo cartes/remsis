@@ -55,6 +55,7 @@ class Company extends Model
         'work_schedule',
         'allows_overtime',
         'slug',
+        'economic_activity_id',
     ];
 
     protected $casts = [
@@ -116,6 +117,11 @@ class Company extends Model
     public function periods()
     {
         return $this->payrollPeriods();
+    }
+
+    public function economicActivity()
+    {
+        return $this->belongsTo(\Modules\Core\Models\EconomicActivity::class);
     }
 
     protected static function booted()
