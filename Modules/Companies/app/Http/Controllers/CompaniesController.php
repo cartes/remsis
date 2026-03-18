@@ -90,7 +90,14 @@ class CompaniesController extends Controller
         // Cargar centros de costo
         $costCenters = $company->costCenters()->orderBy('code')->get();
 
-        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales'));
+        $taxableItems = collect();
+        $enabledTaxableItemIds = [];
+        if ($user->hasRole('super-admin')) {
+            $taxableItems = \Modules\AdminPanel\Models\TaxableItem::where('is_active', true)->get();
+            $enabledTaxableItemIds = $company->taxableItems()->wherePivot('is_enabled', true)->pluck('taxable_items_catalog.id')->toArray();
+        }
+
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales', 'taxableItems', 'enabledTaxableItemIds'));
     }
 
     public function employees(Company $company)
@@ -163,6 +170,15 @@ class CompaniesController extends Controller
         ]);
 
         $company->update($data);
+
+        if ($user->hasRole('super-admin') && $request->has('taxable_items_config')) {
+            $taxableItemsInput = $request->input('taxable_items', []);
+            $syncData = [];
+            foreach ($taxableItemsInput as $id) {
+                $syncData[$id] = ['is_enabled' => true];
+            }
+            $company->taxableItems()->sync($syncData);
+        }
 
         $params = ['company' => $company];
         if ($request->has('section')) {

@@ -639,6 +639,35 @@
                                 </table>
                             </div>
                         </div>
+
+                        {{-- Haberes Imponibles --}}
+                        @if(auth()->user()->hasRole('super-admin'))
+                        <div class="mt-8 border-t border-gray-100 pt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                                Configuración de Haberes Imponibles
+                                <span class="bg-purple-100 text-purple-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded ml-2 align-middle">Super Admin</span>
+                            </h3>
+                            <p class="text-sm text-gray-500 mb-6">Selecciona los haberes imponibles variables que estarán habilitados para esta empresa en el ingreso de nómina.</p>
+
+                            <input type="hidden" name="taxable_items_config" value="1">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach($taxableItems as $item)
+                                <label class="flex items-start p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" name="taxable_items[]" value="{{ $item->id }}" 
+                                            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                            @checked(in_array($item->id, old('taxable_items', $enabledTaxableItemIds)))>
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <div class="font-bold text-gray-800 mb-0.5 group-hover:text-blue-700 transition-colors">{{ $item->name }}</div>
+                                        <p class="text-xs text-gray-500">{{ $item->description }}</p>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- Banco Tab --}}

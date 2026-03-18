@@ -16,6 +16,7 @@ class AdminPanelDatabaseSeeder extends Seeder
             IsapreSeeder::class,
             CcafSeeder::class,
             MutualSeeder::class,
+            TaxableItemsSeeder::class,
         ]);
     }
 }

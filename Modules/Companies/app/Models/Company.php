@@ -124,6 +124,13 @@ class Company extends Model
         return $this->belongsTo(\Modules\Core\Models\EconomicActivity::class);
     }
 
+    public function taxableItems()
+    {
+        return $this->belongsToMany(\Modules\AdminPanel\Models\TaxableItem::class, 'company_taxable_item', 'company_id', 'taxable_item_id')
+                    ->withPivot('is_enabled')
+                    ->withTimestamps();
+    }
+
     protected static function booted()
     {
         static::creating(function ($company) {
