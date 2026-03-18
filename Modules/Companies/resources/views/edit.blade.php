@@ -641,11 +641,10 @@
                         </div>
 
                         {{-- Haberes Imponibles --}}
-                        @if(auth()->user()->hasRole('super-admin'))
+                        @if(auth()->user()->hasAnyRole(['super-admin', 'admin', 'contador']))
                         <div class="mt-8 border-t border-gray-100 pt-6">
                             <h3 class="text-lg font-bold text-gray-800 mb-4">
                                 Configuración de Haberes Imponibles
-                                <span class="bg-purple-100 text-purple-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded ml-2 align-middle">Super Admin</span>
                             </h3>
                             <p class="text-sm text-gray-500 mb-6">Selecciona los haberes imponibles variables que estarán habilitados para esta empresa en el ingreso de nómina.</p>
 

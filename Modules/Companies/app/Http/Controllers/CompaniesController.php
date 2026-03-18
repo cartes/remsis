@@ -92,7 +92,7 @@ class CompaniesController extends Controller
 
         $taxableItems = collect();
         $enabledTaxableItemIds = [];
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasAnyRole(['super-admin', 'admin', 'contador'])) {
             $taxableItems = \Modules\AdminPanel\Models\TaxableItem::where('is_active', true)->get();
             $enabledTaxableItemIds = $company->taxableItems()->wherePivot('is_enabled', true)->pluck('taxable_items_catalog.id')->toArray();
         }
@@ -171,7 +171,7 @@ class CompaniesController extends Controller
 
         $company->update($data);
 
-        if ($user->hasRole('super-admin') && $request->has('taxable_items_config')) {
+        if ($user->hasAnyRole(['super-admin', 'admin', 'contador']) && $request->has('taxable_items_config')) {
             $taxableItemsInput = $request->input('taxable_items', []);
             $syncData = [];
             foreach ($taxableItemsInput as $id) {
