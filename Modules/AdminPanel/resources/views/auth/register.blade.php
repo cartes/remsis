@@ -87,7 +87,7 @@
         </div>
 
         <div class="text-center mt-6">
-            <a href="{{ route('admin.login') }}"
+            <a href="{{ route('login') }}"
                 class="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">
                 ¿Ya tienes una cuenta? Inicia sesión
             </a>

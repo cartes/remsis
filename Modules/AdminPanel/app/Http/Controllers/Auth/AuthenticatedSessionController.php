@@ -70,7 +70,7 @@ class AuthenticatedSessionController extends Controller
                 ], 403);
             }
 
-            return redirect()->route('admin.login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
+            return redirect()->route('login')->withErrors(['email' => 'No tienes rol asignado para ingresar.']);
         }
 
         // Limpiamos cualquier URL "intended" que pueda haber quedado de intentos previos fallidos (como /login-admin)
