@@ -75,7 +75,7 @@ class CompaniesController extends Controller
             abort(403);
         }
         $company->load('economicActivity');
-        
+
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
         $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
         $afps = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get(['id', 'nombre']);
@@ -150,6 +150,7 @@ class CompaniesController extends Controller
             'tipo_contribuyente' => ['nullable', Rule::in(['natural', 'juridica'])],
             'dia_pago' => ['nullable', Rule::in(['ultimo_dia_habil', 'dia_fijo', 'quincenal'])],
             'dia_pago_dia' => ['nullable', 'integer', 'min:1', 'max:31', 'required_if:dia_pago,dia_fijo'],
+            'payment_frequency' => ['required', Rule::in(['diario', 'semanal', 'mensual'])],
             'ccaf_id' => ['nullable', 'exists:ccafs,id'],
             'mutual_id' => ['nullable', 'exists:mutuales,id'],
             'bank_id' => ['nullable', 'exists:banks,id'],

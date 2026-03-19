@@ -3,7 +3,6 @@
 namespace Modules\AdminPanel\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-
 use Modules\AdminPanel\Models\TaxableItem;
 
 class TaxableItemsSeeder extends Seeder

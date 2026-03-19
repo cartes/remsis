@@ -66,7 +66,7 @@ class PayrollConsolidationFlowTest extends TestCase
         $this->assertSame('calculated', $period->fresh()->status);
 
         $updateResponse = $this->actingAs($actor)->putJson(
-            route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'line' => $payroll->id]),
+            route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'payroll' => $payroll->id]),
             [
                 'overtime_hours' => 2,
                 'gratification_amount' => 25000,

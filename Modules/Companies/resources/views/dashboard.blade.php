@@ -10,6 +10,9 @@
         </div>
 
         {{-- Metrics Grid --}}
+        @php
+            $activePeriod = $company->periods()->whereIn('status', ['draft', 'open', 'calculated'])->latest('year')->latest('month')->first();
+        @endphp
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {{-- Total Employees --}}
             <div
@@ -48,12 +51,12 @@
                 </div>
             </div>
 
-            {{-- Pending Payroll --}}
+            {{-- Pending Payroll / Summary --}}
             <div
                 class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Nómina del Mes</p>
-                    <h3 class="text-3xl font-black text-gray-300">---</h3>
+                    <h3 class="text-2xl font-black text-gray-900">{{ $activePeriod ? $activePeriod->getDisplayName() : '---' }}</h3>
                 </div>
                 <div class="p-3 bg-gray-50 text-gray-400 rounded-xl">
                     <i class="fas fa-file-invoice-dollar text-2xl"></i>
@@ -73,12 +76,26 @@
                             Cierre: 30 Mar</span>
                     </div>
                     <div class="p-0">
-                        <div class="p-12 text-center">
-                            <i class="fas fa-check-circle text-green-100 text-6xl mb-4"></i>
-                            <h5 class="text-lg font-bold text-gray-800 mb-1">Todo al día</h5>
-                            <p class="text-sm text-gray-500">No hay discrepancias críticas o alertas pendientes para
-                                este período.</p>
-                        </div>
+                        @if($activePeriod)
+                            <div class="p-10 flex flex-col items-center bg-indigo-50/30">
+                                <div class="w-14 h-14 bg-white shadow-sm border border-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                                    <i class="fas fa-money-check-dollar text-2xl"></i>
+                                </div>
+                                <h5 class="text-xl font-black text-gray-900 mb-1">Periodo de Remuneraciones</h5>
+                                <p class="text-sm text-gray-500 mb-6 text-center max-w-sm">Estamos procesando el periodo de <strong>{{ $activePeriod->getDisplayName() }}</strong>. Aún puedes realizar cambios.</p>
+                                <a href="{{ route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $activePeriod]) }}" 
+                                    class="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-sm hover:bg-blue-700 transition-all shadow-lg hover:-translate-y-0.5 flex items-center gap-2">
+                                    Ir a Liquidaciones: {{ $activePeriod->getDisplayName() }} <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            </div>
+                        @else
+                            <div class="p-12 text-center">
+                                <i class="fas fa-check-circle text-green-100 text-6xl mb-4"></i>
+                                <h5 class="text-lg font-bold text-gray-800 mb-1">Todo al día</h5>
+                                <p class="text-sm text-gray-500">No hay discrepancias críticas o alertas pendientes para
+                                    este período.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

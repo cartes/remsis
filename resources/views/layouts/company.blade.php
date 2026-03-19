@@ -310,6 +310,19 @@
                                     <span class="text-xs font-bold uppercase tracking-widest opacity-80">Empresa
                                         Activa</span>
                                 </div>
+                                @php
+                                    $activePeriod = $company->periods()->whereIn('status', ['draft', 'open', 'calculated'])->latest('year')->latest('month')->first();
+                                @endphp
+                                @if($activePeriod)
+                                    <span class="opacity-30">|</span>
+                                    <a href="{{ route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $activePeriod]) }}" 
+                                       class="flex items-center gap-2 bg-blue-400/20 hover:bg-blue-400/40 transition-colors px-3 py-1 rounded-lg border border-blue-300/30 cursor-pointer">
+                                        <i class="fas fa-edit text-[10px] text-blue-200"></i>
+                                        <span class="text-xs font-bold uppercase tracking-widest text-blue-50">
+                                            Período Activo: {{ $activePeriod->getDisplayName() }}
+                                        </span>
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>

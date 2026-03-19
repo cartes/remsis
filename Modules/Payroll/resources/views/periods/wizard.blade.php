@@ -91,7 +91,43 @@
                         @endif
                     </div>
                 @else
-                    <div x-data="{ showModal: false, selectedLine: null }">
+                    <div x-data="{ 
+                        showModal: false, 
+                        selectedLine: null, 
+                        itemDetails: { 'CO01': [], 'SC01': [], 'BI01': [], 'AG01': [] },
+                        toast: { show: false, message: '', type: 'success' },
+                        showToast(message, type = 'success') {
+                            this.toast.message = message;
+                            this.toast.type = type;
+                            this.toast.show = true;
+                            setTimeout(() => { this.toast.show = false; }, 3000);
+                        }
+                    }">
+                        <!-- Toast Notification -->
+                        <div x-show="toast.show" 
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 transform translate-y-2"
+                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 transform translate-y-0"
+                             x-transition:leave-end="opacity-0 transform translate-y-2"
+                             class="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white border-l-4 rounded-lg shadow-xl p-4"
+                             :class="toast.type === 'success' ? 'border-green-500' : 'border-red-500'"
+                             style="display: none;">
+                            <div class="flex items-center">
+                                <template x-if="toast.type === 'success'">
+                                    <svg class="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </template>
+                                <template x-if="toast.type === 'error'">
+                                    <svg class="h-6 w-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </template>
+                                <p class="text-sm font-medium text-gray-900" x-text="toast.message"></p>
+                            </div>
+                        </div>
                         <div class="overflow-x-auto rounded-lg border border-gray-200">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -138,24 +174,25 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td
+                                            <td id="base-salary-{{ $line->id }}"
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 font-medium">
                                                 ${{ number_format($line->base_salary, 0, ',', '.') }}
                                             </td>
-                                            <td
+                                            <td id="gross-salary-{{ $line->id }}"
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 font-medium">
                                                 ${{ number_format($line->gross_salary, 0, ',', '.') }}
                                             </td>
-                                            <td
+                                            <td id="total-deductions-{{ $line->id }}"
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm text-red-500 font-medium">
                                                 -${{ number_format($line->total_deductions, 0, ',', '.') }}
                                             </td>
-                                            <td
+                                            <td id="net-salary-{{ $line->id }}"
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
                                                 ${{ number_format($line->net_salary, 0, ',', '.') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <button @click="selectedLine = {{ $line->toJson() }}; showModal = true"
+                                                <button
+                                                    @click="selectedLine = {{ $line->toJson() }}; itemDetails = { 'CO01': (selectedLine.details || []).filter(d => d.concept === 'CO01').map(d => ({...d, type: d.concept})), 'SC01': (selectedLine.details || []).filter(d => d.concept === 'SC01').map(d => ({...d, type: d.concept})), 'BI01': (selectedLine.details || []).filter(d => d.concept === 'BI01').map(d => ({...d, type: d.concept})), 'AG01': (selectedLine.details || []).filter(d => d.concept === 'AG01').map(d => ({...d, type: d.concept})) }; showModal = true"
                                                     class="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 px-3 py-1 rounded-md transition-colors">
                                                     Detalles
                                                 </button>
@@ -226,11 +263,10 @@
                                                             <div class="flex justify-between border-b pb-2 mb-2">
                                                                 <span class="text-sm font-medium text-gray-500">Sueldo
                                                                     Base (Contrato)</span>
-                                                                 <span class="text-sm font-bold text-gray-900"
+                                                                <span class="text-sm font-bold text-gray-900"
                                                                     x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.base_salary))"></span>
                                                             </div>
 
-                                                            <!-- Editable Fields -->
                                                             @if ($company->allows_overtime)
                                                                 <div>
                                                                     <label
@@ -245,27 +281,185 @@
                                                                             class="text-xs text-gray-500 self-center">hrs</span>
                                                                         <span
                                                                             class="text-xs font-bold text-indigo-600 self-center ml-auto"
-                                                                             x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.overtime_amount))"></span>
+                                                                            x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.overtime_amount))"></span>
                                                                     </div>
                                                                 </div>
                                                             @endif
 
+                                                            @if ($enabledTaxables->contains('code', 'CO01'))
+                                                                <div class="border rounded p-3 mb-3 bg-gray-50">
+                                                                    <div
+                                                                        class="flex justify-between items-center mb-2">
+                                                                        <label
+                                                                            class="block text-xs font-semibold text-gray-700">Comisiones</label>
+                                                                        <button type="button"
+                                                                            @click="itemDetails['CO01'].push({type: 'CO01', description: '', amount: 0})"
+                                                                            class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+
+                                                                            Agregar Comisión</button>
+                                                                    </div>
+                                                                    <template
+                                                                        x-for="(detail, index) in itemDetails['CO01']"
+                                                                        :key="index">
+                                                                        <div class="flex gap-2 mb-2 items-center">
+                                                                            <input type="text"
+                                                                                x-model="detail.description"
+                                                                                placeholder="Glosa (ej: Ventas mes)"
+                                                                                class="w-1/2 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <input type="number" min="0"
+                                                                                x-model.number="detail.amount"
+                                                                                placeholder="Monto"
+                                                                                class="w-1/3 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <button type="button"
+                                                                                @click="itemDetails['CO01'].splice(index, 1)"
+                                                                                class="text-red-500 hover:text-red-700"><i
+                                                                                    class="fas fa-trash text-xs"></i></button>
+                                                                        </div>
+                                                                    </template>
+                                                                    <div class="text-right text-xs font-bold text-gray-600 mt-1"
+                                                                        x-show="itemDetails['CO01'].length > 0">
+                                                                        Total Comisiones: $<span
+                                                                            x-text="new Intl.NumberFormat('es-CL').format(itemDetails['CO01'].reduce((acc, curr) => acc + (parseInt(curr.amount) || 0), 0))"></span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                            @if ($enabledTaxables->contains('code', 'SC01'))
+                                                                <div class="border rounded p-3 mb-3 bg-gray-50">
+                                                                    <div
+                                                                        class="flex justify-between items-center mb-2">
+                                                                        <label
+                                                                            class="block text-xs font-semibold text-gray-700">Semana
+                                                                            Corrida</label>
+                                                                        <button type="button"
+                                                                            @click="itemDetails['SC01'].push({type: 'SC01', description: '', amount: 0})"
+                                                                            class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+
+                                                                            Agregar Sem. Corrida</button>
+                                                                    </div>
+                                                                    <template
+                                                                        x-for="(detail, index) in itemDetails['SC01']"
+                                                                        :key="index">
+                                                                        <div class="flex gap-2 mb-2 items-center">
+                                                                            <input type="text"
+                                                                                x-model="detail.description"
+                                                                                placeholder="Glosa"
+                                                                                class="w-1/2 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <input type="number" min="0"
+                                                                                x-model.number="detail.amount"
+                                                                                placeholder="Monto"
+                                                                                class="w-1/3 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <button type="button"
+                                                                                @click="itemDetails['SC01'].splice(index, 1)"
+                                                                                class="text-red-500 hover:text-red-700"><i
+                                                                                    class="fas fa-trash text-xs"></i></button>
+                                                                        </div>
+                                                                    </template>
+                                                                    <div class="text-right text-xs font-bold text-gray-600 mt-1"
+                                                                        x-show="itemDetails['SC01'].length > 0">
+                                                                        Total Sem. Corrida: $<span
+                                                                            x-text="new Intl.NumberFormat('es-CL').format(itemDetails['SC01'].reduce((acc, curr) => acc + (parseInt(curr.amount) || 0), 0))"></span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                            @if ($enabledTaxables->contains('code', 'BI01'))
+                                                                <div class="border rounded p-3 mb-3 bg-gray-50">
+                                                                    <div
+                                                                        class="flex justify-between items-center mb-2">
+                                                                        <label
+                                                                            class="block text-xs font-semibold text-gray-700">Bonos
+                                                                            e Incentivos</label>
+                                                                        <button type="button"
+                                                                            @click="itemDetails['BI01'].push({type: 'BI01', description: '', amount: 0})"
+                                                                            class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+
+                                                                            Agregar Bono</button>
+                                                                    </div>
+                                                                    <template
+                                                                        x-for="(detail, index) in itemDetails['BI01']"
+                                                                        :key="index">
+                                                                        <div class="flex gap-2 mb-2 items-center">
+                                                                            <input type="text"
+                                                                                x-model="detail.description"
+                                                                                placeholder="Glosa (ej: Bono Productividad)"
+                                                                                class="w-1/2 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <input type="number" min="0"
+                                                                                x-model.number="detail.amount"
+                                                                                placeholder="Monto"
+                                                                                class="w-1/3 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <button type="button"
+                                                                                @click="itemDetails['BI01'].splice(index, 1)"
+                                                                                class="text-red-500 hover:text-red-700"><i
+                                                                                    class="fas fa-trash text-xs"></i></button>
+                                                                        </div>
+                                                                    </template>
+                                                                    <div class="text-right text-xs font-bold text-gray-600 mt-1"
+                                                                        x-show="itemDetails['BI01'].length > 0">
+                                                                        Total Bonos: $<span
+                                                                            x-text="new Intl.NumberFormat('es-CL').format(itemDetails['BI01'].reduce((acc, curr) => acc + (parseInt(curr.amount) || 0), 0))"></span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                            @if ($enabledTaxables->contains('code', 'AG01'))
+                                                                <div class="border rounded p-3 mb-3 bg-gray-50">
+                                                                    <div
+                                                                        class="flex justify-between items-center mb-2">
+                                                                        <label
+                                                                            class="block text-xs font-semibold text-gray-700">Aguinaldos</label>
+                                                                        <button type="button"
+                                                                            @click="itemDetails['AG01'].push({type: 'AG01', description: '', amount: 0})"
+                                                                            class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+
+                                                                            Agregar Aguinaldo</button>
+                                                                    </div>
+                                                                    <template
+                                                                        x-for="(detail, index) in itemDetails['AG01']"
+                                                                        :key="index">
+                                                                        <div class="flex gap-2 mb-2 items-center">
+                                                                            <input type="text"
+                                                                                x-model="detail.description"
+                                                                                placeholder="Glosa (ej: Fiestas Patrias)"
+                                                                                class="w-1/2 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <input type="number" min="0"
+                                                                                x-model.number="detail.amount"
+                                                                                placeholder="Monto"
+                                                                                class="w-1/3 border-gray-300 rounded-md text-xs p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                                required>
+                                                                            <button type="button"
+                                                                                @click="itemDetails['AG01'].splice(index, 1)"
+                                                                                class="text-red-500 hover:text-red-700"><i
+                                                                                    class="fas fa-trash text-xs"></i></button>
+                                                                        </div>
+                                                                    </template>
+                                                                    <div class="text-right text-xs font-bold text-gray-600 mt-1"
+                                                                        x-show="itemDetails['AG01'].length > 0">
+                                                                        Total Aguinaldos: $<span
+                                                                            x-text="new Intl.NumberFormat('es-CL').format(itemDetails['AG01'].reduce((acc, curr) => acc + (parseInt(curr.amount) || 0), 0))"></span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+
                                                             <!-- Gratification Display -->
-                                                            <div class="flex justify-between items-center mb-2">
-                                                                <label
-                                                                    class="block text-xs font-semibold text-gray-700 mb-1">Gratificación</label>
-                                                                <div class="flex gap-2">
-                                                                    <input type="number" min="0"
-                                                                        x-model="selectedLine.gratification_amount"
-                                                                        @if ($company->gratification_system == 'art_50') readonly @endif
-                                                                        class="w-32 border-gray-300 rounded-md text-sm p-1.5 focus:ring-indigo-500 focus:border-indigo-500 text-right {{ $company->gratification_system == 'art_50' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
+                                                            <div class="flex justify-between items-center mb-1 mt-6">
+                                                                <label class="block text-sm font-bold text-slate-800">Gratificación</label>
+                                                                <div class="text-right bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 min-w-[120px]">
+                                                                    <span class="text-sm font-black text-slate-700"
+                                                                        x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gratification_amount || 0))"></span>
                                                                 </div>
                                                             </div>
                                                             <!-- Helper text for Art 50 -->
                                                             @if ($company->gratification_system == 'art_50')
-                                                                <p
-                                                                    class="text-xs text-blue-600 mb-2 text-right font-medium">
-                                                                    Calculado automáticamente (Art. 50)</p>
+                                                                <div class="text-right mb-4">
+                                                                    <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded">
+                                                                        Calculado automáticamente (Art. 50)
+                                                                    </span>
+                                                                </div>
                                                             @endif
 
                                                             <!-- Totals -->
@@ -273,24 +467,24 @@
                                                                 class="flex justify-between border-b pb-2 mb-2 bg-gray-50 -mx-4 px-4 py-2">
                                                                 <span class="text-sm font-bold text-gray-700">Total
                                                                     Haberes (Imponible)</span>
-                                                                 <span class="text-sm font-bold text-indigo-600"
+                                                                <span class="text-sm font-bold text-indigo-600"
                                                                     x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gross_salary))"></span>
                                                             </div>
 
                                                             <div class="space-y-2 mb-4">
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">AFP</span>
-                                                                     <span class="text-red-500"
+                                                                    <span class="text-red-500"
                                                                         x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.afp_amount))"></span>
                                                                 </div>
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">Salud</span>
-                                                                     <span class="text-red-500"
+                                                                    <span class="text-red-500"
                                                                         x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.isapre_amount))"></span>
                                                                 </div>
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">Seguro Cesantía</span>
-                                                                     <span class="text-red-500"
+                                                                    <span class="text-red-500"
                                                                         x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.cesantia_amount))"></span>
                                                                 </div>
                                                             </div>
@@ -308,7 +502,7 @@
                                                             <div class="flex justify-between border-t pt-2 mb-2">
                                                                 <span class="text-sm font-medium text-gray-500">Total
                                                                     Descuentos</span>
-                                                                 <span class="text-sm font-bold text-red-600"
+                                                                <span class="text-sm font-bold text-red-600"
                                                                     x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.total_deductions))"></span>
                                                             </div>
 
@@ -316,7 +510,7 @@
                                                                 class="flex justify-between border-t border-gray-200 pt-3 mt-2 bg-indigo-50 -mx-4 px-4 py-3 rounded-b-lg">
                                                                 <span class="text-base font-bold text-gray-900">Líquido
                                                                     a Pagar</span>
-                                                                 <span class="text-base font-black text-indigo-700"
+                                                                <span class="text-base font-black text-indigo-700"
                                                                     x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.net_salary))"></span>
                                                             </div>
                                                         </div>
@@ -341,8 +535,15 @@
                                 function updateLine() {
                                     // Construct URL
                                     let url =
-                                        '{{ route('companies.payroll-periods.update-line', ['company' => $company->id, 'period' => $period->id, 'line' => ':lineId']) }}';
+                                        '{{ route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'payroll' => ':lineId']) }}';
                                     url = url.replace(':lineId', this.selectedLine.id);
+
+                                    let allDetails = [
+                                        ...this.itemDetails['CO01'],
+                                        ...this.itemDetails['SC01'],
+                                        ...this.itemDetails['BI01'],
+                                        ...this.itemDetails['AG01']
+                                    ];
 
                                     fetch(url, {
                                             method: 'PUT',
@@ -352,21 +553,58 @@
                                             },
                                             body: JSON.stringify({
                                                 overtime_hours: this.selectedLine.overtime_hours,
-                                                otros_descuentos: Math.round(this.selectedLine.otros_descuentos),
-                                                gratification_amount: Math.round(this.selectedLine.gratification_amount)
+                                                otros_descuentos: Math.round(this.selectedLine.otros_descuentos || 0),
+                                                gratification_amount: Math.round(this.selectedLine.gratification_amount || 0),
+                                                details: allDetails.map(d => ({
+                                                    type: d.type,
+                                                    description: d.description || 'Haber asignado',
+                                                    amount: Math.round(d.amount || 0)
+                                                }))
                                             })
                                         })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.success) {
-                                                window.location.reload();
-                                            } else {
-                                                alert('Error: ' + data.message);
+                                        .then(response => response.text())
+                                        .then(text => {
+                                            try {
+                                                const data = JSON.parse(text);
+                                                if (data.success) {
+                                                    // Update Alpine state with fresh data from server
+                                                    this.selectedLine = data.payroll;
+                                                    // Re-map details to categories 
+                                                    this.itemDetails = { 
+                                                        'CO01': (this.selectedLine.details || []).filter(d => d.concept === 'CO01').map(d => ({...d, type: d.concept})), 
+                                                        'SC01': (this.selectedLine.details || []).filter(d => d.concept === 'SC01').map(d => ({...d, type: d.concept})), 
+                                                        'BI01': (this.selectedLine.details || []).filter(d => d.concept === 'BI01').map(d => ({...d, type: d.concept})), 
+                                                        'AG01': (this.selectedLine.details || []).filter(d => d.concept === 'AG01').map(d => ({...d, type: d.concept})) 
+                                                    };
+                                                    
+                                                    this.showToast('Línea actualizada y recalculada con éxito.', 'success');
+
+                                                    // Update main table rows if they exist
+                                                    const formatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 });
+                                                    const formatVal = (val) => formatter.format(val).replace('CLP', '$').trim();
+                                                    
+                                                    const baseEl = document.getElementById('base-salary-' + data.payroll.id);
+                                                    if (baseEl) baseEl.textContent = formatVal(data.payroll.base_salary);
+                                                    
+                                                    const grossEl = document.getElementById('gross-salary-' + data.payroll.id);
+                                                    if (grossEl) grossEl.textContent = formatVal(data.payroll.gross_salary);
+                                                    
+                                                    const deductionsEl = document.getElementById('total-deductions-' + data.payroll.id);
+                                                    if (deductionsEl) deductionsEl.textContent = '-' + formatVal(data.payroll.total_deductions);
+                                                    
+                                                    const netEl = document.getElementById('net-salary-' + data.payroll.id);
+                                                    if (netEl) netEl.textContent = formatVal(data.payroll.net_salary);
+                                                } else {
+                                                    this.showToast('Error en la actualización.', 'error');
+                                                }
+                                            } catch (e) {
+                                                console.error("HTML Error received:", text);
+                                                this.showToast("Error interno del servidor.", "error");
                                             }
                                         })
                                         .catch(error => {
                                             console.error('Error:', error);
-                                            alert('Error al actualizar.');
+                                            this.showToast('Error de red al actualizar.', 'error');
                                         });
                                 }
                             </script>

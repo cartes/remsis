@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\AdminPanel\Http\Controllers\AdminPanelController;
-use Modules\AdminPanel\Http\Controllers\Auth\AuthenticatedSessionController;
 use Modules\AdminPanel\Http\Controllers\BancoCentralSettingsController;
 use Modules\AdminPanel\Http\Controllers\CompaniesApiController;
 use Modules\AdminPanel\Http\Controllers\SettingsController;

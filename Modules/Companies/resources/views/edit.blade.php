@@ -452,6 +452,20 @@
                             </div>
 
                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Periodicidad del Sueldo</label>
+                                <select name="payment_frequency"
+                                    class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                    <option value="mensual" @selected(old('payment_frequency', $company->payment_frequency) === 'mensual')>Mensual</option>
+                                    <option value="semanal" @selected(old('payment_frequency', $company->payment_frequency) === 'semanal')>Semanal</option>
+                                    <option value="diario" @selected(old('payment_frequency', $company->payment_frequency) === 'diario')>Diario</option>
+                                </select>
+                                @error('payment_frequency')
+                                    <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i
+                                            class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Día de Pago</label>
                                 <select name="dia_pago"
                                     class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"

@@ -51,8 +51,12 @@ class CompanyUserController extends Controller
         // Normalizar booleanos desde strings (FormData)
         if ($request->has('is_in_payroll')) {
             $val = $request->input('is_in_payroll');
-            if ($val === 'true') $request->merge(['is_in_payroll' => true]);
-            if ($val === 'false') $request->merge(['is_in_payroll' => false]);
+            if ($val === 'true') {
+                $request->merge(['is_in_payroll' => true]);
+            }
+            if ($val === 'false') {
+                $request->merge(['is_in_payroll' => false]);
+            }
         }
 
         $validated = $request->validate([
@@ -101,8 +105,12 @@ class CompanyUserController extends Controller
         // Normalizar booleanos desde strings (FormData)
         if ($request->has('is_in_payroll')) {
             $val = $request->input('is_in_payroll');
-            if ($val === 'true') $request->merge(['is_in_payroll' => true]);
-            if ($val === 'false') $request->merge(['is_in_payroll' => false]);
+            if ($val === 'true') {
+                $request->merge(['is_in_payroll' => true]);
+            }
+            if ($val === 'false') {
+                $request->merge(['is_in_payroll' => false]);
+            }
         }
 
         $validated = $request->validate([

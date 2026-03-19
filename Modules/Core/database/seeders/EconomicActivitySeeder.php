@@ -3,7 +3,6 @@
 namespace Modules\Core\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Http;
 use Modules\Core\Models\EconomicActivity;
 
 class EconomicActivitySeeder extends Seeder
@@ -16,11 +15,12 @@ class EconomicActivitySeeder extends Seeder
         $this->command->info('Cargando códigos de actividad económica desde archivo local...');
 
         // Usamos la ruta local y empaquetada junto al seeder para que funcione siempre en producción
-        $jsonPath = __DIR__ . '/data/sii_codes.json';
-        
-        if (!file_exists($jsonPath)) {
+        $jsonPath = __DIR__.'/data/sii_codes.json';
+
+        if (! file_exists($jsonPath)) {
             $this->command->error("No se encontró el archivo JSON en: {$jsonPath}");
             $this->command->info('Asegúrate de haber corrido primero el scraper de Python u obtener el sii_codes.json.');
+
             return;
         }
 
@@ -28,8 +28,9 @@ class EconomicActivitySeeder extends Seeder
             $json = file_get_contents($jsonPath);
             $activities = json_decode($json, true);
 
-            if (!is_array($activities) || empty($activities)) {
+            if (! is_array($activities) || empty($activities)) {
                 $this->command->error('El archivo JSON está vacío o no es válido.');
+
                 return;
             }
 
@@ -54,7 +55,7 @@ class EconomicActivitySeeder extends Seeder
             $this->command->info("\n¡Semilla de actividades económicas finalizada con éxito!");
 
         } catch (\Exception $e) {
-            $this->command->error('Ocurrió un error al procesar el JSON: ' . $e->getMessage());
+            $this->command->error('Ocurrió un error al procesar el JSON: '.$e->getMessage());
         }
     }
 }

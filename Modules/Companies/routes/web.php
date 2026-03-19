@@ -66,7 +66,7 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
         Route::post('/', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'store'])->name('store');
         Route::get('/{period}/wizard', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'wizard'])->name('wizard');
         Route::post('/{period}/calculate', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'calculate'])->name('calculate');
-        Route::put('/{period}/lines/{line}', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'updateLine'])->name('update-line');
+        Route::put('/{period}/lines/{payroll}', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'updateLine'])->name('update-line');
         Route::post('/{period}/update-status', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'updateStatus'])->name('update-status'); // For closing
         Route::patch('/{period}/status', [Modules\Payroll\Http\Controllers\PayrollPeriodController::class, 'updateStatus'])->name('updateStatus');
     });

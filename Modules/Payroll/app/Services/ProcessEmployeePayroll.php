@@ -2,13 +2,13 @@
 
 namespace Modules\Payroll\Services;
 
+use Illuminate\Support\Facades\DB;
 use Modules\AdminPanel\Models\LegalParameter;
 use Modules\Employees\Models\Employee;
-use Modules\Payroll\Models\Payroll;
-use Modules\Payroll\Models\PayrollPeriod;
-use Modules\Payroll\Models\PayrollDetail;
 use Modules\Payroll\DTOs\PayrollResultDTO;
-use Illuminate\Support\Facades\DB;
+use Modules\Payroll\Models\Payroll;
+use Modules\Payroll\Models\PayrollDetail;
+use Modules\Payroll\Models\PayrollPeriod;
 
 class ProcessEmployeePayroll
 {
@@ -21,21 +21,21 @@ class ProcessEmployeePayroll
         $workedDays = 30; // Podría ser dinámico basado en asistencia si se integra
 
         // 2. Cálculo de Haberes
-        $baseSalary = (int)$employee->salary ?? 0;
-        $proportionalSalary = (int)round(($baseSalary / 30) * $workedDays);
-        
+        $baseSalary = (int) $employee->salary ?? 0;
+        $proportionalSalary = (int) round(($baseSalary / 30) * $workedDays);
+
         // Gratificación Legal (Art. 50 del Código del Trabajo)
         // 25% del ingreso imponible con un tope de 4.75 ingresos mínimos mensuales (IMM) anuales
         $imm = LegalParameter::where('key', 'monthly_minimum_wage')->value('value') ?? 500000;
-        $gratificationCap = (int)round((4.75 * $imm) / 12);
-        $calculatedGratification = (int)round($proportionalSalary * 0.25);
+        $gratificationCap = (int) round((4.75 * $imm) / 12);
+        $calculatedGratification = (int) round($proportionalSalary * 0.25);
         $gratification = min($calculatedGratification, $gratificationCap);
 
         $taxableEarnings = $proportionalSalary + $gratification;
-        
+
         // Haberes No Imponibles
-        $mealAllowance = (int)($employee->meal_allowance ?? 0);
-        $mobilityAllowance = (int)($employee->mobility_allowance ?? 0);
+        $mealAllowance = (int) ($employee->meal_allowance ?? 0);
+        $mobilityAllowance = (int) ($employee->mobility_allowance ?? 0);
         $nonTaxableEarnings = $mealAllowance + $mobilityAllowance;
 
         $totalEarnings = $taxableEarnings + $nonTaxableEarnings;
@@ -45,34 +45,34 @@ class ProcessEmployeePayroll
         $afpRate = $employee->afp?->rate ?? 10.0;
         $afpCommission = $employee->afp?->commission ?? 0.0;
         $afpTotalRate = ($afpRate + $afpCommission) / 100;
-        
+
         // Tope Imponible AFP (80.2 UF para el año vigente)
         $ufValue = LegalParameter::where('key', 'uf_value')->value('value') ?? 37000;
         $taxableCap = 80.2 * $ufValue;
-        $afpBase = min((float)$taxableEarnings, (float)$taxableCap);
-        $afpAmount = (int)round($afpBase * $afpTotalRate);
+        $afpBase = min((float) $taxableEarnings, (float) $taxableCap);
+        $afpAmount = (int) round($afpBase * $afpTotalRate);
 
         // Salud (7% obligatorio o plan de Isapre)
         $healthRate = 0.07;
         $healthBase = $afpBase; // El tope de salud es el mismo que el de la AFP
-        $mandatoryHealth = (int)round($healthBase * $healthRate);
-        
+        $mandatoryHealth = (int) round($healthBase * $healthRate);
+
         // Si es Isapre, podría tener una cotización adicional o pactada
-        $isapreAdditional = (int)($employee->health_contribution ?? 0); 
+        $isapreAdditional = (int) ($employee->health_contribution ?? 0);
         $healthAmount = $mandatoryHealth + $isapreAdditional;
 
         // Seguro de Cesantía (AFC) - 0.6% para contratos indefinidos (cargo del trabajador)
         $afcAmount = 0;
         if ($employee->contract_type === 'indefinido') {
-             // El tope de la AFC es mayor (120.3 UF)
-             $afcCap = 120.3 * $ufValue;
-             $afcBase = min((float)$taxableEarnings, (float)$afcCap);
-             $afcAmount = (int)round($afcBase * 0.006);
+            // El tope de la AFC es mayor (120.3 UF)
+            $afcCap = 120.3 * $ufValue;
+            $afcBase = min((float) $taxableEarnings, (float) $afcCap);
+            $afcAmount = (int) round($afcBase * 0.006);
         }
 
         // 4. Impuesto Único de Segunda Categoría (IUSC)
         $taxableForIUSC = $taxableEarnings - $afpAmount - $healthAmount - $afcAmount;
-        $iuscAmount = (int)$this->calculateIUSC($taxableForIUSC);
+        $iuscAmount = (int) $this->calculateIUSC($taxableForIUSC);
 
         $totalDeductions = $afpAmount + $healthAmount + $afcAmount + $iuscAmount;
         $netSalary = $totalEarnings - $totalDeductions;
@@ -143,11 +143,11 @@ class ProcessEmployeePayroll
             }
         }
 
-        if (!$applicableTranche || $applicableTranche['factor'] == 0) {
+        if (! $applicableTranche || $applicableTranche['factor'] == 0) {
             return 0;
         }
 
-        return (int)round(($taxableBase * $applicableTranche['factor']) - ($applicableTranche['discount'] * $utm));
+        return (int) round(($taxableBase * $applicableTranche['factor']) - ($applicableTranche['discount'] * $utm));
     }
 
     private function persist(PayrollResultDTO $dto, Employee $employee, PayrollPeriod $period): void
@@ -189,7 +189,7 @@ class ProcessEmployeePayroll
                     'concept' => $detail['concept'],
                     'amount' => $detail['amount'],
                     'type' => 'earning',
-                    'description' => $detail['type']
+                    'description' => $detail['type'],
                 ]);
             }
 
@@ -199,7 +199,7 @@ class ProcessEmployeePayroll
                     'concept' => $detail['concept'],
                     'amount' => $detail['amount'],
                     'type' => 'deduction',
-                    'description' => $detail['type']
+                    'description' => $detail['type'],
                 ]);
             }
         });

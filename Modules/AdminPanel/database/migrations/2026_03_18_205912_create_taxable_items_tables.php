@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignId('taxable_item_id')->constrained('taxable_items_catalog')->onDelete('cascade');
             $table->boolean('is_enabled')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['company_id', 'taxable_item_id']);
         });
     }

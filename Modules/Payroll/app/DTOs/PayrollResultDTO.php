@@ -1,8 +1,9 @@
 <?php
+
 /**
  * Clase que representa el resultado del cálculo de la nómina de un empleado
+ *
  * @author Cristian Cartes
- * @package Modules\Payroll\DTOs
  */
 
 namespace Modules\Payroll\DTOs;
@@ -26,9 +27,8 @@ class PayrollResultDTO
         public float $iusc_amount,
         public float $total_deductions,
         public array $deductions_details,
-        public float $net_salary
-    ) {
-    }
+        public float $net_salary,
+    ) {}
 
     public function toArray(): array
     {
@@ -47,8 +47,8 @@ class PayrollResultDTO
                 'net_salary' => $this->formatCurrency($this->net_salary),
             ],
             'details' => [
-                'earnings' => array_map(fn($item) => array_merge($item, ['formatted_amount' => $this->formatCurrency($item['amount'])]), $this->earnings_details),
-                'deductions' => array_map(fn($item) => array_merge($item, ['formatted_amount' => $this->formatCurrency($item['amount'])]), $this->deductions_details),
+                'earnings' => array_map(fn ($item) => array_merge($item, ['formatted_amount' => $this->formatCurrency($item['amount'])]), $this->earnings_details),
+                'deductions' => array_map(fn ($item) => array_merge($item, ['formatted_amount' => $this->formatCurrency($item['amount'])]), $this->deductions_details),
             ],
             'legal_deductions' => [
                 'afp' => $this->formatCurrency($this->afp_amount),
@@ -61,12 +61,12 @@ class PayrollResultDTO
                 'total_earnings' => (int) $this->total_earnings,
                 'total_deductions' => (int) $this->total_deductions,
                 'net_salary' => (int) $this->net_salary,
-            ]
+            ],
         ];
     }
 
     private function formatCurrency(float $amount): string
     {
-        return '$' . number_format(round($amount), 0, ',', '.');
+        return '$'.number_format(round($amount), 0, ',', '.');
     }
 }

@@ -23,7 +23,7 @@ class EconomicActivityController extends Controller
             ->when($query, function ($q) use ($query) {
                 $search = mb_strtoupper((string) $query, 'UTF-8');
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             })
             ->limit(20)
             ->get(['id', 'code', 'name']);

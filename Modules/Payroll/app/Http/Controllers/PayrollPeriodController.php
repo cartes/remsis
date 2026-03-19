@@ -118,7 +118,7 @@ class PayrollPeriodController extends Controller
     public function wizard(Request $request, Company $company, PayrollPeriod $period)
     {
         // Get lines with employee data
-        $lines = Payroll::with(['employee.costCenter'])
+        $lines = Payroll::with(['employee.costCenter', 'details'])
             ->where('payroll_period_id', $period->id)
             ->get();
 
@@ -132,7 +132,10 @@ class PayrollPeriodController extends Controller
         // Load cost centers for filter
         $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
 
-        return view('payroll::periods.wizard', compact('company', 'period', 'lines', 'costCenters'));
+        // Load enabled taxable items
+        $enabledTaxables = $company->taxableItems()->wherePivot('is_enabled', true)->get();
+
+        return view('payroll::periods.wizard', compact('company', 'period', 'lines', 'costCenters', 'enabledTaxables'));
     }
 
     /**
@@ -214,15 +217,19 @@ class PayrollPeriodController extends Controller
     /**
      * Update a specific payroll line and recalculate.
      */
-    public function updateLine(Request $request, Company $company, PayrollPeriod $period, $lineId, PayrollCalculationService $service)
+    public function updateLine(Request $request, Company $company, PayrollPeriod $period, Payroll $payroll, PayrollCalculationService $service)
     {
-        $line = Payroll::where('payroll_period_id', $period->id)->findOrFail($lineId);
+        $line = $payroll;
 
         $validated = $request->validate([
             'overtime_hours' => 'nullable|numeric|min:0',
             'anticipos_amount' => 'nullable|numeric|min:0',
             'otros_descuentos' => 'nullable|numeric|min:0',
             'gratification_amount' => 'nullable|numeric|min:0',
+            'details' => 'nullable|array',
+            'details.*.type' => 'required|string',
+            'details.*.description' => 'required|string',
+            'details.*.amount' => 'required|numeric|min:0',
         ]);
 
         try {
@@ -239,15 +246,62 @@ class PayrollPeriodController extends Controller
             if ($request->has('gratification_amount')) {
                 $line->gratification_amount = $request->gratification_amount;
             }
+
+            // Sync Multi-Detail Variable Taxables
+            $taxableCodes = ['CO01', 'SC01', 'BI01', 'AG01'];
+            \Modules\Payroll\Models\PayrollDetail::where('payroll_id', $line->id)
+                ->whereIn('concept', $taxableCodes)
+                ->delete();
+
+            $sumCO01 = 0;
+            $sumSC01 = 0;
+            $sumBI01 = 0;
+            $sumAG01 = 0;
+
+            if ($request->has('details') && is_array($request->details)) {
+                foreach ($request->details as $detail) {
+                    if (in_array($detail['type'], $taxableCodes)) {
+                        \Modules\Payroll\Models\PayrollDetail::create([
+                            'payroll_id' => $line->id,
+                            'type' => 'earning',
+                            'concept' => $detail['type'],
+                            'description' => $detail['description'],
+                            'amount' => $detail['amount'],
+                        ]);
+
+                        if ($detail['type'] === 'CO01') {
+                            $sumCO01 += $detail['amount'];
+                        }
+                        if ($detail['type'] === 'SC01') {
+                            $sumSC01 += $detail['amount'];
+                        }
+                        if ($detail['type'] === 'BI01') {
+                            $sumBI01 += $detail['amount'];
+                        }
+                        if ($detail['type'] === 'AG01') {
+                            $sumAG01 += $detail['amount'];
+                        }
+                    }
+                }
+            }
+
+            $line->comisiones_amount = $sumCO01;
+            $line->semana_corrida_amount = $sumSC01;
+            $line->bonos_imponibles_amount = $sumBI01;
+            $line->aguinaldos_amount = $sumAG01;
+
             $line->save();
 
             // Recalculate this employee's line to update totals
-            // The service uses existing line data for overtime hours (and now gratification) if present
             $service->calculateEmployee($line->employee, $period);
+
+            // Re-load the updated line with details for the frontend
+            $updatedLine = Payroll::with(['employee.costCenter', 'details'])->findOrFail($line->id);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Línea de nómina actualizada y recalculada.',
+                'payroll' => $updatedLine,
             ]);
 
         } catch (\Exception $e) {

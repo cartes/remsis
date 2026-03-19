@@ -109,8 +109,12 @@ class CompanyEmployeeController extends Controller
                     $input[$key] = null;
                 } elseif ($key === 'is_in_payroll') {
                     // Handle boolean strings from FormData
-                    if ($trimmed === 'true') $input[$key] = true;
-                    if ($trimmed === 'false') $input[$key] = false;
+                    if ($trimmed === 'true') {
+                        $input[$key] = true;
+                    }
+                    if ($trimmed === 'false') {
+                        $input[$key] = false;
+                    }
                 }
             }
         }

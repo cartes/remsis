@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->integer('comisiones_amount')->default(0)->after('overtime_amount');
+            $table->integer('semana_corrida_amount')->default(0)->after('comisiones_amount');
+            $table->integer('bonos_imponibles_amount')->default(0)->after('semana_corrida_amount');
+            $table->integer('aguinaldos_amount')->default(0)->after('bonos_imponibles_amount');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('payrolls', function (Blueprint $table) {
+            $table->dropColumn([
+                'comisiones_amount',
+                'semana_corrida_amount',
+                'bonos_imponibles_amount',
+                'aguinaldos_amount',
+            ]);
+        });
+    }
+};

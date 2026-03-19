@@ -56,6 +56,7 @@ class Company extends Model
         'allows_overtime',
         'slug',
         'economic_activity_id',
+        'payment_frequency',
     ];
 
     protected $casts = [
@@ -127,8 +128,8 @@ class Company extends Model
     public function taxableItems()
     {
         return $this->belongsToMany(\Modules\AdminPanel\Models\TaxableItem::class, 'company_taxable_item', 'company_id', 'taxable_item_id')
-                    ->withPivot('is_enabled')
-                    ->withTimestamps();
+            ->withPivot('is_enabled')
+            ->withTimestamps();
     }
 
     protected static function booted()
