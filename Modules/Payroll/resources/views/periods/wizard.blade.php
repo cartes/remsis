@@ -91,9 +91,9 @@
                         @endif
                     </div>
                 @else
-                    <div x-data="{ 
-                        showModal: false, 
-                        selectedLine: null, 
+                    <div x-data="{
+                        showModal: false,
+                        selectedLine: null,
                         itemDetails: { 'CO01': [], 'SC01': [], 'BI01': [], 'AG01': [] },
                         toast: { show: false, message: '', type: 'success' },
                         showToast(message, type = 'success') {
@@ -104,25 +104,28 @@
                         }
                     }">
                         <!-- Toast Notification -->
-                        <div x-show="toast.show" 
-                             x-transition:enter="transition ease-out duration-300"
-                             x-transition:enter-start="opacity-0 transform translate-y-2"
-                             x-transition:enter-end="opacity-100 transform translate-y-0"
-                             x-transition:leave="transition ease-in duration-200"
-                             x-transition:leave-start="opacity-100 transform translate-y-0"
-                             x-transition:leave-end="opacity-0 transform translate-y-2"
-                             class="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white border-l-4 rounded-lg shadow-xl p-4"
-                             :class="toast.type === 'success' ? 'border-green-500' : 'border-red-500'"
-                             style="display: none;">
+                        <div x-show="toast.show" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform translate-y-2"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            x-transition:leave="transition ease-in duration-200"
+                            x-transition:leave-start="opacity-100 transform translate-y-0"
+                            x-transition:leave-end="opacity-0 transform translate-y-2"
+                            class="fixed bottom-5 right-5 z-[100] max-w-sm w-full bg-white border-l-4 rounded-lg shadow-xl p-4"
+                            :class="toast.type === 'success' ? 'border-green-500' : 'border-red-500'"
+                            style="display: none;">
                             <div class="flex items-center">
                                 <template x-if="toast.type === 'success'">
-                                    <svg class="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    <svg class="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7"></path>
                                     </svg>
                                 </template>
                                 <template x-if="toast.type === 'error'">
-                                    <svg class="h-6 w-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    <svg class="h-6 w-6 text-red-500 mr-3" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                 </template>
                                 <p class="text-sm font-medium text-gray-900" x-text="toast.message"></p>
@@ -182,6 +185,10 @@
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-600 font-medium">
                                                 ${{ number_format($line->gross_salary, 0, ',', '.') }}
                                             </td>
+                                            <td id="total-earnings-{{ $line->id }}"
+                                                class="px-6 py-4 whitespace-nowrap text-right text-sm text-indigo-600 font-bold">
+                                                ${{ number_format($line->total_earnings, 0, ',', '.') }}
+                                            </td>
                                             <td id="total-deductions-{{ $line->id }}"
                                                 class="px-6 py-4 whitespace-nowrap text-right text-sm text-red-500 font-medium">
                                                 -${{ number_format($line->total_deductions, 0, ',', '.') }}
@@ -207,11 +214,11 @@
                                             Totales ({{ $lines->count() }})</th>
                                         <th scope="col"
                                             class="px-6 py-4 text-right text-xs font-bold text-gray-900 uppercase tracking-wider">
-                                            ${{ number_format($lines->sum('base_salary'), 0, ',', '.') }}
+                                            ${{ number_format($lines->sum('gross_salary'), 0, ',', '.') }}
                                         </th>
                                         <th scope="col"
-                                            class="px-6 py-4 text-right text-xs font-bold text-gray-900 uppercase tracking-wider">
-                                            ${{ number_format($lines->sum('gross_salary'), 0, ',', '.') }}
+                                            class="px-6 py-4 text-right text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                                            ${{ number_format($lines->sum('total_earnings'), 0, ',', '.') }}
                                         </th>
                                         <th scope="col"
                                             class="px-6 py-4 text-right text-xs font-bold text-red-600 uppercase tracking-wider">
@@ -447,8 +454,10 @@
 
                                                             <!-- Gratification Display -->
                                                             <div class="flex justify-between items-center mb-1 mt-6">
-                                                                <label class="block text-sm font-bold text-slate-800">Gratificación</label>
-                                                                <div class="text-right bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 min-w-[120px]">
+                                                                <label
+                                                                    class="block text-sm font-bold text-slate-800">Gratificación</label>
+                                                                <div
+                                                                    class="text-right bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 min-w-[120px]">
                                                                     <span class="text-sm font-black text-slate-700"
                                                                         x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gratification_amount || 0))"></span>
                                                                 </div>
@@ -456,7 +465,8 @@
                                                             <!-- Helper text for Art 50 -->
                                                             @if ($company->gratification_system == 'art_50')
                                                                 <div class="text-right mb-4">
-                                                                    <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded">
+                                                                    <span
+                                                                        class="text-[10px] text-blue-600 font-bold uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded">
                                                                         Calculado automáticamente (Art. 50)
                                                                     </span>
                                                                 </div>
@@ -471,7 +481,49 @@
                                                                     x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gross_salary))"></span>
                                                             </div>
 
-                                                            <div class="space-y-2 mb-4">
+                                                            <!-- Haberes Summary -->
+                                                            <div class="mt-6 space-y-2 border-t pt-4">
+                                                                <div class="flex justify-between items-center text-sm">
+                                                                    <span class="text-gray-600 font-medium">Total
+                                                                        Imponible</span>
+                                                                    <span class="font-bold text-gray-900"
+                                                                        x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.gross_salary))"></span>
+                                                                </div>
+
+                                                                <div class="p-3 bg-gray-50 rounded-lg space-y-1 mt-2">
+                                                                    <div
+                                                                        class="flex justify-between items-center text-[11px] uppercase tracking-wider text-gray-400 font-bold">
+                                                                        <span>No Imponibles</span>
+                                                                    </div>
+                                                                    <div
+                                                                        class="flex justify-between items-center text-xs">
+                                                                        <span class="text-gray-500 italic">Asignación
+                                                                            Colación</span>
+                                                                        <span class="font-medium text-gray-700"
+                                                                            x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.meal_allowance))"></span>
+                                                                    </div>
+                                                                    <div
+                                                                        class="flex justify-between items-center text-xs">
+                                                                        <span class="text-gray-500 italic">Asignación
+                                                                            Movilización</span>
+                                                                        <span class="font-medium text-gray-700"
+                                                                            x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.mobility_allowance))"></span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    class="flex justify-between items-center pt-2 text-sm font-black border-t border-gray-100 italic">
+                                                                    <span class="text-gray-800">TOTAL HABERES</span>
+                                                                    <span class="text-indigo-600"
+                                                                        x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.total_earnings))"></span>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Descuentos / Deductions -->
+                                                            <div class="space-y-2 mt-6 mb-4">
+                                                                <h4
+                                                                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">
+                                                                    Descuentos Legales</h4>
                                                                 <div class="flex justify-between text-xs">
                                                                     <span class="text-gray-500">AFP</span>
                                                                     <span class="text-red-500"
@@ -489,168 +541,185 @@
                                                                 </div>
                                                             </div>
 
-                                                            <!-- Other Discounts Editable -->
-                                                            <div>
-                                                                <label
-                                                                    class="block text-xs font-semibold text-gray-700 mb-1">Otros
-                                                                    Descuentos</label>
-                                                                <input type="number" min="0"
-                                                                    x-model="selectedLine.otros_descuentos"
-                                                                    class="w-full border-gray-300 rounded-md text-sm p-1.5 focus:ring-indigo-500 focus:border-indigo-500">
-                                                            </div>
-
-                                                            <div class="flex justify-between border-t pt-2 mb-2">
-                                                                <span class="text-sm font-medium text-gray-500">Total
-                                                                    Descuentos</span>
-                                                                <span class="text-sm font-bold text-red-600"
-                                                                    x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.total_deductions))"></span>
-                                                            </div>
-
+                                                            <!-- Final Payment Summary -->
                                                             <div
-                                                                class="flex justify-between border-t border-gray-200 pt-3 mt-2 bg-indigo-50 -mx-4 px-4 py-3 rounded-b-lg">
-                                                                <span class="text-base font-bold text-gray-900">Líquido
-                                                                    a Pagar</span>
-                                                                <span class="text-base font-black text-indigo-700"
-                                                                    x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.net_salary))"></span>
+                                                                class="bg-indigo-600 text-white -mx-6 px-6 py-4 rounded-b-2xl mt-6 shadow-xl relative overflow-hidden">
+                                                                <div class="absolute top-0 right-0 p-2 opacity-10">
+                                                                    <i class="fas fa-money-bill-wave text-4xl"></i>
+                                                                </div>
+                                                                <div
+                                                                    class="flex justify-between items-center relative z-10">
+                                                                    <span
+                                                                        class="text-xs font-bold text-indigo-100 uppercase tracking-widest">Sueldo
+                                                                        Líquido Final</span>
+                                                                    <span class="text-2xl font-black"
+                                                                        x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.net_salary))"></span>
+                                                                </div>
                                                             </div>
+                                                            <span class="text-base font-black text-indigo-700"
+                                                                x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.net_salary))"></span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                                                <button type="submit"
-                                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                                                    Guardar y Recalcular
-                                                </button>
-                                                <button type="button" @click="showModal = false"
-                                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </template>
                                 </div>
+                                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <button type="submit"
+                                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                        Guardar y Recalcular
+                                    </button>
+                                    <button type="button" @click="showModal = false"
+                                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                        Cancelar
+                                    </button>
+                                </div>
+                                </form>
+                                </template>
                             </div>
-                            <script>
-                                function updateLine() {
-                                    // Construct URL
-                                    let url =
-                                        '{{ route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'payroll' => ':lineId']) }}';
-                                    url = url.replace(':lineId', this.selectedLine.id);
-
-                                    let allDetails = [
-                                        ...this.itemDetails['CO01'],
-                                        ...this.itemDetails['SC01'],
-                                        ...this.itemDetails['BI01'],
-                                        ...this.itemDetails['AG01']
-                                    ];
-
-                                    fetch(url, {
-                                            method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                            },
-                                            body: JSON.stringify({
-                                                overtime_hours: this.selectedLine.overtime_hours,
-                                                otros_descuentos: Math.round(this.selectedLine.otros_descuentos || 0),
-                                                gratification_amount: Math.round(this.selectedLine.gratification_amount || 0),
-                                                details: allDetails.map(d => ({
-                                                    type: d.type,
-                                                    description: d.description || 'Haber asignado',
-                                                    amount: Math.round(d.amount || 0)
-                                                }))
-                                            })
-                                        })
-                                        .then(response => response.text())
-                                        .then(text => {
-                                            try {
-                                                const data = JSON.parse(text);
-                                                if (data.success) {
-                                                    // Update Alpine state with fresh data from server
-                                                    this.selectedLine = data.payroll;
-                                                    // Re-map details to categories 
-                                                    this.itemDetails = { 
-                                                        'CO01': (this.selectedLine.details || []).filter(d => d.concept === 'CO01').map(d => ({...d, type: d.concept})), 
-                                                        'SC01': (this.selectedLine.details || []).filter(d => d.concept === 'SC01').map(d => ({...d, type: d.concept})), 
-                                                        'BI01': (this.selectedLine.details || []).filter(d => d.concept === 'BI01').map(d => ({...d, type: d.concept})), 
-                                                        'AG01': (this.selectedLine.details || []).filter(d => d.concept === 'AG01').map(d => ({...d, type: d.concept})) 
-                                                    };
-                                                    
-                                                    this.showToast('Línea actualizada y recalculada con éxito.', 'success');
-
-                                                    // Update main table rows if they exist
-                                                    const formatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 });
-                                                    const formatVal = (val) => formatter.format(val).replace('CLP', '$').trim();
-                                                    
-                                                    const baseEl = document.getElementById('base-salary-' + data.payroll.id);
-                                                    if (baseEl) baseEl.textContent = formatVal(data.payroll.base_salary);
-                                                    
-                                                    const grossEl = document.getElementById('gross-salary-' + data.payroll.id);
-                                                    if (grossEl) grossEl.textContent = formatVal(data.payroll.gross_salary);
-                                                    
-                                                    const deductionsEl = document.getElementById('total-deductions-' + data.payroll.id);
-                                                    if (deductionsEl) deductionsEl.textContent = '-' + formatVal(data.payroll.total_deductions);
-                                                    
-                                                    const netEl = document.getElementById('net-salary-' + data.payroll.id);
-                                                    if (netEl) netEl.textContent = formatVal(data.payroll.net_salary);
-                                                } else {
-                                                    this.showToast('Error en la actualización.', 'error');
-                                                }
-                                            } catch (e) {
-                                                console.error("HTML Error received:", text);
-                                                this.showToast("Error interno del servidor.", "error");
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error:', error);
-                                            this.showToast('Error de red al actualizar.', 'error');
-                                        });
-                                }
-                            </script>
                         </div>
-                    </div>
-
-                    @if ($period->status == 'calculated')
-                        <div class="mt-6 flex justify-end border-t border-gray-200 pt-6">
-                            <button type="button" onclick="confirmClosePeriod()"
-                                class="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Cerrar Período y Finalizar
-                            </button>
-                        </div>
-
                         <script>
-                            function confirmClosePeriod() {
-                                if (confirm(
-                                        '¿Estás seguro de que deseas cerrar este período? No se podrán hacer más cambios automáticamente.')) {
-                                    // AJAX or Form submit to close period
-                                    fetch('{{ route('companies.payroll-periods.update-status', ['company' => $company, 'period' => $period->id]) }}', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                            },
-                                            body: JSON.stringify({
-                                                status: 'closed'
-                                            })
-                                        }).then(res => res.json())
-                                        .then(data => {
+                            function updateLine() {
+                                // Construct URL
+                                let url =
+                                    '{{ route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'payroll' => ':lineId']) }}';
+                                url = url.replace(':lineId', this.selectedLine.id);
+
+                                let allDetails = [
+                                    ...this.itemDetails['CO01'],
+                                    ...this.itemDetails['SC01'],
+                                    ...this.itemDetails['BI01'],
+                                    ...this.itemDetails['AG01']
+                                ];
+
+                                fetch(url, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({
+                                            overtime_hours: this.selectedLine.overtime_hours,
+                                            otros_descuentos: Math.round(this.selectedLine.otros_descuentos || 0),
+                                            gratification_amount: Math.round(this.selectedLine.gratification_amount || 0),
+                                            details: allDetails.map(d => ({
+                                                type: d.type,
+                                                description: d.description || 'Haber asignado',
+                                                amount: Math.round(d.amount || 0)
+                                            }))
+                                        })
+                                    })
+                                    .then(response => response.text())
+                                    .then(text => {
+                                        try {
+                                            const data = JSON.parse(text);
                                             if (data.success) {
-                                                window.location.reload();
+                                                // Update Alpine state with fresh data from server
+                                                this.selectedLine = data.payroll;
+                                                // Re-map details to categories
+                                                this.itemDetails = {
+                                                    'CO01': (this.selectedLine.details || []).filter(d => d.concept === 'CO01').map(d =>
+                                                        ({
+                                                            ...d,
+                                                            type: d.concept
+                                                        })),
+                                                    'SC01': (this.selectedLine.details || []).filter(d => d.concept === 'SC01').map(d =>
+                                                        ({
+                                                            ...d,
+                                                            type: d.concept
+                                                        })),
+                                                    'BI01': (this.selectedLine.details || []).filter(d => d.concept === 'BI01').map(d =>
+                                                        ({
+                                                            ...d,
+                                                            type: d.concept
+                                                        })),
+                                                    'AG01': (this.selectedLine.details || []).filter(d => d.concept === 'AG01').map(d =>
+                                                        ({
+                                                            ...d,
+                                                            type: d.concept
+                                                        }))
+                                                };
+
+                                                this.showToast('Línea actualizada y recalculada con éxito.', 'success');
+
+                                                // Update main table rows if they exist
+                                                const formatter = new Intl.NumberFormat('es-CL', {
+                                                    style: 'currency',
+                                                    currency: 'CLP',
+                                                    minimumFractionDigits: 0
+                                                });
+                                                const formatVal = (val) => formatter.format(val).replace('CLP', '$').trim();
+
+                                                const baseEl = document.getElementById('base-salary-' + data.payroll.id);
+                                                if (baseEl) baseEl.textContent = formatVal(data.payroll.base_salary);
+
+                                                const grossEl = document.getElementById('gross-salary-' + data.payroll.id);
+                                                if (grossEl) grossEl.textContent = formatVal(data.payroll.gross_salary);
+
+                                                const totalEarningsEl = document.getElementById('total-earnings-' + data.payroll.id);
+                                                if (totalEarningsEl) totalEarningsEl.textContent = formatVal(data.payroll.total_earnings);
+
+                                                const deductionsEl = document.getElementById('total-deductions-' + data.payroll.id);
+                                                if (deductionsEl) deductionsEl.textContent = '-' + formatVal(data.payroll.total_deductions);
+
+                                                const netEl = document.getElementById('net-salary-' + data.payroll.id);
+                                                if (netEl) netEl.textContent = formatVal(data.payroll.net_salary);
                                             } else {
-                                                alert('Error: ' + data.message);
+                                                this.showToast('Error en la actualización.', 'error');
                                             }
-                                        });
-                                }
+                                        } catch (e) {
+                                            console.error("HTML Error received:", text);
+                                            this.showToast("Error interno del servidor.", "error");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        this.showToast('Error de red al actualizar.', 'error');
+                                    });
                             }
                         </script>
-                    @endif
-                @endif
+                    </div>
             </div>
+
+            @if ($period->status == 'calculated')
+                <div class="mt-6 flex justify-end border-t border-gray-200 pt-6">
+                    <button type="button" onclick="confirmClosePeriod()"
+                        class="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                        Cerrar Período y Finalizar
+                    </button>
+                </div>
+
+                <script>
+                    function confirmClosePeriod() {
+                        if (confirm(
+                                '¿Estás seguro de que deseas cerrar este período? No se podrán hacer más cambios automáticamente.')) {
+                            // AJAX or Form submit to close period
+                            fetch('{{ route('companies.payroll-periods.update-status', ['company' => $company, 'period' => $period->id]) }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        status: 'closed'
+                                    })
+                                }).then(res => res.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        window.location.reload();
+                                    } else {
+                                        alert('Error: ' + data.message);
+                                    }
+                                });
+                        }
+                    }
+                </script>
+            @endif
+            @endif
         </div>
+    </div>
     </div>
 </x-layouts.company>

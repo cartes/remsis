@@ -111,7 +111,13 @@ class PayrollCalculationService
         // 4. Total Imponible
         $imponible = (int) ($baseGratificacion + $gratificationAmount);
 
-        // 5. Deducciones Legales
+        // 5. Haberes No Imponibles
+        $mealAllowance = (int) ($employee->meal_allowance ?? 0);
+        $mobilityAllowance = (int) ($employee->mobility_allowance ?? 0);
+        $nonTaxableEarnings = $mealAllowance + $mobilityAllowance;
+        $totalEarnings = $imponible + $nonTaxableEarnings;
+
+        // 6. Deducciones Legales
         // afp: imponible * 0.10 (Simulado)
         $afpAmount = (int) round($imponible * 0.10);
         // salud: imponible * 0.07
@@ -122,8 +128,8 @@ class PayrollCalculationService
         // total_deductions
         $totalDeductions = (int) ($afpAmount + $saludAmount + $cesantiaAmount + $anticiposAmount + $otrosDescuentos);
 
-        // total_neto: imponible - deducciones
-        $totalNeto = (int) ($imponible - $totalDeductions);
+        // total_neto: total earnings (imponible + no imponible) - deducciones
+        $totalNeto = (int) ($totalEarnings - $totalDeductions);
 
         // Create or update the canonical payroll row for this employee and period.
         return Payroll::updateOrCreate(
@@ -148,6 +154,10 @@ class PayrollCalculationService
                 'base_salary' => $haberBase,
                 'gratification_amount' => $gratificationAmount,
                 'gross_salary' => $imponible,
+                'meal_allowance' => $mealAllowance,
+                'mobility_allowance' => $mobilityAllowance,
+                'non_taxable_earnings' => $nonTaxableEarnings,
+                'total_earnings' => $totalEarnings,
 
                 'afp_id' => $employee->afp_id,
                 'afp_amount' => $afpAmount,
