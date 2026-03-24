@@ -61,6 +61,8 @@ class Employee extends Model
         'emergency_contact_phone',
         'meal_allowance',
         'mobility_allowance',
+        'gender',
+        'health_system',
     ];
 
     protected $casts = [
