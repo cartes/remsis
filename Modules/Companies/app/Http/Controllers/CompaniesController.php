@@ -13,6 +13,8 @@ class CompaniesController extends Controller
     public function index()
     {
         $user = auth()->user();
+
+        // Si no es super-admin, filtramos las empresas a las que tiene acceso.
         $query = Company::orderBy('razon_social')->orderBy('name');
 
         if (! $user->hasRole('super-admin')) {
@@ -25,6 +27,14 @@ class CompaniesController extends Controller
         }
 
         $companies = $query->get();
+
+        // REGLA: Si no es super-admin y solo tiene una empresa, redirigir al dashboard directamente.
+        if (! $user->hasRole('super-admin') && $companies->count() === 1) {
+            $company = $companies->first();
+            session(['selected_company_id' => $company->id]);
+
+            return redirect()->route('companies.dashboard', $company);
+        }
 
         return view('companies::index', compact('companies'));
     }
@@ -275,6 +285,9 @@ class CompaniesController extends Controller
 
     public function dashboard(Company $company)
     {
+        // Aseguramos que la empresa esté seleccionada en la sesión al entrar a su dashboard
+        session(['selected_company_id' => $company->id]);
+
         $totalEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)->count();
         $activeEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)
             ->whereHas('user', function ($q) {

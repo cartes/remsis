@@ -59,7 +59,7 @@
                                                 <div>
                                                     <div class="font-semibold text-gray-800">
                                                         <a class="text-blue-600 block hover:underline"
-                                                            href="{{ route('companies.edit', $company) }}">
+                                                            href="{{ route('companies.dashboard', $company) }}">
                                                             {{ $company->razon_social ?? $company->name }}
                                                             @if ($company->nombre_fantasia)
                                                                 <div class="text-xs text-gray-500 font-normal mt-0.5">

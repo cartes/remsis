@@ -4,5 +4,8 @@
     "Users": true,
     "Employees": true,
     "Payroll": true,
-    "Companies": true
+    "Companies": true,
+    "Attendance": true,
+    "Documents": true,
+    "Requests": true
 }
