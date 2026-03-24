@@ -10,6 +10,11 @@
                         <i class="fas fa-calendar-plus text-2xl"></i>
                     </div>
                     <div>
+                        <x-breadcrumb :items="[
+                            ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                            ['label' => 'Nómina', 'url' => route('companies.payroll-periods.index', $company)],
+                            ['label' => 'Crear Período']
+                        ]" />
                         <h1 class="text-xl font-bold text-gray-800">Crear Período de Nómina</h1>
                         <p class="text-gray-600 mt-1">{{ $company->razon_social }}</p>
                     </div>

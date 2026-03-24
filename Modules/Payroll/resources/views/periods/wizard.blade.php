@@ -5,6 +5,11 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                 <div>
+                    <x-breadcrumb :items="[
+                        ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                        ['label' => 'Nómina', 'url' => route('companies.payroll-periods.index', $company)],
+                        ['label' => 'Cálculo de Nómina']
+                    ]" />
                     <h2 class="text-xl font-bold text-gray-800">Cálculo de Nómina - {{ $period->getDisplayName() }}</h2>
                     <p class="text-sm text-gray-500 mt-1">Estado: <span
                             class="{{ $period->getStatusBadgeClass() }} px-2 py-0.5 rounded-full text-xs border">{{ $period->getStatusLabel() }}</span>

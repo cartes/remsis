@@ -164,7 +164,11 @@
         {{-- Subheader with specific actions for accounting --}}
         <div class="flex justify-between items-center mb-6">
             <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">Contabilidad</p>
+                <x-breadcrumb :items="[
+                    ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                    ['label' => 'Contabilidad'],
+                    ['label' => $sectionTitle]
+                ]" />
                 <h2 class="text-2xl font-bold text-gray-800 tracking-tight">{{ $sectionTitle }}</h2>
                 <p class="text-sm text-gray-500 mt-1">{{ $sectionDescription }}</p>
             </div>

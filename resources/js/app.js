@@ -1,3 +1,4 @@
+import "@hotwired/turbo";
 import "virtual:uno.css";
 import "./bootstrap";
 

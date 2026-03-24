@@ -3,6 +3,11 @@
         {{-- Header con Acciones --}}
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
+                <x-breadcrumb :items="[
+                    ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                    ['label' => 'Contabilidad'],
+                    ['label' => 'Movimientos']
+                ]" />
                 <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Movimientos Financieros</h2>
                 <p class="text-sm text-gray-500 mt-1">Consulta y gestión de ingresos y egresos de la empresa.</p>
             </div>

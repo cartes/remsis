@@ -4,6 +4,11 @@
     <div class="max-w-7xl mx-auto py-6" x-data="usersManager()">
         <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
+                <x-breadcrumb :items="[
+                    ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                    ['label' => 'Configuración'],
+                    ['label' => 'Usuarios y Accesos']
+                ]" />
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Usuarios y Accesos</h1>
                 <p class="text-sm text-gray-500 mt-2">Administradores, contadores y personal de recursos humanos de la
                     empresa.</p>

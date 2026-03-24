@@ -19,15 +19,64 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Anti-flicker Sidebar Script -->
+    <meta name="turbo-cache-control" content="no-preview">
+    <script>
+        (function() {
+            const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+            document.documentElement.classList.add('sidebar-initializing');
+            // Remove initializing class after a short delay
+            setTimeout(() => document.documentElement.classList.remove('sidebar-initializing'), 200);
+        })();
+    </script>
+    <style>
+        /* Base styles before Alpine loads */
+        .sidebar-collapsed aside { width: 80px !important; }
+        .sidebar-initializing aside { transition: none !important; }
+        
+        /* Centering icons in collapsed mode before Alpine boots */
+        .sidebar-collapsed aside .logo-wrapper { justify-content: center !important; }
+        .sidebar-collapsed aside .nav-item-link { justify-content: center !important; padding: 0.625rem !important; }
+
+        [x-cloak] { display: none !important; }
+
+        .sidebar-collapsed aside span,
+        .sidebar-collapsed aside p[x-show],
+        .sidebar-collapsed aside div[x-show]:not(.fixed),
+        .sidebar-collapsed aside i[x-show],
+        .sidebar-collapsed aside form[x-show] {
+            display: none !important;
+        }
+    </style>
 </head>
 
-<body class="font-sans antialiased bg-slate-50 flex overflow-hidden" x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === null ? true : localStorage.getItem('sidebarCollapsed') === 'true' }" x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
+<body class="font-sans antialiased bg-slate-50 flex overflow-hidden" x-data="{
+    sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+    hoveringLabel: null,
+    tooltipTop: 0
+}" x-init="
+    $watch('sidebarCollapsed', val => {
+        localStorage.setItem('sidebarCollapsed', val);
+        document.documentElement.classList.toggle('sidebar-collapsed', val);
+    });
+    // Ensure initial sync
+    document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+">
+
+    {{-- Global Tooltip for Collapsed Sidebar --}}
+    <div x-show="sidebarCollapsed && hoveringLabel" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0"
+        class="fixed py-1.5 px-3 bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold rounded-lg shadow-xl z-[110] whitespace-nowrap pointer-events-none"
+        :style="`left: 76px; top: ${tooltipTop}px`" x-text="hoveringLabel" x-cloak style="display: none;">
+    </div>
     {{-- Sidebar Navigation --}}
     <aside :class="sidebarCollapsed ? 'w-20' : 'w-68'"
-        class="bg-white border-r border-gray-200 flex-shrink-0 hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300">
+        class="w-68 bg-white border-r border-gray-200 flex-shrink-0 hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300">
         {{-- Sidebar Header / Logo --}}
         <div class="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
-            <div class="flex items-center w-full transition-all duration-300"
+            <div class="logo-wrapper flex items-center w-full transition-all duration-300"
                 :class="sidebarCollapsed ? 'justify-center pr-0' : 'justify-between'">
                 <a href="{{ route('companies.dashboard', $company) }}" class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20 flex-shrink-0 transition-transform"
@@ -56,7 +105,9 @@
                     class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Plataforma</p>
                 <div class="space-y-1">
                     <a href="{{ route('companies.dashboard', $company) }}" title="Dashboard"
-                        class="flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Dashboard'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
                         :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
                                 '{{ $activeTab ?? '' }}'
                                 === 'dashboard') ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
@@ -96,14 +147,14 @@
                 <p x-show="!sidebarCollapsed"
                     class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Gestión de Empresa
                 </p>
-                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}', accountingOpen: @js($isAccountingSection), showBalloon: false, balloonTimeout: null }"
-                    @mouseenter="if(sidebarCollapsed) { clearTimeout(balloonTimeout); showBalloon = true }"
-                    @mouseleave="balloonTimeout = setTimeout(() => showBalloon = false, 300)">
+                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}', accountingOpen: @js($isAccountingSection), showBalloon: false, balloonTimeout: null }">
                     <div class="rounded-2xl transition-all duration-200"
                         :class="sidebarCollapsed ? '' : 'border border-slate-200/80 bg-slate-50/70 p-1'">
                         <button type="button"
-                            @click="sidebarCollapsed ? sidebarCollapsed = false : accountingOpen = !accountingOpen"
-                            class="flex w-full items-center rounded-xl text-left text-sm font-bold transition-all"
+                            @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Contabilidad'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                            @mouseleave="hoveringLabel = null"
+                            @click="sidebarCollapsed ? (showBalloon = !showBalloon) : accountingOpen = !accountingOpen"
+                            class="nav-item-link flex w-full items-center rounded-xl text-left text-sm font-bold transition-all"
                             :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-100' : 'gap-3 px-3 py-2.5 ' + ((
                                     accountingOpen || @js($isAccountingSection)) ?
                                 'bg-white text-slate-900 shadow-sm border border-slate-200' :
@@ -122,9 +173,8 @@
                         <div x-show="showBalloon && sidebarCollapsed"
                             x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 translate-x-4"
-                            x-transition:enter-end="opacity-100 translate-x-0"
-                            @mouseenter="clearTimeout(balloonTimeout); showBalloon = true"
-                            @mouseleave="showBalloon = false"
+                            x-transition:enter-end="opacity-100 translate-x-0" @mouseenter="hoveringLabel = null"
+                            @click.away="showBalloon = false" x-cloak
                             class="fixed left-20 ml-0 py-3 px-2 bg-white border border-slate-200 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] z-[100] w-64"
                             style="margin-top: -45px;">
                             <div class="absolute -left-4 top-0 bottom-0 w-4"></div> {{-- Invisible bridge --}}
@@ -159,7 +209,8 @@
                             </div>
                         </div>
 
-                        <div x-show="accountingOpen && !sidebarCollapsed" x-transition class="mt-1 space-y-1 px-2 pb-2">
+                        <div x-show="accountingOpen && !sidebarCollapsed" x-transition x-cloak
+                            class="mt-1 space-y-1 px-2 pb-2">
                             <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
                                 class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
                                 <i
@@ -191,8 +242,10 @@
                     </div>
 
                     <a href="{{ route('companies.transactions', $company) }}" title="Movimientos"
-                        class="flex items-center rounded-xl text-sm font-bold transition-all"
-                        :class="sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5' + (
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Movimientos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
                             activeTab === 'transactions' ?
                             ' bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
                             ' text-slate-600 hover:bg-slate-50 group')">
@@ -212,7 +265,9 @@
                 <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}' }">
                     <a href="{{ route('companies.payroll-periods.index', ['company' => $company]) }}"
                         title="Períodos de Nómina"
-                        class="flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Períodos de Nómina'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
                         :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
                                 '{{ $activeTab ?? '' }}'
                                 === 'payroll-periods') ?
@@ -225,7 +280,9 @@
                     </a>
 
                     <a href="{{ route('payrolls.byCompany', ['company' => $company]) }}" title="Historial de Nóminas"
-                        class="flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Historial de Nóminas'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
                         :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
                                 '{{ $activeTab ?? '' }}'
                                 === 'payrolls') ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
@@ -245,7 +302,9 @@
                 <div class="space-y-1">
                     <a href="{{ route('companies.users.index', ['company' => $company]) }}"
                         title="Usuarios y Accesos"
-                        class="flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Usuarios y Accesos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
                         :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
                                 '{{ $activeTab ?? '' }}'
                                 === 'users') ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
@@ -262,7 +321,9 @@
                 <div class="pt-4 border-t border-slate-100">
                     <div class="space-y-1">
                         <a href="{{ route('companies.index') }}" title="Volver a Empresas"
-                            class="flex items-center rounded-xl text-sm font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all border border-amber-100 group shadow-sm"
+                            @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Volver a Empresas'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                            @mouseleave="hoveringLabel = null"
+                            class="nav-item-link flex items-center rounded-xl text-sm font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 transition-all border border-amber-100 group shadow-sm"
                             :class="sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-3'">
                             <i
                                 class="fas fa-chevron-left w-5 text-center group-hover:-translate-x-1 transition-transform"></i>
@@ -279,10 +340,10 @@
             <div x-show="showProfileForm" x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95" @mouseenter="clearTimeout(timeout)"
-                @mouseleave="showProfileForm = false"
+                x-transition:leave-end="opacity-0 scale-95" @mouseenter="hoveringLabel = null; clearTimeout(timeout)"
+                @mouseleave="showProfileForm = false" x-cloak
                 class="absolute bottom-full mb-3 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-200 p-5 z-[100] w-80"
-                :class="sidebarCollapsed ? 'left-20' : 'left-4'" style="display: none;">
+                :class="sidebarCollapsed ? 'left-20' : 'left-4'">
                 {{-- Arrow --}}
                 <div class="absolute -bottom-1.5 w-3 h-3 bg-white border-b border-r border-slate-200 transform rotate-45"
                     :class="sidebarCollapsed ? 'left-2' : 'left-8'">
@@ -313,7 +374,7 @@
                         Editar Perfil
                     </a>
 
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" data-turbo="false">
                         @csrf
                         <button type="submit"
                             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black text-red-500 hover:bg-red-50 transition-all group/item">
@@ -324,10 +385,10 @@
                 </div>
             </div>
 
-            <div class="flex items-center group/user transition-all duration-300 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
+            <div class="nav-item-link flex items-center group/user transition-all duration-300 rounded-xl hover:bg-white hover:shadow-sm cursor-pointer transition-all"
                 :class="sidebarCollapsed ? 'justify-center p-2' : 'gap-3 px-2 py-2'"
-                @mouseenter="clearTimeout(timeout); showProfileForm = true"
-                @mouseleave="timeout = setTimeout(() => { showProfileForm = false }, 300)">
+                @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Mi Perfil'; tooltipTop = $el.getBoundingClientRect().top + 8 }; clearTimeout(timeout); showProfileForm = true"
+                @mouseleave="hoveringLabel = null; timeout = setTimeout(() => { showProfileForm = false }, 300)">
                 <div
                     class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xs font-black text-white uppercase shadow-md shadow-blue-500/20 transition-transform group-hover/user:scale-105 overflow-hidden flex-shrink-0">
                     @if (Auth::user()->profile_photo)
@@ -344,7 +405,7 @@
                     <p class="text-[10px] font-bold text-slate-400 truncate tracking-tight">{{ Auth::user()->email }}
                     </p>
                 </div>
-                <form x-show="!sidebarCollapsed" method="POST" action="{{ route('logout') }}"
+                <form x-show="!sidebarCollapsed" method="POST" action="{{ route('logout') }}" data-turbo="false"
                     @mouseenter="clearTimeout(timeout)">
                     @csrf
                     <button type="submit"
@@ -508,7 +569,7 @@
             }
 
             // Escuchar flashes de sesión de Laravel
-            window.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('turbo:load', () => {
                 @if (session('success'))
                     toast(@json(session('success')), 'success');
                 @endif

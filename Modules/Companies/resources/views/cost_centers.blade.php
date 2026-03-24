@@ -66,6 +66,11 @@
         {{-- Header con Acciones --}}
         <div class="flex justify-between items-center mb-6">
             <div>
+                <x-breadcrumb :items="[
+                    ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                    ['label' => 'Contabilidad'],
+                    ['label' => 'Centros de Costos']
+                ]" />
                 <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Centros de Costos</h2>
                 <p class="text-sm text-gray-500 mt-1">Gestión de centros de costo de la empresa.</p>
             </div>

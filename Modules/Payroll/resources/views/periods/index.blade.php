@@ -11,6 +11,11 @@
                             <i class="fas fa-calendar-alt text-2xl"></i>
                         </div>
                         <div>
+                            <x-breadcrumb :items="[
+                                ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
+                                ['label' => 'Nómina'],
+                                ['label' => 'Períodos']
+                            ]" />
                             <h1 class="text-xl font-bold text-gray-800">Períodos de Nómina</h1>
                             <p class="text-gray-600 mt-1">Gestión de períodos mensuales de remuneraciones</p>
                         </div>
