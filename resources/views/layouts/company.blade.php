@@ -33,14 +33,27 @@
     </script>
     <style>
         /* Base styles before Alpine loads */
-        .sidebar-collapsed aside { width: 80px !important; }
-        .sidebar-initializing aside { transition: none !important; }
-        
-        /* Centering icons in collapsed mode before Alpine boots */
-        .sidebar-collapsed aside .logo-wrapper { justify-content: center !important; }
-        .sidebar-collapsed aside .nav-item-link { justify-content: center !important; padding: 0.625rem !important; }
+        .sidebar-collapsed aside {
+            width: 80px !important;
+        }
 
-        [x-cloak] { display: none !important; }
+        .sidebar-initializing aside {
+            transition: none !important;
+        }
+
+        /* Centering icons in collapsed mode before Alpine boots */
+        .sidebar-collapsed aside .logo-wrapper {
+            justify-content: center !important;
+        }
+
+        .sidebar-collapsed aside .nav-item-link {
+            justify-content: center !important;
+            padding: 0.625rem !important;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
 
         .sidebar-collapsed aside span,
         .sidebar-collapsed aside p[x-show],
@@ -56,14 +69,12 @@
     sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
     hoveringLabel: null,
     tooltipTop: 0
-}" x-init="
-    $watch('sidebarCollapsed', val => {
-        localStorage.setItem('sidebarCollapsed', val);
-        document.documentElement.classList.toggle('sidebar-collapsed', val);
-    });
-    // Ensure initial sync
-    document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-">
+}" x-init="$watch('sidebarCollapsed', val => {
+    localStorage.setItem('sidebarCollapsed', val);
+    document.documentElement.classList.toggle('sidebar-collapsed', val);
+});
+// Ensure initial sync
+document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed);">
 
     {{-- Global Tooltip for Collapsed Sidebar --}}
     <div x-show="sidebarCollapsed && hoveringLabel" x-transition:enter="transition ease-out duration-200"
@@ -151,7 +162,7 @@
                     <div class="rounded-2xl transition-all duration-200"
                         :class="sidebarCollapsed ? '' : 'border border-slate-200/80 bg-slate-50/70 p-1'">
                         <button type="button"
-                            @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Contabilidad'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                            @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Administración'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
                             @mouseleave="hoveringLabel = null"
                             @click="sidebarCollapsed ? (showBalloon = !showBalloon) : accountingOpen = !accountingOpen"
                             class="nav-item-link flex w-full items-center rounded-xl text-left text-sm font-bold transition-all"
@@ -163,7 +174,7 @@
                                 :class="(accountingOpen || @js($isAccountingSection)) && !sidebarCollapsed ?
                                     'text-blue-600' :
                                     'text-slate-400 group-hover:text-blue-500'"></i>
-                            <span x-show="!sidebarCollapsed" class="flex-1">Contabilidad</span>
+                            <span x-show="!sidebarCollapsed" class="flex-1">Administración</span>
                             <i x-show="!sidebarCollapsed"
                                 class="fas fa-chevron-down text-xs text-slate-400 transition-transform"
                                 :class="{ 'rotate-180': accountingOpen }"></i>
@@ -180,7 +191,7 @@
                             <div class="absolute -left-4 top-0 bottom-0 w-4"></div> {{-- Invisible bridge --}}
                             <p
                                 class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50">
-                                Contabilidad</p>
+                                Administración</p>
                             <div class="space-y-1">
                                 <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
                                     class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
