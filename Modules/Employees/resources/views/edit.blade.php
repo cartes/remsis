@@ -3,7 +3,39 @@
 <div
     x-data="{
         tab: '{{ session('active_tab', 'personales') }}',
-        healthSystem: '{{ old('health_system', $employee->health_system ?? '') }}'
+        healthSystem: '{{ old('health_system', $employee->health_system ?? '') }}',
+        nationality: '{{ old('nationality', $employee->nationality ?? 'Chile') }}',
+        searchNationality: '',
+        nationalityDropdownOpen: false,
+        countries: [
+            'Chile',
+            'Afganistán','Alemania','Angola','Argentina','Australia','Austria',
+            'Bangladés','Bélgica','Bolivia','Brasil','Bulgaria',
+            'Canadá','Colombia','Corea del Sur','Costa Rica','Cuba',
+            'Dinamarca','República Dominicana',
+            'Ecuador','Egipto','Emiratos Árabes','Eslovaquia','España','Estados Unidos',
+            'Finlandia','Francia',
+            'Grecia','Guatemala',
+            'Haití','Países Bajos','Honduras','Hungría',
+            'India','Indonesia','Irán','Irak','Irlanda','Israel','Italia',
+            'Jamaica','Japón','Jordania',
+            'Kenia','Kuwait',
+            'Líbano','Libia',
+            'Marruecos','México',
+            'Nueva Zelanda','Nicaragua','Nigeria','Noruega',
+            'Pakistán','Panamá','Paraguay','Perú','Polonia','Portugal',
+            'Rumania','Rusia',
+            'El Salvador','Siria','Sudáfrica','Suecia','Suiza',
+            'Tailandia','Taiwán','Túnez','Turquía',
+            'Ucrania','Uruguay',
+            'Venezuela','Vietnam',
+            'Otro',
+        ],
+        get filteredNationalities() {
+            if (!this.searchNationality) return this.countries;
+            const search = this.searchNationality.toLowerCase();
+            return this.countries.filter(c => c.toLowerCase().includes(search));
+        }
     }"
     x-init="
         const hash = window.location.hash.replace('#', '');
@@ -183,15 +215,54 @@
                     @error('gender')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
                 </div>
 
-                {{-- Nacionalidad --}}
-                <div class="sm:col-span-2">
+                {{-- Nacionalidad (Buscador) --}}
+                <div class="sm:col-span-2 relative" @click.away="nationalityDropdownOpen = false">
                     <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
                         Nacionalidad
                     </label>
-                    <input type="text" name="nationality"
-                        value="{{ old('nationality', $employee->nationality) }}"
-                        placeholder="Chilena"
-                        class="w-full sm:w-1/2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('nationality') border-red-400 bg-red-50 @enderror">
+                    <input type="hidden" name="nationality" :value="nationality">
+                    
+                    <div @click="nationalityDropdownOpen = !nationalityDropdownOpen"
+                        class="w-full sm:w-1/2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all cursor-pointer flex items-center justify-between"
+                        :class="nationalityDropdownOpen ? 'ring-2 ring-blue-500/20 border-blue-400' : ''">
+                        <span x-text="nationality || 'Seleccionar nacionalidad'" :class="!nationality ? 'text-slate-300' : ''"></span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="nationalityDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+
+                    {{-- Dropdown --}}
+                    <div x-show="nationalityDropdownOpen" x-cloak
+                        class="absolute z-50 mt-1 w-full sm:w-1/2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100">
+                        
+                        {{-- Search input inside dropdown --}}
+                        <div class="p-2 border-b border-slate-50">
+                            <input type="text" x-model="searchNationality" placeholder="Buscar país..."
+                                @click.stop
+                                class="w-full px-3 py-2 text-xs border border-slate-100 rounded-lg outline-none focus:bg-slate-50 transition-colors">
+                        </div>
+
+                        <div class="max-h-48 overflow-y-auto pt-1 pb-1 scrollbar-thin">
+                            <template x-for="country in filteredNationalities" :key="country">
+                                <div @click="nationality = country; nationalityDropdownOpen = false; searchNationality = ''"
+                                    class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors flex items-center justify-between"
+                                    :class="nationality === country ? 'bg-blue-50 text-blue-700 font-semibold' : ''">
+                                    <span x-text="country"></span>
+                                    <template x-if="nationality === country">
+                                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </template>
+                                </div>
+                            </template>
+                            <div x-show="filteredNationalities.length === 0" class="px-4 py-3 text-xs text-slate-400 italic text-center">
+                                No se encontraron resultados
+                            </div>
+                        </div>
+                    </div>
                     @error('nationality')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
                 </div>
 

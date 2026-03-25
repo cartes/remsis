@@ -1,18 +1,19 @@
 {{-- ═══════════════════════════════════════════════════════════════════
-     Wizard de Creación de Colaborador — Alpine.js
+     Wizard de Creación de Colaborador — Alpine.js 5 pasos
      Escucha el evento: open-create-wizard.window
-     Al completar: recarga la página con la nueva lista
  ═══════════════════════════════════════════════════════════════════ --}}
 
 @push('scripts')
 <script>
 window.createEmployeeWizard = function () {
     return {
-        isOpen: false,
+        isOpen:      false,
         currentStep: 1,
-        totalSteps: 5,
-        loading: false,
-        errors: {},
+        totalSteps:  5,
+        loading:     false,
+        errors:      {},
+        searchNationality: '',
+        nationalityDropdownOpen: false,
 
         afps:        @json($afps),
         isapres:     @json($isapres),
@@ -21,31 +22,65 @@ window.createEmployeeWizard = function () {
         costCenters: @json($costCenters),
 
         steps: [
-            { id: 1, label: 'Personal' },
-            { id: 2, label: 'Laboral' },
-            { id: 3, label: 'Previsión' },
-            { id: 4, label: 'Remuneración' },
-            { id: 5, label: 'Pago' },
+            { id: 1, label: 'Identificación' },
+            { id: 2, label: 'Contrato'       },
+            { id: 3, label: 'Previsión'      },
+            { id: 4, label: 'Sueldo'         },
+            { id: 5, label: 'Pago'           },
         ],
+
+        // ── Países — Chile primero, resto alfabético ──────────────────
+        countries: [
+            'Chile',
+            'Afganistán','Alemania','Angola','Argentina','Australia','Austria',
+            'Bangladés','Bélgica','Bolivia','Brasil','Bulgaria',
+            'Canadá','Colombia','Corea del Sur','Costa Rica','Cuba',
+            'Dinamarca','República Dominicana',
+            'Ecuador','Egipto','Emiratos Árabes','Eslovaquia','España','Estados Unidos',
+            'Finlandia','Francia',
+            'Grecia','Guatemala',
+            'Haití','Países Bajos','Honduras','Hungría',
+            'India','Indonesia','Irán','Irak','Irlanda','Israel','Italia',
+            'Jamaica','Japón','Jordania',
+            'Kenia','Kuwait',
+            'Líbano','Libia',
+            'Marruecos','México',
+            'Nueva Zelanda','Nicaragua','Nigeria','Noruega',
+            'Pakistán','Panamá','Paraguay','Perú','Polonia','Portugal',
+            'Rumania','Rusia',
+            'El Salvador','Siria','Sudáfrica','Suecia','Suiza',
+            'Tailandia','Taiwán','Túnez','Turquía',
+            'Ucrania','Uruguay',
+            'Venezuela','Vietnam',
+            'Otro',
+        ],
+
+        get filteredNationalities() {
+            if (!this.searchNationality) return this.countries;
+            const search = this.searchNationality.toLowerCase();
+            return this.countries.filter(c => c.toLowerCase().includes(search));
+        },
 
         form: {},
 
         defaultForm() {
             return {
-                // Paso 1
+                // Paso 1 — Identificación
                 first_name: '', last_name: '', rut: '', email: '',
-                password: '', birth_date: '', gender: '', phone: '', address: '',
-                // Paso 2
-                position: '', hire_date: '', contract_type: '',
+                password: '', birth_date: '', gender: '', phone: '',
+                address: '', nationality: 'Chile',
+                // Paso 2 — Contrato
+                position: '', hire_date: '', contract_type: 'indefinido',
                 work_schedule_type: 'full_time', cost_center_id: '',
-                // Paso 3
+                // Paso 3 — Previsión
                 afp_id: '', health_system: 'fonasa', isapre_id: '',
                 health_contribution: '', ccaf_id: '', apv_amount: '',
-                // Paso 4
+                // Paso 4 — Sueldo
                 salary: '', salary_type: 'mensual',
                 meal_allowance: '', mobility_allowance: '', num_dependents: 0,
-                // Paso 5
-                bank_id: '', bank_account_type: '', bank_account_number: '',
+                // Paso 5 — Pago
+                payment_method: 'efectivo',
+                bank_id: '', bank_account_type: 'corriente', bank_account_number: '',
             };
         },
 
@@ -61,30 +96,30 @@ window.createEmployeeWizard = function () {
             this.isOpen = false;
         },
 
-        // ── RUT chileno ──────────────────────────────────────────────
-        onRutInput(value) {
-            const raw = value.replace(/[^0-9kK]/g, '').toUpperCase();
+        // ── RUT ───────────────────────────────────────────────────────
+        onRutInput(val) {
+            const raw = val.replace(/[^0-9kK]/g, '').toUpperCase();
             if (raw.length <= 1) { this.form.rut = raw; return; }
             const body = raw.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             this.form.rut = `${body}-${raw.slice(-1)}`;
         },
 
         isValidRut(rut) {
-            if (!rut || !rut.trim()) return true;
-            const raw = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+            if (!rut?.trim()) return true;
+            const raw  = rut.replace(/[^0-9kK]/g, '').toUpperCase();
             if (raw.length < 2) return false;
             const body = raw.slice(0, -1);
             const dv   = raw.slice(-1);
             let sum = 0, mult = 2;
             for (let i = body.length - 1; i >= 0; i--) {
-                sum  += parseInt(body[i]) * mult;
-                mult  = mult === 7 ? 2 : mult + 1;
+                sum += parseInt(body[i]) * mult;
+                mult = mult === 7 ? 2 : mult + 1;
             }
             const rem = 11 - (sum % 11);
             return dv === (rem === 11 ? '0' : rem === 10 ? 'K' : String(rem));
         },
 
-        // ── Validación por paso (solo paso 1 tiene campos requeridos) ──
+        // ── Validación por paso ───────────────────────────────────────
         validateStep() {
             const e = {};
             if (this.currentStep === 1) {
@@ -93,7 +128,7 @@ window.createEmployeeWizard = function () {
                 if (!this.form.email?.trim()) {
                     e.email = 'El correo es requerido';
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
-                    e.email = 'Formato de correo inválido';
+                    e.email = 'Correo inválido';
                 }
                 if (!this.form.password) {
                     e.password = 'La contraseña es requerida';
@@ -101,8 +136,13 @@ window.createEmployeeWizard = function () {
                     e.password = 'Mínimo 6 caracteres';
                 }
                 if (this.form.rut && !this.isValidRut(this.form.rut)) {
-                    e.rut = 'RUT no válido (verifica el dígito verificador)';
+                    e.rut = 'RUT inválido';
                 }
+            }
+            if (this.currentStep === 5 && this.form.payment_method === 'transferencia') {
+                if (!this.form.bank_id)             e.bank_id             = 'Selecciona un banco';
+                if (!this.form.bank_account_type)   e.bank_account_type   = 'Selecciona tipo de cuenta';
+                if (!this.form.bank_account_number?.trim()) e.bank_account_number = 'Ingresa el número de cuenta';
             }
             this.errors = e;
             return Object.keys(e).length === 0;
@@ -111,14 +151,16 @@ window.createEmployeeWizard = function () {
         // ── Navegación ────────────────────────────────────────────────
         next() { if (this.validateStep()) this.currentStep++; },
         prev() { if (this.currentStep > 1) { this.currentStep--; this.errors = {}; } },
+
         isStepDone(step)  { return step < this.currentStep; },
+        isStepActive(step){ return step === this.currentStep; },
 
         stepFieldMap: {
-            1: ['first_name','last_name','rut','email','password','birth_date','gender','phone','address'],
-            2: ['position','hire_date','contract_type','work_schedule_type','cost_center_id'],
-            3: ['afp_id','health_system','isapre_id','health_contribution','ccaf_id','apv_amount'],
-            4: ['salary','salary_type','meal_allowance','mobility_allowance','num_dependents'],
-            5: ['bank_id','bank_account_type','bank_account_number'],
+            1: ['first_name','last_name','rut','email','password'],
+            2: ['position','hire_date','contract_type'],
+            3: ['afp_id','health_system','isapre_id','health_contribution'],
+            4: ['salary','salary_type'],
+            5: ['bank_id','bank_account_type','bank_account_number','payment_method'],
         },
 
         hasStepError(step) {
@@ -138,7 +180,7 @@ window.createEmployeeWizard = function () {
             this.errors  = {};
             try {
                 const response = await axios.post(
-                    '{{ route("companies.employees.store", $company) }}',
+                    '{{ route("companies.employees.store", $company, false) }}',
                     this.form
                 );
                 if (typeof toast === 'function') {
@@ -152,7 +194,7 @@ window.createEmployeeWizard = function () {
                     this.goToErrorStep();
                 } else {
                     if (typeof toast === 'function') {
-                        toast(err.response?.data?.message || 'Error al crear el colaborador', 'error');
+                        toast(err.response?.data?.message || 'Error al crear el colaborador. Intenta nuevamente.', 'error');
                     }
                 }
             } finally {
@@ -164,14 +206,14 @@ window.createEmployeeWizard = function () {
 </script>
 @endpush
 
-{{-- ─── Modal Wizard ──────────────────────────────────────────────────── --}}
+{{-- ─── Modal Overlay ────────────────────────────────────────────────── --}}
 <div
     x-data="createEmployeeWizard()"
     @open-create-wizard.window="open()"
     x-show="isOpen"
     x-cloak
     class="fixed inset-0 z-[70] flex items-center justify-center p-4"
-    style="background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);"
+    style="background:rgba(15,23,42,0.45);backdrop-filter:blur(6px);"
     x-transition:enter="ease-out duration-300"
     x-transition:enter-start="opacity-0"
     x-transition:enter-end="opacity-100"
@@ -179,227 +221,273 @@ window.createEmployeeWizard = function () {
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
 >
+    {{-- ─── Panel ──────────────────────────────────────────────────── --}}
     <div
         @click.away="close()"
-        class="bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden"
+        class="bg-white rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.18)] w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden"
         x-transition:enter="ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-        x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
     >
 
-        {{-- ── Header ─────────────────────────────────────────────── --}}
-        <div class="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
-            <div>
-                <h2 class="text-base font-bold text-slate-900 tracking-tight">Nuevo Colaborador</h2>
-                <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Completa cada paso · los campos opcionales pueden editarse luego</p>
+        {{-- ── Header ──────────────────────────────────────────────── --}}
+        <div class="px-8 pt-7 pb-0 flex-shrink-0">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 tracking-tight">Nuevo Colaborador</h2>
+                    <p class="text-xs text-slate-400 mt-1">Completa cada paso · los campos opcionales pueden editarse después</p>
+                </div>
+                <button @click="close()" :disabled="loading"
+                    class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all disabled:opacity-40 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            <button @click="close()" :disabled="loading"
-                class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all disabled:opacity-40">
-                <i class="fas fa-times text-sm"></i>
-            </button>
-        </div>
 
-        {{-- ── Stepper ─────────────────────────────────────────────── --}}
-        <div class="px-7 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
-            <div class="relative flex items-start justify-between">
-                {{-- Línea de fondo --}}
-                <div class="absolute top-[15px] left-4 right-4 h-px bg-slate-100"></div>
-                {{-- Línea de progreso --}}
-                <div class="absolute top-[15px] left-4 h-px bg-slate-900 transition-all duration-500 ease-out"
-                     :style="`width: calc((100% - 2rem) * ${(currentStep - 1) / (totalSteps - 1)})`"></div>
-
-                <template x-for="step in steps" :key="step.id">
-                    <div class="relative z-10 flex flex-col items-center gap-2 flex-1">
-                        {{-- Círculo --}}
-                        <div class="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[11px] font-bold border-2 bg-white transition-all duration-300"
-                            :class="{
-                                'border-slate-900 bg-slate-900 text-white ring-4 ring-slate-900/10': currentStep === step.id && !isStepDone(step.id),
-                                'border-slate-900 bg-slate-900 text-white': isStepDone(step.id),
-                                'border-red-400 bg-red-50 text-red-500': hasStepError(step.id),
-                                'border-slate-200 text-slate-400': !isStepDone(step.id) && currentStep !== step.id && !hasStepError(step.id),
-                            }">
-                            <template x-if="isStepDone(step.id) && !hasStepError(step.id)">
-                                <i class="fas fa-check text-[9px]"></i>
-                            </template>
-                            <template x-if="hasStepError(step.id)">
-                                <i class="fas fa-exclamation text-[9px]"></i>
-                            </template>
-                            <template x-if="!isStepDone(step.id) && !hasStepError(step.id)">
-                                <span x-text="step.id"></span>
-                            </template>
+            {{-- ── Stepper ──────────────────────────────────────────── --}}
+            <div class="flex items-center w-full mb-0">
+                <template x-for="(step, idx) in steps" :key="step.id">
+                    <div class="flex items-center" :class="idx < steps.length - 1 ? 'flex-1' : ''">
+                        {{-- Circle + Label --}}
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 border-2"
+                                :class="{
+                                    'bg-slate-900 border-slate-900 text-white shadow-md':          isStepActive(step.id),
+                                    'bg-emerald-500 border-emerald-500 text-white':                isStepDone(step.id),
+                                    'bg-white border-slate-200 text-slate-400':                    !isStepActive(step.id) && !isStepDone(step.id),
+                                    'border-red-400 bg-red-50 text-red-500':                        hasStepError(step.id),
+                                }"
+                            >
+                                <template x-if="isStepDone(step.id) && !hasStepError(step.id)">
+                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </template>
+                                <template x-if="!isStepDone(step.id) || hasStepError(step.id)">
+                                    <span x-text="step.id"></span>
+                                </template>
+                            </div>
+                            <span class="text-[10px] font-medium whitespace-nowrap transition-colors duration-300"
+                                :class="{
+                                    'text-slate-900': isStepActive(step.id),
+                                    'text-emerald-600': isStepDone(step.id) && !hasStepError(step.id),
+                                    'text-slate-400': !isStepActive(step.id) && !isStepDone(step.id),
+                                    'text-red-500': hasStepError(step.id),
+                                }"
+                                x-text="step.label"
+                            ></span>
                         </div>
-                        {{-- Etiqueta --}}
-                        <span class="text-[10px] font-bold transition-colors whitespace-nowrap"
-                            :class="{
-                                'text-slate-900': currentStep === step.id,
-                                'text-slate-500': isStepDone(step.id),
-                                'text-red-400': hasStepError(step.id) && !isStepDone(step.id),
-                                'text-slate-300': !isStepDone(step.id) && currentStep !== step.id && !hasStepError(step.id),
-                            }"
-                            x-text="step.label">
-                        </span>
+                        {{-- Connector line --}}
+                        <div x-show="idx < steps.length - 1"
+                            class="flex-1 h-0.5 mx-2 mb-4 transition-all duration-500 rounded-full"
+                            :class="isStepDone(step.id) ? 'bg-emerald-400' : 'bg-slate-200'"
+                        ></div>
                     </div>
                 </template>
             </div>
+            <div class="border-t border-slate-100 mt-4"></div>
         </div>
 
-        {{-- ── Contenido (scrollable) ──────────────────────────────── --}}
-        <div class="flex-1 overflow-y-auto px-7 py-6 min-h-0">
+        {{-- ── Form Body (scrollable) ───────────────────────────────── --}}
+        <div class="flex-1 overflow-y-auto px-8 py-6">
 
-            {{-- ─────── PASO 1: Información Personal ─────────────── --}}
-            <div x-show="currentStep === 1">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Información Personal</p>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+            {{-- ════ PASO 1: Identificación ═══════════════════════════ --}}
+            <div x-show="currentStep === 1" x-cloak>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Datos Personales</p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
 
+                    {{-- Nombre --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                            Nombres <span class="text-red-400">*</span>
-                        </label>
-                        <input type="text" x-model="form.first_name" placeholder="Ej: Juan Andrés"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border outline-none transition-all"
-                            :class="errors.first_name ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'">
-                        <p x-show="errors.first_name" x-text="errors.first_name" class="mt-1 text-[10px] text-red-500 font-medium"></p>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Nombres <span class="text-red-400">*</span></label>
+                        <input type="text" x-model="form.first_name" placeholder="Ej: María Fernanda"
+                            class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                            :class="errors.first_name ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                        <p x-show="errors.first_name" class="mt-1 text-xs text-red-500" x-text="errors.first_name"></p>
                     </div>
 
+                    {{-- Apellidos --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                            Apellidos <span class="text-red-400">*</span>
-                        </label>
-                        <input type="text" x-model="form.last_name" placeholder="Ej: Pérez González"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border outline-none transition-all"
-                            :class="errors.last_name ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'">
-                        <p x-show="errors.last_name" x-text="errors.last_name" class="mt-1 text-[10px] text-red-500 font-medium"></p>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Apellidos <span class="text-red-400">*</span></label>
+                        <input type="text" x-model="form.last_name" placeholder="Ej: González Soto"
+                            class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                            :class="errors.last_name ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                        <p x-show="errors.last_name" class="mt-1 text-xs text-red-500" x-text="errors.last_name"></p>
                     </div>
 
+                    {{-- RUT --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">RUT</label>
-                        <input type="text" x-model="form.rut"
-                            @input="onRutInput($event.target.value)"
-                            placeholder="12.345.678-9" maxlength="12"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border outline-none transition-all font-mono tracking-wide"
-                            :class="errors.rut ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'">
-                        <p x-show="errors.rut" x-text="errors.rut" class="mt-1 text-[10px] text-red-500 font-medium"></p>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">RUT</label>
+                        <input type="text" :value="form.rut" @input="onRutInput($event.target.value)" placeholder="Ej: 12.345.678-9"
+                            class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-mono tracking-wide"
+                            :class="errors.rut ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                        <p x-show="errors.rut" class="mt-1 text-xs text-red-500" x-text="errors.rut"></p>
                     </div>
 
+                    {{-- Email --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Fecha de Nacimiento</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Correo electrónico <span class="text-red-400">*</span></label>
+                        <input type="email" x-model="form.email" placeholder="correo@empresa.cl"
+                            class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                            :class="errors.email ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                        <p x-show="errors.email" class="mt-1 text-xs text-red-500" x-text="errors.email"></p>
+                    </div>
+
+                    {{-- Contraseña --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Contraseña de acceso <span class="text-red-400">*</span></label>
+                        <input type="password" x-model="form.password" placeholder="Mínimo 6 caracteres"
+                            class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                            :class="errors.password ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                        <p x-show="errors.password" class="mt-1 text-xs text-red-500" x-text="errors.password"></p>
+                    </div>
+
+                    {{-- Fecha de nacimiento --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Fecha de nacimiento</label>
                         <input type="date" x-model="form.birth_date"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
+                    {{-- Nacionalidad (Buscador) --}}
+                    <div class="relative" @click.away="nationalityDropdownOpen = false">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Nacionalidad</label>
+                        
+                        <div @click="nationalityDropdownOpen = !nationalityDropdownOpen"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-400 cursor-pointer flex items-center justify-between">
+                            <span x-text="form.nationality || 'Seleccionar nacionalidad'" :class="!form.nationality ? 'text-slate-300' : ''"></span>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform" :class="nationalityDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+
+                        {{-- Dropdown --}}
+                        <div x-show="nationalityDropdownOpen" x-cloak
+                            class="absolute z-[80] mt-1 w-full bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100">
+                            
+                            {{-- Search input inside dropdown --}}
+                            <div class="p-2 border-b border-slate-50">
+                                <input type="text" x-model="searchNationality" placeholder="Buscar país..."
+                                    @click.stop
+                                    class="w-full px-3 py-2 text-xs border border-slate-100 rounded-lg outline-none focus:bg-slate-50 transition-colors">
+                            </div>
+
+                            <div class="max-h-48 overflow-y-auto pt-1 pb-1 scrollbar-thin">
+                                <template x-for="country in filteredNationalities" :key="country">
+                                    <div @click="form.nationality = country; nationalityDropdownOpen = false; searchNationality = ''"
+                                        class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors flex items-center justify-between"
+                                        :class="form.nationality === country ? 'bg-slate-50 text-slate-900 font-semibold' : ''">
+                                        <span x-text="country"></span>
+                                        <template x-if="form.nationality === country">
+                                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </template>
+                                    </div>
+                                </template>
+                                <div x-show="filteredNationalities.length === 0" class="px-4 py-3 text-xs text-slate-400 italic text-center">
+                                    No se encontraron resultados
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Género --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Género</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Género</label>
                         <select x-model="form.gender"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                            <option value="">Seleccionar…</option>
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                            <option value="">Sin especificar</option>
                             <option value="masculino">Masculino</option>
                             <option value="femenino">Femenino</option>
                             <option value="otro">Otro</option>
-                            <option value="prefiero_no_decir">Prefiero no decir</option>
                         </select>
                     </div>
 
+                    {{-- Teléfono --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Teléfono</label>
-                        <input type="text" x-model="form.phone" placeholder="+56 9 XXXX XXXX"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Teléfono</label>
+                        <input type="tel" x-model="form.phone" placeholder="+56 9 1234 5678"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
+                    {{-- Dirección --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                            Correo Electrónico <span class="text-red-400">*</span>
-                        </label>
-                        <input type="email" x-model="form.email" placeholder="colaborador@empresa.cl"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border outline-none transition-all"
-                            :class="errors.email ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'">
-                        <p x-show="errors.email" x-text="errors.email" class="mt-1 text-[10px] text-red-500 font-medium"></p>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                            Contraseña de Acceso <span class="text-red-400">*</span>
-                        </label>
-                        <input type="password" x-model="form.password" placeholder="Mínimo 6 caracteres"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border outline-none transition-all"
-                            :class="errors.password ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100'">
-                        <p x-show="errors.password" x-text="errors.password" class="mt-1 text-[10px] text-red-500 font-medium"></p>
-                    </div>
-
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Dirección</label>
-                        <input type="text" x-model="form.address" placeholder="Calle, número, comuna, ciudad"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Dirección</label>
+                        <input type="text" x-model="form.address" placeholder="Calle, número, comuna"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
                 </div>
             </div>
 
-            {{-- ─────── PASO 2: Información Laboral ──────────────── --}}
+            {{-- ════ PASO 2: Contrato ══════════════════════════════════ --}}
             <div x-show="currentStep === 2" x-cloak>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Información Laboral</p>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Información Laboral</p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
 
+                    {{-- Cargo --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Cargo / Puesto</label>
-                        <input type="text" x-model="form.position" placeholder="Ej: Analista de TI"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Cargo / Puesto</label>
+                        <input type="text" x-model="form.position" placeholder="Ej: Analista de RRHH"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
+                    {{-- Centro de costo --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Centro de Costo</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Centro de Costo</label>
                         <select x-model="form.cost_center_id"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                             <option value="">Sin asignar</option>
                             <template x-for="cc in costCenters" :key="cc.id">
-                                <option :value="cc.id" x-text="(cc.code ? cc.code + ' – ' : '') + cc.name"></option>
+                                <option :value="cc.id" x-text="`${cc.code} — ${cc.name}`"></option>
                             </template>
                         </select>
                     </div>
 
+                    {{-- Fecha de ingreso --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Fecha de Ingreso</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Fecha de Ingreso</label>
                         <input type="date" x-model="form.hire_date"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
+                    {{-- Tipo de contrato --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tipo de Contrato</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Tipo de Contrato</label>
                         <select x-model="form.contract_type"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                            <option value="">Seleccionar…</option>
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                             <option value="indefinido">Indefinido</option>
                             <option value="plazo_fijo">Plazo Fijo</option>
                             <option value="obra_faena">Por Obra o Faena</option>
+                            <option value="honorarios">Honorarios</option>
+                            <option value="part_time">Part-time</option>
                         </select>
                     </div>
 
+                    {{-- Jornada --}}
                     <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Jornada Laboral</label>
-                        <div class="grid grid-cols-2 gap-3">
+                        <label class="block text-xs font-medium text-slate-600 mb-2">Jornada de Trabajo</label>
+                        <div class="flex gap-3">
                             <button type="button" @click="form.work_schedule_type = 'full_time'"
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all text-left"
+                                class="flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all"
                                 :class="form.work_schedule_type === 'full_time'
-                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                                    : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'">
-                                <i class="fas fa-briefcase w-4 text-center text-xs flex-shrink-0"></i>
-                                <div>
-                                    <div>Jornada Completa</div>
-                                    <div class="text-[10px] font-normal opacity-70">45 hrs semanales</div>
-                                </div>
+                                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'">
+                                Jornada Completa
                             </button>
                             <button type="button" @click="form.work_schedule_type = 'part_time'"
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all text-left"
+                                class="flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all"
                                 :class="form.work_schedule_type === 'part_time'
-                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                                    : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'">
-                                <i class="fas fa-hourglass-half w-4 text-center text-xs flex-shrink-0"></i>
-                                <div>
-                                    <div>Media Jornada</div>
-                                    <div class="text-[10px] font-normal opacity-70">Part-time</div>
-                                </div>
+                                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'">
+                                Jornada Parcial
                             </button>
                         </div>
                     </div>
@@ -407,26 +495,28 @@ window.createEmployeeWizard = function () {
                 </div>
             </div>
 
-            {{-- ─────── PASO 3: Previsión y Salud ─────────────────── --}}
+            {{-- ════ PASO 3: Previsión Social ══════════════════════════ --}}
             <div x-show="currentStep === 3" x-cloak>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Previsión y Salud</p>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Seguridad Social</p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
 
+                    {{-- AFP --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">AFP</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">AFP</label>
                         <select x-model="form.afp_id"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                            <option value="">Seleccionar AFP…</option>
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                            <option value="">Sin AFP (independiente)</option>
                             <template x-for="afp in afps" :key="afp.id">
                                 <option :value="afp.id" x-text="afp.nombre"></option>
                             </template>
                         </select>
                     </div>
 
+                    {{-- CCAF --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">CCAF (Caja)</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Caja de Compensación (CCAF)</label>
                         <select x-model="form.ccaf_id"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                             <option value="">Sin CCAF</option>
                             <template x-for="ccaf in ccafs" :key="ccaf.id">
                                 <option :value="ccaf.id" x-text="ccaf.nombre"></option>
@@ -436,230 +526,272 @@ window.createEmployeeWizard = function () {
 
                     {{-- Sistema de Salud --}}
                     <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Sistema de Salud</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button type="button" @click="form.health_system = 'fonasa'; form.isapre_id = ''; form.health_contribution = ''"
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all text-left"
+                        <label class="block text-xs font-medium text-slate-600 mb-2">Sistema de Salud</label>
+                        <div class="flex gap-3">
+                            <button type="button"
+                                @click="form.health_system = 'fonasa'; form.isapre_id = ''; form.health_contribution = ''"
+                                class="flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all"
                                 :class="form.health_system === 'fonasa'
-                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                                    : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'">
-                                <i class="fas fa-hospital w-4 text-center text-xs flex-shrink-0"></i>
-                                <div>
-                                    <div>FONASA</div>
-                                    <div class="text-[10px] font-normal opacity-70">Fondo Nacional de Salud</div>
-                                </div>
+                                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'">
+                                FONASA
                             </button>
-                            <button type="button" @click="form.health_system = 'isapre'"
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all text-left"
+                            <button type="button"
+                                @click="form.health_system = 'isapre'"
+                                class="flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all"
                                 :class="form.health_system === 'isapre'
-                                    ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                                    : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'">
-                                <i class="fas fa-shield-alt w-4 text-center text-xs flex-shrink-0"></i>
-                                <div>
-                                    <div>ISAPRE</div>
-                                    <div class="text-[10px] font-normal opacity-70">Instituto de Salud Previsional</div>
-                                </div>
+                                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'">
+                                ISAPRE
                             </button>
                         </div>
                     </div>
 
-                    {{-- Isapre condicional --}}
-                    <div x-show="form.health_system === 'isapre'" class="col-span-2 grid grid-cols-2 gap-x-5 gap-y-4">
+                    {{-- Campos Isapre (condicional) --}}
+                    <div x-show="form.health_system === 'isapre'" class="col-span-2 grid grid-cols-2 gap-x-6 gap-y-4 pt-1"
+                        x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Institución Isapre</label>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Isapre</label>
                             <select x-model="form.isapre_id"
-                                class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                                <option value="">Seleccionar…</option>
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                                <option value="">Seleccionar Isapre…</option>
                                 <template x-for="isa in isapres" :key="isa.id">
                                     <option :value="isa.id" x-text="isa.nombre"></option>
                                 </template>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Cotización Pactada ($)</label>
-                            <input type="number" x-model="form.health_contribution" placeholder="0" min="0"
-                                class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Monto plan (UF)</label>
+                            <input type="number" x-model="form.health_contribution" placeholder="Ej: 3.25" step="0.01" min="0"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                         </div>
                     </div>
 
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">APV — Ahorro Previsional Voluntario ($)</label>
-                        <input type="number" x-model="form.apv_amount" placeholder="0 (opcional)" min="0"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                        <p class="mt-1 text-[10px] text-slate-400">Monto mensual destinado a Ahorro Previsional Voluntario.</p>
+                    {{-- APV --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">APV mensual ($)</label>
+                        <input type="number" x-model="form.apv_amount" placeholder="0" min="0"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                        <p class="mt-1 text-[10px] text-slate-400">Ahorro Previsional Voluntario</p>
                     </div>
 
                 </div>
             </div>
 
-            {{-- ─────── PASO 4: Remuneraciones ─────────────────────── --}}
+            {{-- ════ PASO 4: Sueldo ════════════════════════════════════ --}}
             <div x-show="currentStep === 4" x-cloak>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Remuneraciones</p>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Remuneración</p>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
 
+                    {{-- Sueldo base --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Sueldo Base ($)</label>
-                        <input type="number" x-model="form.salary" placeholder="0" min="0"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Sueldo Base ($)</label>
+                        <input type="number" x-model="form.salary" placeholder="Ej: 650000" min="0"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
+                    {{-- Periodicidad --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Periodicidad de Pago</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Periodicidad de pago</label>
                         <select x-model="form.salary_type"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                             <option value="mensual">Mensual</option>
                             <option value="quincenal">Quincenal</option>
                             <option value="semanal">Semanal</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Asig. de Colación ($)</label>
-                        <input type="number" x-model="form.meal_allowance" placeholder="0" min="0"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                        <p class="mt-1 text-[10px] text-slate-400">No imponible ni tributable.</p>
+                    {{-- Gratificación --}}
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-slate-600 mb-2">Gratificación Legal</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            @foreach([['art_47','Art. 47 (anual)'],['art_50','Art. 50 (mensual)'],['sin_gratificacion','Sin gratificación']] as [$val,$label])
+                            <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 cursor-pointer hover:bg-slate-100 transition-colors"
+                                @click="form.gratificacion = '{{ $val }}'">
+                                <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                                    :class="form.gratificacion === '{{ $val }}' ? 'border-slate-900' : 'border-slate-300'">
+                                    <div class="w-2 h-2 rounded-full bg-slate-900 transition-all"
+                                        :class="form.gratificacion === '{{ $val }}' ? 'opacity-100' : 'opacity-0'"></div>
+                                </div>
+                                <span class="text-xs font-medium text-slate-700">{{ $label }}</span>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
 
+                    {{-- Asignación de movilización --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Asig. de Movilización ($)</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Asignación de Movilización ($)</label>
                         <input type="number" x-model="form.mobility_allowance" placeholder="0" min="0"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                        <p class="mt-1 text-[10px] text-slate-400">No imponible ni tributable.</p>
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Número de Cargas Familiares</label>
-                        <input type="number" x-model="form.num_dependents" min="0" max="20"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                        <p class="mt-1 text-[10px] text-slate-400">Usado para el cálculo del Impuesto Único a la Renta.</p>
+                    {{-- Asignación de colación --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Asignación de Colación ($)</label>
+                        <input type="number" x-model="form.meal_allowance" placeholder="0" min="0"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
-                    <div class="col-span-2">
-                        <div class="flex items-start gap-3 bg-blue-50/60 rounded-xl px-4 py-3 border border-blue-100/80">
-                            <i class="fas fa-info-circle text-blue-400 mt-0.5 text-sm flex-shrink-0"></i>
-                            <p class="text-[11px] text-slate-500 leading-relaxed">
-                                La <strong class="font-semibold text-slate-700">gratificación</strong> se configura a nivel de empresa (Art. 47 o 50 del Código del Trabajo) y se aplica automáticamente al calcular la nómina.
-                            </p>
-                        </div>
+                    {{-- Cargas familiares --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">N° de Cargas Familiares</label>
+                        <input type="number" x-model="form.num_dependents" placeholder="0" min="0"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
 
                 </div>
             </div>
 
-            {{-- ─────── PASO 5: Método de Pago ─────────────────────── --}}
+            {{-- ════ PASO 5: Pago ══════════════════════════════════════ --}}
             <div x-show="currentStep === 5" x-cloak>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Método de Pago</p>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Información de Pago</p>
+                <div class="space-y-6">
 
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Banco</label>
-                        <select x-model="form.bank_id"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all">
-                            <option value="">Seleccionar banco…</option>
-                            <template x-for="banco in bancos" :key="banco.id">
-                                <option :value="banco.id" x-text="banco.nombre ?? banco.name"></option>
-                            </template>
-                        </select>
+                    {{-- Método de pago --}}
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-2">Medio de Pago</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            @foreach([['transferencia','Transferencia','M13 2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1v5h5M9 13h6M9 17h6M9 9h2'],['cheque','Cheque','M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],['efectivo','Efectivo','M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z']] as [$val,$label,$icon])
+                            <button type="button" @click="form.payment_method = '{{ $val }}'"
+                                class="flex flex-col items-center gap-2 rounded-xl border-2 px-4 py-4 transition-all"
+                                :class="form.payment_method === '{{ $val }}'
+                                    ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+                                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $icon }}"/>
+                                </svg>
+                                <span class="text-sm font-semibold">{{ $label }}</span>
+                            </button>
+                            @endforeach
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tipo de Cuenta</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <template x-for="tipo in [{v:'corriente',l:'Corriente'},{v:'vista',l:'Vista / RUT'},{v:'ahorro',l:'Ahorro'}]" :key="tipo.v">
-                                <button type="button" @click="form.bank_account_type = tipo.v"
-                                    class="px-2 py-2.5 rounded-lg border-2 text-xs font-semibold transition-all"
-                                    :class="form.bank_account_type === tipo.v
-                                        ? 'border-slate-900 bg-slate-900 text-white'
-                                        : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'"
-                                    x-text="tipo.l">
+                    {{-- Datos bancarios (solo si Transferencia) --}}
+                    <div x-show="form.payment_method === 'transferencia'"
+                        x-transition:enter="ease-out duration-300"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="grid grid-cols-2 gap-x-6 gap-y-5 pt-1"
+                    >
+                        <p class="col-span-2 text-xs font-semibold text-slate-500 uppercase tracking-widest">Datos Bancarios</p>
+
+                        {{-- Banco --}}
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Banco <span class="text-red-400">*</span></label>
+                            <select x-model="form.bank_id"
+                                class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                                :class="errors.bank_id ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                                <option value="">Seleccionar banco…</option>
+                                <template x-for="banco in bancos" :key="banco.id">
+                                    <option :value="banco.id" x-text="banco.nombre ?? banco.name"></option>
+                                </template>
+                            </select>
+                            <p x-show="errors.bank_id" class="mt-1 text-xs text-red-500" x-text="errors.bank_id"></p>
+                        </div>
+
+                        {{-- Número de cuenta --}}
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Número de Cuenta <span class="text-red-400">*</span></label>
+                            <input type="text" x-model="form.bank_account_number" placeholder="Ej: 00012345678"
+                                class="w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 font-mono"
+                                :class="errors.bank_account_number ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'">
+                            <p x-show="errors.bank_account_number" class="mt-1 text-xs text-red-500" x-text="errors.bank_account_number"></p>
+                        </div>
+
+                        {{-- Tipo de cuenta --}}
+                        <div class="col-span-2">
+                            <label class="block text-xs font-medium text-slate-600 mb-2">Tipo de Cuenta <span class="text-red-400">*</span></label>
+                            <div class="flex gap-3">
+                                @foreach([['corriente','Cuenta Corriente'],['vista','Cuenta Vista / RUT'],['ahorro','Cuenta de Ahorro']] as [$v,$l])
+                                <button type="button" @click="form.bank_account_type = '{{ $v }}'"
+                                    class="flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all"
+                                    :class="form.bank_account_type === '{{ $v }}'
+                                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'">
+                                    {{ $l }}
                                 </button>
-                            </template>
+                                @endforeach
+                            </div>
+                            <p x-show="errors.bank_account_type" class="mt-1 text-xs text-red-500" x-text="errors.bank_account_type"></p>
                         </div>
+
                     </div>
 
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Número de Cuenta</label>
-                        <input type="text" x-model="form.bank_account_number" placeholder="Ej: 00012345678"
-                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition-all font-mono tracking-wide">
+                    {{-- Mensaje info para efectivo/cheque --}}
+                    <div x-show="form.payment_method !== 'transferencia'"
+                        x-transition:enter="ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        class="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 px-5 py-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-slate-500">
+                            El pago por <strong class="text-slate-700" x-text="form.payment_method"></strong> no requiere datos bancarios.
+                            Podrás agregar información bancaria más tarde desde el perfil del colaborador.
+                        </p>
                     </div>
 
-                </div>
-
-                {{-- Resumen previo a crear --}}
-                <div class="mt-6 bg-slate-50 rounded-xl border border-slate-100 p-5">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Resumen</p>
-                    <div class="grid grid-cols-2 gap-x-6 gap-y-2.5 text-[11px]">
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">Nombre</span>
-                            <span class="font-semibold text-slate-700 text-right" x-text="(form.first_name + ' ' + form.last_name).trim() || '—'"></span>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">RUT</span>
-                            <span class="font-semibold text-slate-700 font-mono" x-text="form.rut || '—'"></span>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">Correo</span>
-                            <span class="font-semibold text-slate-700 truncate ml-2" x-text="form.email || '—'"></span>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">Cargo</span>
-                            <span class="font-semibold text-slate-700" x-text="form.position || '—'"></span>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">Sueldo Base</span>
-                            <span class="font-semibold text-slate-700" x-text="form.salary ? '$ ' + Number(form.salary).toLocaleString('es-CL') : '—'"></span>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <span class="text-slate-400 flex-shrink-0">Salud</span>
-                            <span class="font-semibold text-slate-700 uppercase" x-text="form.health_system || '—'"></span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-        </div>{{-- /content --}}
+        </div>{{-- /form-body --}}
 
-        {{-- ── Footer de Navegación ────────────────────────────────── --}}
-        <div class="flex items-center justify-between px-7 py-4 border-t border-slate-100 bg-slate-50/60 flex-shrink-0 rounded-b-2xl">
+        {{-- ── Footer ──────────────────────────────────────────────── --}}
+        <div class="flex items-center justify-between px-8 py-5 border-t border-slate-100 bg-slate-50/60 flex-shrink-0">
 
-            <button type="button" @click="prev()"
-                x-show="currentStep > 1"
-                class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600 rounded-xl border border-slate-200 hover:bg-white hover:shadow-sm transition-all">
-                <i class="fas fa-arrow-left text-xs"></i>
-                Anterior
-            </button>
-            <div x-show="currentStep === 1"></div>
+            {{-- Izquierda: Atrás / Cancelar --}}
+            <div>
+                <button x-show="currentStep > 1" @click="prev()" type="button" :disabled="loading"
+                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-all disabled:opacity-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Atrás
+                </button>
+                <button x-show="currentStep === 1" @click="close()" type="button" :disabled="loading"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-medium text-slate-500 bg-white border border-slate-200 hover:bg-slate-100 transition-all disabled:opacity-50">
+                    Cancelar
+                </button>
+            </div>
 
-            <div class="flex items-center gap-4">
-                <span class="text-[10px] font-semibold text-slate-300 tabular-nums" x-text="`${currentStep} / ${totalSteps}`"></span>
+            {{-- Derecha: Siguiente / Guardar --}}
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400 mr-1" x-text="`Paso ${currentStep} de ${totalSteps}`"></span>
 
-                <button type="button" @click="next()"
-                    x-show="currentStep < totalSteps"
-                    class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 shadow-sm transition-all">
-                    Continuar
-                    <i class="fas fa-arrow-right text-xs"></i>
+                <button x-show="currentStep < totalSteps" @click="next()" type="button" :disabled="loading"
+                    class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 shadow-sm transition-all disabled:opacity-60">
+                    Siguiente
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </button>
 
-                <button type="button" @click="submit()"
-                    x-show="currentStep === totalSteps"
+                <button x-show="currentStep === totalSteps" @click="submit()" type="button"
                     :disabled="loading"
-                    class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-all disabled:opacity-60">
                     <template x-if="!loading">
-                        <span class="flex items-center gap-2">
-                            <i class="fas fa-user-plus text-xs"></i>
-                            Crear Colaborador
-                        </span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                     </template>
                     <template x-if="loading">
-                        <span class="flex items-center gap-2">
-                            <i class="fas fa-spinner fa-spin text-xs"></i>
-                            Creando…
-                        </span>
+                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
                     </template>
+                    <span x-text="loading ? 'Guardando...' : 'Guardar Colaborador'"></span>
                 </button>
             </div>
 
-        </div>
+        </div>{{-- /footer --}}
 
-    </div>
-</div>
+    </div>{{-- /panel --}}
+</div>{{-- /overlay --}}

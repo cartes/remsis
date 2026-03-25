@@ -295,7 +295,7 @@
                     // Carga inicial
                     async init() {
                         try {
-                            const resp = await axios.get("{{ route('settings.ccafs.json') }}", {
+                            const resp = await axios.get("{{ route('settings.ccafs.json', [], false) }}", {
                                 headers: {
                                     Accept: 'application/json'
                                 }
@@ -316,7 +316,7 @@
                         }
 
                         try {
-                            const resp = await axios.get("{{ route('settings.bancos.json') }}", {
+                            const resp = await axios.get("{{ route('settings.bancos.json', [], false) }}", {
                                 headers: {
                                     Accept: 'application/json'
                                 }
@@ -337,7 +337,7 @@
 
                         this.savingEssential = true;
                         try {
-                            const resp = await axios.post("{{ route('companies.store') }}", this.formEssential, {
+                            const resp = await axios.post("{{ route('companies.store', [], false) }}", this.formEssential, {
                                 headers: {
                                     'Accept': 'application/json'
                                 }

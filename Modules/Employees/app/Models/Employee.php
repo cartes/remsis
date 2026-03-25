@@ -63,6 +63,7 @@ class Employee extends Model
         'mobility_allowance',
         'gender',
         'health_system',
+        'payment_method',
     ];
 
     protected $casts = [

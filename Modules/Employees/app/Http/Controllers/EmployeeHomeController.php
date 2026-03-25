@@ -35,7 +35,9 @@ class EmployeeHomeController extends Controller
     {
         $user = auth()->user();
 
-        $employee = $user->employee()->with('company')->first();
+        $employee = $user->employee()
+            ->with(['company', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter'])
+            ->first();
 
         return view('employees::profile.show', compact('user', 'employee'));
     }

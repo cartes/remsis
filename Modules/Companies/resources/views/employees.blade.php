@@ -412,7 +412,7 @@
                         this.loading = true;
                         this.errors = {};
                         try {
-                            const response = await axios.post("{{ route('companies.employees.store', $company) }}",
+                            const response = await axios.post("{{ route('companies.employees.store', $company, false) }}",
                                 this
                                 .newEmployee);
                             if (response.data.status === "success") {

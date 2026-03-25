@@ -6,6 +6,7 @@ use App\Rules\Rut;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,7 @@ class CompanyEmployeeController extends Controller
             'gender'              => 'nullable|string|max:50',
             'phone'               => 'nullable|string|max:30',
             'address'             => 'nullable|string|max:500',
+            'nationality'         => 'nullable|string|max:100',
             // Laboral
             'position'            => 'nullable|string|max:255',
             'hire_date'           => 'nullable|date',
@@ -52,9 +54,10 @@ class CompanyEmployeeController extends Controller
             'mobility_allowance'  => 'nullable|numeric|min:0',
             'num_dependents'      => 'nullable|integer|min:0',
             // Pago
-            'bank_id'             => 'nullable|exists:banks,id',
-            'bank_account_type'   => 'nullable|in:corriente,vista,ahorro',
-            'bank_account_number' => 'nullable|string|max:50',
+            'payment_method'      => 'nullable|in:transferencia,cheque,efectivo',
+            'bank_id'             => 'nullable|required_if:payment_method,transferencia|exists:banks,id',
+            'bank_account_type'   => 'nullable|required_if:payment_method,transferencia|in:corriente,vista,ahorro',
+            'bank_account_number' => 'nullable|required_if:payment_method,transferencia|string|max:50',
         ]);
 
         DB::beginTransaction();
@@ -81,6 +84,7 @@ class CompanyEmployeeController extends Controller
                 'gender'              => $validated['gender'] ?? null,
                 'phone'               => $validated['phone'] ?? null,
                 'address'             => $validated['address'] ?? null,
+                'nationality'         => $validated['nationality'] ?? null,
                 'position'            => $validated['position'] ?? null,
                 'hire_date'           => $validated['hire_date'] ?? null,
                 'contract_type'       => $validated['contract_type'] ?? null,
@@ -100,6 +104,7 @@ class CompanyEmployeeController extends Controller
                 'bank_id'             => $validated['bank_id'] ?? null,
                 'bank_account_type'   => $validated['bank_account_type'] ?? null,
                 'bank_account_number' => $validated['bank_account_number'] ?? null,
+                'payment_method'      => $validated['payment_method'] ?? 'efectivo',
                 'is_in_payroll'       => true,
                 'status'              => 'active',
             ]);
@@ -107,9 +112,15 @@ class CompanyEmployeeController extends Controller
             DB::commit();
         } catch (Throwable $e) {
             DB::rollBack();
+            Log::error('Error al crear colaborador: ' . $e->getMessage(), [
+                'file'    => $e->getFile() . ':' . $e->getLine(),
+                'company' => $company->id,
+            ]);
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Error al crear el colaborador. Por favor intenta nuevamente.',
+                'message' => config('app.debug')
+                    ? $e->getMessage()
+                    : 'Error al crear el colaborador. Por favor intenta nuevamente.',
             ], 500);
         }
 
