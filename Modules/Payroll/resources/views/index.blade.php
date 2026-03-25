@@ -52,7 +52,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-wider">
                     <tr>
-                        <th class="px-6 py-4 text-left">Empleado</th>
+                        <th class="px-6 py-4 text-left">Colaborador</th>
                         <th class="px-6 py-4 text-left">Periodo</th>
                         <th class="px-6 py-4 text-center">Tipo</th>
                         <th class="px-6 py-4 text-right">Monto Líquido</th>
@@ -65,7 +65,7 @@
                         <tr class="hover:bg-gray-50 transition-colors group">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-bold text-gray-800">{{ $payroll->employee->user->name ?? 'N/A' }}</div>
-                                <div class="text-[11px] text-gray-500">{{ $payroll->employee->position ?? 'Empleado' }}
+                                <div class="text-[11px] text-gray-500">{{ $payroll->employee->position ?? 'Colaborador' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-gray-600">

@@ -18,7 +18,7 @@
             <div
                 class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Empleados</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Colaboradores</p>
                     <h3 class="text-3xl font-black text-gray-900">{{ $totalEmployees }}</h3>
                 </div>
                 <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
@@ -30,7 +30,7 @@
             <div
                 class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Empleados Activos</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Colaboradores Activos</p>
                     <h3 class="text-3xl font-black text-green-600">{{ $activeEmployees }}</h3>
                 </div>
                 <div class="p-3 bg-green-50 text-green-600 rounded-xl">
@@ -104,10 +104,10 @@
                     <div class="relative z-10">
                         <h4 class="text-2xl font-black mb-2 italic">Procesamiento de Payroll</h4>
                         <p class="text-blue-100 text-sm mb-6 max-w-md">Optimiza la gestión de tu empresa asegurando que
-                            todas las fichas de empleados estén completas sobre el 90%.</p>
+                            todas las fichas de colaboradores estén completas sobre el 90%.</p>
                         <a href="{{ route('companies.employees', $company) }}"
                             class="inline-flex items-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-xl font-black text-sm hover:bg-blue-50 transition-all shadow-lg transform hover:-translate-y-0.5">
-                            Revisar Nómina <i class="fas fa-arrow-right"></i>
+                            Revisar Colaboradores <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
                     <i class="fas fa-rocket absolute -right-4 -bottom-4 text-white/10 text-[180px] -rotate-12"></i>
@@ -193,7 +193,7 @@
                                 </div>
                                 <div class="ml-2 text-sm">
                                     <label for="is_in_payroll" class="font-bold text-gray-700">¿Será parte de la nómina de la empresa?</label>
-                                    <p class="text-[11px] font-medium text-gray-500 mt-1">Marca esta casilla si el administrador recibirá pagos o generará liquidaciones como empleado de <strong>{{ $company->razon_social }}</strong>.</p>
+                                    <p class="text-[11px] font-medium text-gray-500 mt-1">Marca esta casilla si el administrador recibirá pagos o generará liquidaciones como colaborador de <strong>{{ $company->razon_social }}</strong>.</p>
                                 </div>
                             </div>
                         </div>

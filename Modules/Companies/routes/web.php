@@ -19,7 +19,7 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::get('companies/{company}/employees', [CompaniesController::class, 'employees'])
         ->name('companies.employees');
 
-    // Gestión de Empleados (Nómina) dentro de Empresa
+    // Gestión de Colaboradores (Nómina) dentro de Empresa
     Route::post('companies/{company}/employees', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'store'])
         ->name('companies.employees.store');
     Route::get('companies/{company}/employees/search', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'search'])

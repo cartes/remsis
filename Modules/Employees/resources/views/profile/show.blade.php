@@ -1,5 +1,5 @@
 <x-adminpanel::layouts.master>
-    @section('title', 'Perfil de empleado')
+    @section('title', 'Perfil de colaborador')
 
     @section('content')
         <div class="max-w-5xl mx-auto">

@@ -10,7 +10,7 @@
                     </div>
                     <div>
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">No hay empresas registradas</h3>
-                        <p class="text-gray-500">Comienza creando tu primera empresa para gestionar empleados y nóminas.</p>
+                        <p class="text-gray-500">Comienza creando tu primera empresa para gestionar colaboradores y nóminas.</p>
                     </div>
                     <a href="{{ route('companies.create') }}"
                         class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg font-bold">
@@ -95,7 +95,7 @@
                                                 <a href="{{ route('companies.employees', $company) }}"
                                                     class="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-green-50 transition-all">
                                                     <i class="fas fa-users"></i>
-                                                    Empleados
+                                                    Colaboradores
                                                 </a>
                                             </div>
                                         </td>

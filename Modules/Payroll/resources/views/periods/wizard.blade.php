@@ -75,11 +75,11 @@
                                 </path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900">No hay empleados calculados</h3>
+                        <h3 class="text-lg font-medium text-gray-900">No hay colaboradores calculados</h3>
                         <p class="mt-2 text-sm text-gray-500 max-w-md mx-auto">Aún no se ha procesado la nómina para
                             este
                             período. Haz clic en el botón "Calcular Nómina" para generar los registros basados en los
-                            empleados activos.</p>
+                            colaboradores activos.</p>
 
                         @if ($period->status == 'draft' || $period->status == 'open')
                             <div class="mt-6">
@@ -142,7 +142,7 @@
                                     <tr>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                            Empleado</th>
+                                            Colaborador</th>
                                         <th scope="col"
                                             class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Base Imp.</th>

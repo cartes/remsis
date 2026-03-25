@@ -20,7 +20,7 @@
         </div>
         <div>
             <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none">
-                {{ $employee->full_name ?: 'Empleado sin nombre' }}
+                {{ $employee->full_name ?: 'Colaborador sin nombre' }}
             </h1>
             <p class="text-sm text-slate-500 mt-1 font-medium">
                 {{ $employee->position ?? 'Sin cargo asignado' }}
@@ -127,7 +127,7 @@
                     </label>
                     <input type="email" name="email"
                         value="{{ old('email', $employee->email) }}"
-                        placeholder="empleado@empresa.cl"
+                        placeholder="colaborador@empresa.cl"
                         class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('email') border-red-400 bg-red-50 @enderror">
                     @error('email')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
                 </div>
@@ -486,7 +486,7 @@
                 <div>
                     <p class="text-sm font-black text-slate-800">Genera Liquidación de Sueldo</p>
                     <p class="text-xs text-slate-500 mt-0.5 font-medium">
-                        Al desactivar, el empleado queda excluido del cálculo de nómina mensual.
+                        Al desactivar, el colaborador queda excluido del cálculo de nómina mensual.
                     </p>
                 </div>
                 <label x-data="{ on: {{ $employee->is_in_payroll ? 'true' : 'false' }} }"

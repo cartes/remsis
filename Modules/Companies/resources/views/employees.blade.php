@@ -1,5 +1,5 @@
 <x-layouts.company :company="$company" activeTab="employees">
-    @section('title', 'Nómina de Empleados - ' . $company->razon_social)
+    @section('title', 'Nómina de Colaboradores - ' . $company->razon_social)
 
     <div class="max-w-7xl mx-auto" x-data="employeeComponent()">
 
@@ -8,18 +8,18 @@
             <div>
                 <x-breadcrumb :items="[
                     ['label' => 'Panel de Control', 'url' => route('companies.dashboard', $company)],
-                    ['label' => 'Nómina'],
-                    ['label' => 'Nómina de Empleados']
+                    ['label' => 'Colaboradores'],
+                    ['label' => 'Nómina de Colaboradores']
                 ]" />
-                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Nómina de Empleados</h2>
-                <p class="text-sm text-gray-500 mt-1">Gestión de empleados vinculados a esta empresa.</p>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Nómina de Colaboradores</h2>
+                <p class="text-sm text-gray-500 mt-1">Gestión de colaboradores vinculados a esta empresa.</p>
             </div>
             <div class="flex items-center gap-4">
-                {{-- Buscador de Empleados --}}
+                {{-- Buscador de Colaboradores --}}
                 <div class="relative" @click.away="showSearchResults = false">
                     <div class="relative">
                         <input type="text" x-model="searchTerm" @input.debounce.300ms="fetchEmployeesSearch()"
-                            placeholder="Buscar empleado..."
+                            placeholder="Buscar colaborador..."
                             class="w-64 pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400 text-xs"></i>
@@ -57,14 +57,14 @@
                     {{-- No se encontraron resultados --}}
                     <div x-show="showSearchResults && searchResults.length === 0 && searchTerm.length >= 3" x-cloak
                         class="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-4 text-center">
-                        <p class="text-sm text-gray-400">No se encontraron empleados</p>
+                        <p class="text-sm text-gray-400">No se encontraron colaboradores</p>
                     </div>
                 </div>
 
-                <button type="button" @click="showAddEmployeeModal = true"
-                    class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Nuevo Empleado</span>
+                <button type="button" @click="$dispatch('open-create-wizard')"
+                    class="bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
+                    <i class="fas fa-user-plus text-xs"></i>
+                    <span>Nuevo Colaborador</span>
                 </button>
             </div>
         </div>
@@ -104,7 +104,7 @@
                                     <span>Nombre / Email</span>
                                     <div
                                         class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 left-0 whitespace-nowrap normal-case tracking-normal">
-                                        Nombre y correo electrónico del empleado
+                                        Nombre y correo electrónico del colaborador
                                         <div class="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45"></div>
                                     </div>
                                 </div>
@@ -138,7 +138,7 @@
                                     <span>Acciones</span>
                                     <div
                                         class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 right-0 whitespace-nowrap normal-case tracking-normal">
-                                        Acciones de gestión de empleado
+                                        Acciones de gestión de colaborador
                                         <div class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 rotate-45"></div>
                                     </div>
                                 </div>
@@ -208,7 +208,7 @@
                                         <button type="button"
                                             @click="removeEmployee({{ $emp->user->id }}, @js($emp->user->name))"
                                             class="inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-100 bg-red-50/60 text-xs font-semibold"
-                                            title="Desvincular empleado">
+                                            title="Desvincular colaborador">
                                             <i class="fas fa-trash-can text-[11px]"></i>
                                             <span>Desvincular</span>
                                         </button>
@@ -220,7 +220,7 @@
                                 <td colspan="4" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center opacity-30">
                                         <i class="fas fa-users-slash text-5xl mb-4"></i>
-                                        <p class="text-sm font-medium">No hay empleados registrados en esta empresa
+                                        <p class="text-sm font-medium">No hay colaboradores registrados en esta empresa
                                         </p>
                                     </div>
                                 </td>
@@ -232,69 +232,7 @@
         </div>
 
         {{-- Add Employee Modal --}}
-        <div x-show="showAddEmployeeModal" x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0" x-cloak
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[60] flex items-center justify-center p-4">
-
-            <div @click.away="showAddEmployeeModal = false"
-                class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">Agregar Nuevo Empleado</h3>
-                    <button @click="showAddEmployeeModal = false"
-                        class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-
-                <form @submit.prevent="addEmployee" class="p-6 space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nombre
-                            Completo</label>
-                        <input type="text" x-model="newEmployee.name" placeholder="Ej: Juan Pérez"
-                            :class="errors.name ? 'border-red-500 ring-red-100' : 'border-gray-200'"
-                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <template x-if="errors.name">
-                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.name[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Correo
-                            Electrónico</label>
-                        <input type="email" x-model="newEmployee.email" placeholder="juan@ejemplo.com"
-                            :class="errors.email ? 'border-red-500 ring-red-100' : 'border-gray-200'"
-                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <template x-if="errors.email">
-                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.email[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contraseña
-                            Inicial</label>
-                        <input type="password" x-model="newEmployee.password"
-                            :class="errors.password ? 'border-red-500 ring-red-100' : 'border-gray-200'"
-                            class="w-full px-4 py-2.5 bg-white border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <template x-if="errors.password">
-                            <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.password[0]"></p>
-                        </template>
-                    </div>
-
-                    <div class="pt-4 flex gap-3">
-                        <button type="button" @click="showAddEmployeeModal = false"
-                            class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">
-                            Cancelar
-                        </button>
-                        <button type="submit" :disabled="loading"
-                            class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                            <i class="fas fa-spinner fa-spin" x-show="loading"></i>
-                            <i class="fas fa-user-plus" x-show="!loading"></i>
-                            <span x-text="loading ? 'Procesando...' : 'Crear Empleado'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        @include('companies::partials.create_employee_wizard')
 
         @include('companies::partials.payroll_modal')
     </div>
@@ -499,13 +437,13 @@
                             if (error.response?.status === 422) {
                                 this.errors = Object.assign({}, error.response.data.errors);
                             } else {
-                                toast(error.response?.data?.message || "Error al crear empleado", "error");
+                                toast(error.response?.data?.message || "Error al crear colaborador", "error");
                             }
                         } finally {
                             this.loading = false;
                         }
                     },
-                    async removeEmployee(userId, employeeName = "este empleado") {
+                    async removeEmployee(userId, employeeName = "este colaborador") {
                         if (!confirm(`¿Seguro que deseas desvincular a ${employeeName}?`)) return;
                         try {
                             const url = "{{ route('companies.employees.destroy', [$company, ':id']) }}".replace(
@@ -516,7 +454,7 @@
                                 window.location.reload();
                             }
                         } catch (error) {
-                            toast("Error al desvincular empleado", "error");
+                            toast("Error al desvincular colaborador", "error");
                         }
                     },
                     async openPayrollModal(employeeId) {
@@ -597,7 +535,7 @@
                                 console.log("Validation Errors:", this.errors);
                                 toast("Hay errores de validación en el formulario", "error");
                             } else {
-                                toast("Error al actualizar datos de nómina", "error");
+                                toast("Error al actualizar datos de colaborador", "error");
                             }
                         } finally {
                             this.payrollLoading = false;

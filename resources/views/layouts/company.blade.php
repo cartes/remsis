@@ -197,19 +197,19 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                                     class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
                                     <i
                                         class="fas fa-building w-4 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Datos empresa
+                                    Organización
+                                </a>
+                                <a href="{{ route('companies.employees', $company) }}"
+                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
+                                    <i
+                                        class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                    Colaboradores
                                 </a>
                                 <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
                                     class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isRemunerationsActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
                                     <i
                                         class="fas fa-money-bill-wave w-4 text-center {{ $isRemunerationsActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
                                     Remuneraciones
-                                </a>
-                                <a href="{{ route('companies.employees', $company) }}"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
-                                    <i
-                                        class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Nómina de empleados
                                 </a>
                                 <a href="{{ route('companies.freelancers.index', $company) }}"
                                     class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ ($activeTab ?? '') === 'honorarios' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
@@ -226,7 +226,14 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                                 class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
                                 <i
                                     class="fas fa-building w-4 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Datos empresa</span>
+                                <span x-show="!sidebarCollapsed">Organización</span>
+                            </a>
+
+                            <a href="{{ route('companies.employees', $company) }}"
+                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
+                                <i
+                                    class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
+                                <span x-show="!sidebarCollapsed">Colaboradores</span>
                             </a>
 
                             <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
@@ -234,13 +241,6 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                                 <i
                                     class="fas fa-money-bill-wave w-4 text-center {{ $isRemunerationsActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
                                 <span x-show="!sidebarCollapsed">Remuneraciones</span>
-                            </a>
-
-                            <a href="{{ route('companies.employees', $company) }}"
-                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
-                                <i
-                                    class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Nómina de empleados</span>
                             </a>
 
                             <a href="{{ route('companies.freelancers.index', $company) }}"

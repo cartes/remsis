@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
 use Modules\Users\Models\User;
@@ -20,33 +21,103 @@ class CompanyEmployeeController extends Controller
         $this->authorizeCompanyAccess($company);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
+            // Cuenta de acceso
+            'first_name'          => 'required|string|max:255',
+            'last_name'           => 'required|string|max:255',
+            'email'               => 'required|email|unique:users,email',
+            'password'            => 'required|min:6',
+            // Personal
+            'rut'                 => ['nullable', 'string', new Rut],
+            'birth_date'          => 'nullable|date',
+            'gender'              => 'nullable|string|max:50',
+            'phone'               => 'nullable|string|max:30',
+            'address'             => 'nullable|string|max:500',
+            // Laboral
+            'position'            => 'nullable|string|max:255',
+            'hire_date'           => 'nullable|date',
+            'contract_type'       => 'nullable|string|max:50',
+            'work_schedule_type'  => 'nullable|in:full_time,part_time',
+            'cost_center_id'      => 'nullable|exists:cost_centers,id',
+            // Previsión
+            'afp_id'              => 'nullable|exists:afps,id',
+            'health_system'       => 'nullable|in:fonasa,isapre',
+            'isapre_id'           => 'nullable|exists:isapres,id',
+            'health_contribution' => 'nullable|numeric|min:0',
+            'ccaf_id'             => 'nullable|exists:ccafs,id',
+            'apv_amount'          => 'nullable|numeric|min:0',
+            // Remuneraciones
+            'salary'              => 'nullable|numeric|min:0',
+            'salary_type'         => 'nullable|in:mensual,quincenal,semanal',
+            'meal_allowance'      => 'nullable|numeric|min:0',
+            'mobility_allowance'  => 'nullable|numeric|min:0',
+            'num_dependents'      => 'nullable|integer|min:0',
+            // Pago
+            'bank_id'             => 'nullable|exists:banks,id',
+            'bank_account_type'   => 'nullable|in:corriente,vista,ahorro',
+            'bank_account_number' => 'nullable|string|max:50',
         ]);
 
-        // 1. Crear el usuario
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'status' => true,
-        ]);
+        DB::beginTransaction();
+        try {
+            // 1. Crear usuario
+            $user = User::create([
+                'name'       => trim($validated['first_name'] . ' ' . $validated['last_name']),
+                'email'      => $validated['email'],
+                'password'   => Hash::make($validated['password']),
+                'status'     => true,
+            ]);
 
-        // 2. Asignar rol employee
-        $user->assignRole('employee');
+            $user->assignRole('employee');
 
-        // 3. Vincular a la empresa vía el modelo Employee
-        $employee = Employee::create([
-            'user_id' => $user->id,
-            'company_id' => $company->id,
-        ]);
+            // 2. Crear registro de empleado con todos los campos del wizard
+            $employee = Employee::create([
+                'user_id'             => $user->id,
+                'company_id'          => $company->id,
+                'first_name'          => $validated['first_name'],
+                'last_name'           => $validated['last_name'],
+                'email'               => $validated['email'],
+                'rut'                 => $validated['rut'] ?? null,
+                'birth_date'          => $validated['birth_date'] ?? null,
+                'gender'              => $validated['gender'] ?? null,
+                'phone'               => $validated['phone'] ?? null,
+                'address'             => $validated['address'] ?? null,
+                'position'            => $validated['position'] ?? null,
+                'hire_date'           => $validated['hire_date'] ?? null,
+                'contract_type'       => $validated['contract_type'] ?? null,
+                'work_schedule_type'  => $validated['work_schedule_type'] ?? 'full_time',
+                'cost_center_id'      => $validated['cost_center_id'] ?? null,
+                'afp_id'              => $validated['afp_id'] ?? null,
+                'health_system'       => $validated['health_system'] ?? 'fonasa',
+                'isapre_id'           => $validated['isapre_id'] ?? null,
+                'health_contribution' => $validated['health_contribution'] ?? null,
+                'ccaf_id'             => $validated['ccaf_id'] ?? null,
+                'apv_amount'          => $validated['apv_amount'] ?? null,
+                'salary'              => $validated['salary'] ?? null,
+                'salary_type'         => $validated['salary_type'] ?? 'mensual',
+                'meal_allowance'      => $validated['meal_allowance'] ?? null,
+                'mobility_allowance'  => $validated['mobility_allowance'] ?? null,
+                'num_dependents'      => $validated['num_dependents'] ?? 0,
+                'bank_id'             => $validated['bank_id'] ?? null,
+                'bank_account_type'   => $validated['bank_account_type'] ?? null,
+                'bank_account_number' => $validated['bank_account_number'] ?? null,
+                'is_in_payroll'       => true,
+                'status'              => 'active',
+            ]);
 
-        session()->flash('success', 'Empleado creado y vinculado correctamente.');
+            DB::commit();
+        } catch (Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error al crear el colaborador. Por favor intenta nuevamente.',
+            ], 500);
+        }
+
+        session()->flash('success', 'Colaborador creado y vinculado correctamente.');
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Empleado creado y vinculado correctamente.',
+            'message' => 'Colaborador creado y vinculado correctamente.',
             'employee' => [
                 'id' => $employee->id, // Add this line
                 'user_id' => $user->id,
@@ -75,12 +146,12 @@ class CompanyEmployeeController extends Controller
 
             // Opcional: si queremos borrar al usuario físico si no tiene otros roles
             // $user->delete();
-            session()->flash('success', 'Empleado desvinculado de la empresa.');
+            session()->flash('success', 'Colaborador desvinculado de la empresa.');
         }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Empleado desvinculado de la empresa.',
+            'message' => 'Colaborador desvinculado de la empresa.',
         ]);
     }
 

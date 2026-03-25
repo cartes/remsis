@@ -14,7 +14,7 @@
                     <i class="fas fa-file-invoice-dollar text-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800">Ficha de Nómina</h3>
+                    <h3 class="text-lg font-bold text-gray-800">Ficha de Colaborador</h3>
                     <p class="text-xs text-gray-500" x-text="selectedEmployee.user.name"></p>
                 </div>
             </div>
@@ -286,7 +286,7 @@
                     </div>
                     <div class="ml-2 text-sm">
                         <label for="edit_is_in_payroll" class="font-bold text-gray-700">¿Es parte de la nómina de la empresa?</label>
-                        <p class="text-xs font-medium text-gray-500">Si desmarcas esta opción el empleado no se contabilizará ni aparecerá al momento de calcular los pagos del mes.</p>
+                        <p class="text-xs font-medium text-gray-500">Si desmarcas esta opción el colaborador no se contabilizará ni aparecerá al momento de calcular los pagos del mes.</p>
                     </div>
                 </div>
 

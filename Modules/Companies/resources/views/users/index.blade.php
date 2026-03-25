@@ -209,7 +209,7 @@
                                                     nómina de la empresa?</label>
                                                 <p class="text-xs font-medium text-gray-500">Marca esta casilla si el
                                                     usuario recibirá pagos o generará liquidación de sueldo como
-                                                    empleado. Déjalo desmarcado si es personal externo (Ej. oficina
+                                                    colaborador. Déjalo desmarcado si es personal externo (Ej. oficina
                                                     contable).</p>
                                             </div>
                                         </div>

@@ -22,7 +22,7 @@
 
             <!-- KPI Segments (Payroll Centric) -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                @foreach (['active_companies' => ['Empresas Activas', 'fa-building', 'indigo'], 'active_employees' => ['Empleados Activos', 'fa-user-group', 'blue'], 'social_security' => ['Previred Pendiente', 'fa-shield-heart', 'rose']] as $key => $meta)
+                @foreach (['active_companies' => ['Empresas Activas', 'fa-building', 'indigo'], 'active_employees' => ['Colaboradores Activos', 'fa-user-group', 'blue'], 'social_security' => ['Previred Pendiente', 'fa-shield-heart', 'rose']] as $key => $meta)
                     <div
                         class="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div class="flex items-start justify-between">
