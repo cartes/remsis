@@ -59,8 +59,6 @@ class Employee extends Model
         'is_in_payroll',
         'emergency_contact_name',
         'emergency_contact_phone',
-        'meal_allowance',
-        'mobility_allowance',
         'gender',
         'health_system',
         'payment_method',
@@ -116,6 +114,15 @@ class Employee extends Model
     public function costCenter()
     {
         return $this->belongsTo(\Modules\Companies\Models\CostCenter::class);
+    }
+
+    /**
+     * Relación con ítems asignados al colaborador.
+     * Usa FQCN string para evitar dependencia circular de namespace con el módulo Payroll.
+     */
+    public function employeeItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany('Modules\Payroll\Models\EmployeeItem', 'employee_id');
     }
 
     protected $appends = ['full_name', 'completion_percentage'];

@@ -24,8 +24,30 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
         ->name('companies.employees.store');
     Route::get('companies/{company}/employees/search', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'search'])
         ->name('companies.employees.search');
+    Route::get('companies/{company}/employees/{employee}/edit', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'edit'])
+        ->name('companies.employees.edit');
+    Route::patch('companies/{company}/employees/{employee}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'update'])
+        ->name('companies.employees.update');
     Route::delete('companies/{company}/employees/{user}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroy'])
         ->name('companies.employees.destroy');
+
+    // Employee Items CRUD
+    Route::post('companies/{company}/employees/{employee}/items', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'storeItem'])
+        ->name('companies.employees.items.store');
+    Route::patch('companies/{company}/employees/{employee}/items/{employeeItem}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'updateItem'])
+        ->name('companies.employees.items.update');
+    Route::delete('companies/{company}/employees/{employee}/items/{employeeItem}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroyItem'])
+        ->name('companies.employees.items.destroy');
+
+    // Catálogo de Ítems de la Empresa
+    Route::get('companies/{company}/items-catalog', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'index'])
+        ->name('companies.items.index');
+    Route::post('companies/{company}/items-catalog', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'store'])
+        ->name('companies.items.store');
+    Route::patch('companies/{company}/items-catalog/{item}', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'update'])
+        ->name('companies.items.update');
+    Route::delete('companies/{company}/items-catalog/{item}', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'destroy'])
+        ->name('companies.items.destroy');
 
     // Detalle de Nómina (para el Modal)
     Route::get('companies/{company}/employees/{employee}/payroll', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'getPayroll'])

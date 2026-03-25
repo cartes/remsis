@@ -516,38 +516,17 @@
                     @error('salary')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
                 </div>
 
-                {{-- Colación --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Asignación Colación
-                        <span class="text-slate-400 font-medium normal-case">(no imponible)</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                        <input type="number" name="meal_allowance"
-                            value="{{ old('meal_allowance', $employee->meal_allowance) }}"
-                            placeholder="0"
-                            min="0"
-                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('meal_allowance') border-red-400 bg-red-50 @enderror">
+                {{-- Colación y Movilización — ahora gestionadas en Ítems --}}
+                <div class="col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-700 mb-1">Colación y Movilización</p>
+                            <p class="text-xs text-slate-500">Estos haberes se gestionan desde la ficha del colaborador → pestaña <strong>Ítems</strong>.</p>
+                        </div>
                     </div>
-                    @error('meal_allowance')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Movilización --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Asignación Movilización
-                        <span class="text-slate-400 font-medium normal-case">(no imponible)</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                        <input type="number" name="mobility_allowance"
-                            value="{{ old('mobility_allowance', $employee->mobility_allowance) }}"
-                            placeholder="0"
-                            min="0"
-                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('mobility_allowance') border-red-400 bg-red-50 @enderror">
-                    </div>
-                    @error('mobility_allowance')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
                 </div>
 
             </div>{{-- /grid --}}

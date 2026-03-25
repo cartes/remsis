@@ -8,6 +8,8 @@ use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\LegalParameter;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
+use Modules\Payroll\Models\EmployeeItem;
+use Modules\Payroll\Models\Item;
 use Modules\Payroll\Models\PayrollPeriod;
 use Modules\Payroll\Services\ProcessEmployeePayroll;
 use Modules\Users\Models\User;
@@ -58,11 +60,29 @@ class ProcessEmployeePayrollTest extends TestCase
             'salary' => 1000000,
             'afp_id' => $afp->id,
             'contract_type' => 'indefinido',
-            'meal_allowance' => 50000,
-            'mobility_allowance' => 50000,
             'status' => 'active',
             'is_in_payroll' => true,
         ]);
+
+        // Colación y movilización ahora viven en employee_items
+        $colacion = Item::create([
+            'company_id' => $this->company->id,
+            'name' => 'Colación',
+            'code' => 'COLACION',
+            'type' => 'haber_no_imponible',
+            'is_taxable' => false,
+            'is_gratification_base' => false,
+        ]);
+        $movilizacion = Item::create([
+            'company_id' => $this->company->id,
+            'name' => 'Movilización',
+            'code' => 'MOVILIZACION',
+            'type' => 'haber_no_imponible',
+            'is_taxable' => false,
+            'is_gratification_base' => false,
+        ]);
+        EmployeeItem::create(['employee_id' => $employee->id, 'item_id' => $colacion->id, 'amount' => 50000, 'unit' => 'CLP', 'periodicity' => 'fixed', 'is_active' => true]);
+        EmployeeItem::create(['employee_id' => $employee->id, 'item_id' => $movilizacion->id, 'amount' => 50000, 'unit' => 'CLP', 'periodicity' => 'fixed', 'is_active' => true]);
 
         $period = PayrollPeriod::create([
             'company_id' => $this->company->id,

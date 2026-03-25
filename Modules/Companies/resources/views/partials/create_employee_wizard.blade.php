@@ -77,7 +77,7 @@ window.createEmployeeWizard = function () {
                 health_contribution: '', ccaf_id: '', apv_amount: '',
                 // Paso 4 — Sueldo
                 salary: '', salary_type: 'mensual',
-                meal_allowance: '', mobility_allowance: '', num_dependents: 0,
+                num_dependents: 0,
                 // Paso 5 — Pago
                 payment_method: 'efectivo',
                 bank_id: '', bank_account_type: 'corriente', bank_account_number: '',
@@ -619,18 +619,17 @@ window.createEmployeeWizard = function () {
                         </div>
                     </div>
 
-                    {{-- Asignación de movilización --}}
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Asignación de Movilización ($)</label>
-                        <input type="number" x-model="form.mobility_allowance" placeholder="0" min="0"
-                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
-                    </div>
-
-                    {{-- Asignación de colación --}}
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Asignación de Colación ($)</label>
-                        <input type="number" x-model="form.meal_allowance" placeholder="0" min="0"
-                            class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                    {{-- Asignación de movilización y colación — ahora gestionadas desde la ficha del colaborador vía Ítems --}}
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-700 mb-1">Colación y Movilización</p>
+                                <p class="text-xs text-slate-500">Estos haberes se configuran desde la ficha del colaborador → pestaña <strong>Ítems</strong>, una vez creado el registro.</p>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Cargas familiares --}}

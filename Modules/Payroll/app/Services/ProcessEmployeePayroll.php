@@ -14,7 +14,7 @@ class ProcessEmployeePayroll
 {
     public function execute(int $employeeId, int $periodId): PayrollResultDTO
     {
-        $employee = Employee::with(['afp', 'isapre'])->findOrFail($employeeId);
+        $employee = Employee::with(['afp', 'isapre', 'employeeItems.item'])->findOrFail($employeeId);
         $period = PayrollPeriod::findOrFail($periodId);
 
         // 1. Días Trabajados (Estándar 30 días para cálculo mensual)
@@ -33,10 +33,18 @@ class ProcessEmployeePayroll
 
         $taxableEarnings = $proportionalSalary + $gratification;
 
-        // Haberes No Imponibles
-        $mealAllowance = (int) ($employee->meal_allowance ?? 0);
-        $mobilityAllowance = (int) ($employee->mobility_allowance ?? 0);
-        $nonTaxableEarnings = $mealAllowance + $mobilityAllowance;
+        // Haberes No Imponibles desde employee_items
+        $ufObj  = (object)['value' => $ufValue];
+        $utmObj = (object)['value' => LegalParameter::where('key', 'utm_value')->value('value') ?? 65182];
+
+        $activeItems = $employee->employeeItems->where('is_active', true)->filter(fn($ei) => $ei->item !== null);
+        $haberesNoImponibles = $activeItems->filter(fn($ei) => $ei->item->type === 'haber_no_imponible');
+        $descuentosVarios    = $activeItems->filter(fn($ei) => $ei->item->type === 'descuento_varios');
+        $creditos            = $activeItems->filter(fn($ei) => $ei->item->type === 'credito');
+
+        $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
+        $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
+        $nonTaxableEarnings = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
 
         $totalEarnings = $taxableEarnings + $nonTaxableEarnings;
 

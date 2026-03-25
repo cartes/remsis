@@ -13,6 +13,7 @@ Actualmente, los haberes variables de un colaborador (colación, movilización, 
 ## Solución
 
 Introducir un modelo relacional con:
+
 - **Catálogo de ítems** por empresa (`items`)
 - **Asignaciones por colaborador** (`employee_items`)
 
@@ -56,6 +57,7 @@ created_at / updated_at
 ### Migración de datos (incluida en la migración)
 
 Al crear las nuevas tablas, la migración incluye un bloque `DB::statement` / seeder que:
+
 1. Por cada empresa que tenga empleados con `meal_allowance > 0`, crea ítem "Colación" (haber_no_imponible) en el catálogo y genera rows en `employee_items`.
 2. Por cada empresa que tenga empleados con `mobility_allowance > 0`, ídem con "Movilización".
 3. Elimina las columnas `meal_allowance` y `mobility_allowance` de `employees`.
@@ -77,21 +79,21 @@ Al crear las nuevas tablas, la migración incluye un bloque `DB::statement` / se
 - `belongsTo(Item::class)`
 - `$fillable`: employee_id, item_id, amount, unit, periodicity, total_installments, current_installment, is_active, notes
 - Método `resolvedAmountCLP(LegalParameter $uf, LegalParameter $utm, int $base = 0): int` — convierte según `unit`:
-  - CLP → retorna `amount` directo
-  - UF → `(int) round($amount * $uf->value)`
-  - UTM → `(int) round($amount * $utm->value)`
-  - PERCENTAGE → `(int) round($base * $amount / 100)` — requiere `$base` (imponible del empleado); nunca llamar directamente en `sum()`, se resuelve en el servicio pasando la base
+    - CLP → retorna `amount` directo
+    - UF → `(int) round($amount * $uf->value)`
+    - UTM → `(int) round($amount * $utm->value)`
+    - PERCENTAGE → `(int) round($base * $amount / 100)` — requiere `$base` (imponible del empleado); nunca llamar directamente en `sum()`, se resuelve en el servicio pasando la base
 
 ### `Modules\Employees\Models\Employee` — cambios
 
 - Agrega relación usando FQCN string para evitar dependencia circular de namespace:
-  ```php
-  public function employeeItems(): HasMany
-  {
-      return $this->hasMany('Modules\Payroll\Models\EmployeeItem', 'employee_id');
-  }
-  ```
-  > **Nota**: `Modules\Employees` depende de `Modules\Payroll` solo por FQCN string, no por import. Esta dependencia unidireccional es intencional y documentada.
+    ```php
+    public function employeeItems(): HasMany
+    {
+        return $this->hasMany('Modules\Payroll\Models\EmployeeItem', 'employee_id');
+    }
+    ```
+    > **Nota**: `Modules\Employees` depende de `Modules\Payroll` solo por FQCN string, no por import. Esta dependencia unidireccional es intencional y documentada.
 - Elimina `meal_allowance`, `mobility_allowance` de `$fillable` y `$casts`
 
 ---
@@ -155,13 +157,13 @@ El Payroll resultante guarda el detalle en JSON (`items_detail`) para histórico
 
 Usa Alpine.js con `x-data="{ tab: 'personal' }"`. 5 tabs:
 
-| Tab | Campos |
-|-----|--------|
-| Personal | first_name, last_name, rut, email, birth_date, gender, nationality, phone, address |
-| Laboral | position, hire_date, contract_type, work_schedule_type, part_time_hours, cost_center_id |
-| Previsional | afp_id, health_system, isapre_id, health_contribution, ccaf_id, apv_amount |
-| Remuneraciones | salary, salary_type, payment_method, bank_id, bank_account_type, bank_account_number |
-| Ítems | Sub-tabs: Haberes / Descuentos / Créditos — CRUD inline con Alpine.js |
+| Tab            | Campos                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------- |
+| Personal       | first_name, last_name, rut, email, birth_date, gender, nationality, phone, address      |
+| Laboral        | position, hire_date, contract_type, work_schedule_type, part_time_hours, cost_center_id |
+| Previsional    | afp_id, health_system, isapre_id, health_contribution, ccaf_id, apv_amount              |
+| Remuneraciones | salary, salary_type, payment_method, bank_id, bank_account_type, bank_account_number    |
+| Ítems          | Sub-tabs: Haberes / Descuentos / Créditos — CRUD inline con Alpine.js                   |
 
 Cada tab tiene su propio `<form>` con `method POST` + `@method('PATCH')` apuntando a `update()`. Se guarda independientemente.
 
@@ -225,6 +227,7 @@ Route::delete('items-catalog/{item}', [CompanyItemsController::class, 'destroy']
 La tabla `payrolls` también tiene columnas `meal_allowance` y `mobility_allowance` (líneas 157–158 de PayrollCalculationService). Estas son columnas **históricas** que deben **mantenerse** en la tabla `payrolls` para preservar el histórico de liquidaciones ya procesadas. Se seguirán poblando usando el valor resuelto desde `employee_items`.
 
 En PayrollCalculationService, al escribir al Payroll:
+
 ```php
 'meal_allowance'      => $haberesNoImponibles->where('item.code', 'COLACION')->sum(...),
 'mobility_allowance'  => $haberesNoImponibles->where('item.code', 'MOVILIZACION')->sum(...),
@@ -250,14 +253,14 @@ Esto mantiene compatibilidad con vistas de liquidaciones que muestren esas colum
 
 ## Riesgos y mitigaciones
 
-| Riesgo | Mitigación |
-|--------|-----------|
-| Datos existentes en meal_allowance/mobility_allowance se pierden | Script de migración de datos incluido en la misma migration |
-| PayrollCalculationService falla si no hay employee_items | `->get()` en colección vacía retorna 0 — sin error |
-| Performance: N+1 en cálculo de nómina | Usar `with('employeeItems.item')` al cargar employees para el período |
-| Columnas eliminadas de employees rompen código antiguo | Buscar todas las referencias a `meal_allowance`/`mobility_allowance` y limpiarlas |
-| Columnas históricas en payrolls se rompen | Mantener columnas en payrolls, poblarlas desde items_detail en el servicio |
-| PERCENTAGE sin base en sum() retorna null | resolvedAmountCLP() requiere $base, service lo pasa explícitamente — no usar en sum() anónimo |
-| Créditos nunca se completan | PayrollCalculationService incrementa current_installment y desactiva al llegar al total |
-| Catálogo vacío al crear employee_items | Migración de datos crea ítems base (Colación, Movilización) por empresa; admin puede agregar más |
-| periodicity=variable sin flujo de activación | Para V1, los ítems variable se comportan como fixed (siempre activos). Flujo de activación por período = fase posterior. |
+| Riesgo                                                           | Mitigación                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Datos existentes en meal_allowance/mobility_allowance se pierden | Script de migración de datos incluido en la misma migration                                                              |
+| PayrollCalculationService falla si no hay employee_items         | `->get()` en colección vacía retorna 0 — sin error                                                                       |
+| Performance: N+1 en cálculo de nómina                            | Usar `with('employeeItems.item')` al cargar employees para el período                                                    |
+| Columnas eliminadas de employees rompen código antiguo           | Buscar todas las referencias a `meal_allowance`/`mobility_allowance` y limpiarlas                                        |
+| Columnas históricas en payrolls se rompen                        | Mantener columnas en payrolls, poblarlas desde items_detail en el servicio                                               |
+| PERCENTAGE sin base en sum() retorna null                        | resolvedAmountCLP() requiere $base, service lo pasa explícitamente — no usar en sum() anónimo                            |
+| Créditos nunca se completan                                      | PayrollCalculationService incrementa current_installment y desactiva al llegar al total                                  |
+| Catálogo vacío al crear employee_items                           | Migración de datos crea ítems base (Colación, Movilización) por empresa; admin puede agregar más                         |
+| periodicity=variable sin flujo de activación                     | Para V1, los ítems variable se comportan como fixed (siempre activos). Flujo de activación por período = fase posterior. |

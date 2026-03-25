@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
+use Modules\Payroll\Models\EmployeeItem;
+use Modules\Payroll\Models\Item;
 use Modules\Users\Models\User;
 use Throwable;
 
@@ -50,8 +52,6 @@ class CompanyEmployeeController extends Controller
             // Remuneraciones
             'salary'              => 'nullable|numeric|min:0',
             'salary_type'         => 'nullable|in:mensual,quincenal,semanal',
-            'meal_allowance'      => 'nullable|numeric|min:0',
-            'mobility_allowance'  => 'nullable|numeric|min:0',
             'num_dependents'      => 'nullable|integer|min:0',
             // Pago
             'payment_method'      => 'nullable|in:transferencia,cheque,efectivo',
@@ -98,8 +98,6 @@ class CompanyEmployeeController extends Controller
                 'apv_amount'          => $validated['apv_amount'] ?? null,
                 'salary'              => $validated['salary'] ?? null,
                 'salary_type'         => $validated['salary_type'] ?? 'mensual',
-                'meal_allowance'      => $validated['meal_allowance'] ?? null,
-                'mobility_allowance'  => $validated['mobility_allowance'] ?? null,
                 'num_dependents'      => $validated['num_dependents'] ?? 0,
                 'bank_id'             => $validated['bank_id'] ?? null,
                 'bank_account_type'   => $validated['bank_account_type'] ?? null,
@@ -358,5 +356,150 @@ class CompanyEmployeeController extends Controller
         if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Ficha de edición del colaborador (admin)
+    // -------------------------------------------------------------------------
+
+    public function edit(Company $company, Employee $employee)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $employee->load(['user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item']);
+
+        $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();
+        $isapres     = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get();
+        $ccafs       = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get();
+        $bancos      = \Modules\AdminPanel\Models\Bank::orderBy('name')->get();
+        $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
+        $catalogItems = Item::forCompany($company->id)->orderBy('name')->get();
+
+        return view('companies::employees.edit', compact(
+            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems'
+        ));
+    }
+
+    public function update(Request $request, Company $company, Employee $employee)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $section = $request->input('section', 'personal');
+
+        $rules = match ($section) {
+            'personal' => [
+                'first_name'  => 'required|string|max:100',
+                'last_name'   => 'required|string|max:100',
+                'rut'         => ['nullable', 'string', 'max:12', Rule::unique('employees', 'rut')->ignore($employee->id)],
+                'email'       => ['nullable', 'email', Rule::unique('employees', 'email')->ignore($employee->id)],
+                'birth_date'  => 'nullable|date',
+                'gender'      => 'nullable|in:male,female,other',
+                'nationality' => 'nullable|string|max:100',
+                'phone'       => 'nullable|string|max:20',
+                'address'     => 'nullable|string|max:255',
+            ],
+            'laboral' => [
+                'position'           => 'nullable|string|max:150',
+                'hire_date'          => 'nullable|date',
+                'contract_type'      => 'nullable|string|max:50',
+                'work_schedule_type' => 'nullable|in:full_time,part_time',
+                'part_time_hours'    => 'nullable|numeric|min:1|max:40',
+                'cost_center_id'     => 'nullable|exists:cost_centers,id',
+                'is_in_payroll'      => 'boolean',
+            ],
+            'previsional' => [
+                'afp_id'              => 'nullable|exists:afps,id',
+                'health_system'       => 'nullable|in:fonasa,isapre',
+                'isapre_id'           => 'nullable|exists:isapres,id',
+                'health_contribution' => 'nullable|numeric|min:0',
+                'ccaf_id'             => 'nullable|exists:ccafs,id',
+                'apv_amount'          => 'nullable|numeric|min:0',
+            ],
+            'remuneraciones' => [
+                'salary'              => 'nullable|numeric|min:0',
+                'salary_type'         => 'nullable|in:mensual,quincenal,semanal',
+                'payment_method'      => 'nullable|in:transferencia,cheque,efectivo',
+                'bank_id'             => 'nullable|required_if:payment_method,transferencia|exists:banks,id',
+                'bank_account_type'   => 'nullable|required_if:payment_method,transferencia|in:corriente,vista,ahorro',
+                'bank_account_number' => 'nullable|required_if:payment_method,transferencia|string|max:50',
+            ],
+            default => [],
+        };
+
+        $validated = $request->validate($rules);
+        $employee->update($validated);
+
+        if ($section === 'personal' && isset($validated['first_name'])) {
+            $employee->user?->update([
+                'name'  => trim($validated['first_name'] . ' ' . $validated['last_name']),
+                'email' => $validated['email'] ?? $employee->user->email,
+            ]);
+        }
+
+        return back()->with('success', 'Información actualizada correctamente.');
+    }
+
+    // -------------------------------------------------------------------------
+    // CRUD de employee_items
+    // -------------------------------------------------------------------------
+
+    public function storeItem(Request $request, Company $company, Employee $employee)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $validated = $request->validate([
+            'item_id'            => 'required|exists:items,id',
+            'amount'             => 'required|numeric|min:0',
+            'unit'               => 'required|in:CLP,UF,UTM,PERCENTAGE',
+            'periodicity'        => 'required|in:fixed,variable',
+            'total_installments' => 'nullable|integer|min:1',
+            'notes'              => 'nullable|string|max:500',
+        ]);
+
+        // Verificar que el item pertenece a esta empresa
+        $item = Item::where('id', $validated['item_id'])
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $employeeItem = EmployeeItem::create([
+            'employee_id'        => $employee->id,
+            'item_id'            => $item->id,
+            'amount'             => $validated['amount'],
+            'unit'               => $validated['unit'],
+            'periodicity'        => $validated['periodicity'],
+            'total_installments' => $validated['total_installments'] ?? null,
+            'current_installment' => $item->type === Item::TYPE_CREDITO ? 0 : null,
+            'is_active'          => true,
+            'notes'              => $validated['notes'] ?? null,
+        ]);
+
+        return response()->json(['success' => true, 'item' => $employeeItem->load('item')]);
+    }
+
+    public function updateItem(Request $request, Company $company, Employee $employee, EmployeeItem $employeeItem)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $validated = $request->validate([
+            'amount'             => 'sometimes|numeric|min:0',
+            'unit'               => 'sometimes|in:CLP,UF,UTM,PERCENTAGE',
+            'periodicity'        => 'sometimes|in:fixed,variable',
+            'total_installments' => 'nullable|integer|min:1',
+            'is_active'          => 'sometimes|boolean',
+            'notes'              => 'nullable|string|max:500',
+        ]);
+
+        $employeeItem->update($validated);
+
+        return response()->json(['success' => true, 'item' => $employeeItem->load('item')]);
+    }
+
+    public function destroyItem(Company $company, Employee $employee, EmployeeItem $employeeItem)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $employeeItem->delete();
+
+        return response()->json(['success' => true]);
     }
 }
