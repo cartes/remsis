@@ -163,15 +163,15 @@
 
                                         <div class="flex flex-col min-w-0">
                                         <div class="flex items-center gap-2">
-                                            <button type="button" @click="openPayrollModal({{ $emp->id }})"
-                                                class="font-bold text-gray-800 hover:text-blue-600 transition-colors text-left">
+                                            <a href="{{ route('companies.employees.edit', [$company, $emp]) }}"
+                                                class="font-bold text-gray-800 hover:text-blue-600 transition-colors">
                                                 {{ $emp->user->name }}
-                                            </button>
-                                            <button type="button" @click="openPayrollModal({{ $emp->id }})"
+                                            </a>
+                                            <a href="{{ route('companies.employees.edit', [$company, $emp]) }}"
                                                 class="inline-flex items-center justify-center w-7 h-7 rounded-md text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all border border-transparent hover:border-blue-100 self-center"
-                                                title="Editar ficha / remuneraciones">
+                                                title="Ver ficha del colaborador">
                                                 <i class="fas fa-pen-to-square text-[12px]"></i>
-                                            </button>
+                                            </a>
                                             <div class="flex gap-1">
                                                 @foreach ($emp->user->roles as $role)
                                                     <span
