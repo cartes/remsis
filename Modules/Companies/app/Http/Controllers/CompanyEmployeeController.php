@@ -366,7 +366,10 @@ class CompanyEmployeeController extends Controller
     {
         $this->authorizeCompanyAccess($company);
 
-        $employee->load(['user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item']);
+        $employee->load([
+            'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item',
+            'payrolls' => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
+        ]);
 
         $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();
         $isapres     = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get();
@@ -437,6 +440,16 @@ class CompanyEmployeeController extends Controller
         }
 
         return back()->with('success', 'Información actualizada correctamente.');
+    }
+
+    public function downloadPayroll(Company $company, Employee $employee, \Modules\Payroll\Models\Payroll $payroll)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        abort_unless($payroll->employee_id === $employee->id, 404);
+
+        // TODO: integrar librería PDF (ej. barryvdh/laravel-dompdf) y renderizar la liquidación
+        abort(501, 'Generación de PDF pendiente de implementación.');
     }
 
     // -------------------------------------------------------------------------

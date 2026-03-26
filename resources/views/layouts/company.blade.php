@@ -512,6 +512,13 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
             </div>
         </div>
 
+        {{-- Breadcrumbs Slot (Optional) --}}
+        @if ($breadcrumbs ?? false)
+            <div class="bg-slate-50 border-b border-slate-200/60">
+                {{ $breadcrumbs }}
+            </div>
+        @endif
+
         {{-- Main Content Section --}}
         <main class="flex-1 p-6 sm:p-8 bg-slate-50/50 overflow-y-auto">
             <div class="max-w-7xl mx-auto">

@@ -1,8 +1,78 @@
 <x-layouts.company :company="$employee->company" activeTab="employees">
+    <div class="mb-6">
+        {{-- Breadcrumb minimalista --}}
+        <nav class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 overflow-x-auto no-scrollbar py-1">
+            <a href="{{ route('companies.index') }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">Empresas</a>
+            <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
+            
+            <a href="{{ route('companies.dashboard', $employee->company) }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">
+                {{ $employee->company->razon_social ?? $employee->company->name }}
+            </a>
+            <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
+            
+            <a href="{{ route('companies.employees', $employee->company) }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">Colaboradores</a>
+            <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
+            
+            <span class="text-slate-900 whitespace-nowrap">{{ $employee->full_name }}</span>
+        </nav>
+
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden ring-1 ring-slate-100">
+            {{-- Decoración sutil de fondo --}}
+            <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 z-0 border border-slate-100/50"></div>
+            
+            <div class="flex items-center gap-6 relative z-10">
+                {{-- Avatar --}}
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-500/20 flex-shrink-0 ring-4 ring-white">
+                    {{ strtoupper(substr($employee->first_name ?? '?', 0, 1)) }}
+                </div>
+                
+                <div>
+                    <div class="flex items-center gap-3 mb-2 font-bold">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+                            {{ $employee->full_name ?: 'Colaborador sin nombre' }}
+                        </h1>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                            Activo
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 text-sm font-bold text-slate-500">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-briefcase text-blue-500/50 text-xs"></i>
+                            {{ $employee->position ?? 'Sin cargo asignado' }}
+                        </span>
+                        <span class="text-slate-300">|</span>
+                        <span class="flex items-center gap-1.5 font-mono bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                            <i class="fas fa-id-card text-slate-400 text-xs"></i>
+                            {{ $employee->rut }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Barra de completitud --}}
+            <div class="flex-shrink-0 w-full sm:w-60 bg-slate-50/80 backdrop-blur-sm p-4 rounded-xl border border-slate-100 relative z-10">
+                <div class="flex justify-between items-center mb-2.5">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <i class="fas fa-circle-nodes text-[8px] text-blue-400"></i>
+                        Estado de la Ficha
+                    </span>
+                    <span class="text-xs font-black text-slate-900">{{ $employee->completion_percentage }}%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div class="h-2 rounded-full transition-all duration-1000 ease-out
+                        {{ $employee->completion_percentage >= 80 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : ($employee->completion_percentage >= 50 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]') }}"
+                        style="width: {{ $employee->completion_percentage }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <div
     x-data="{
-        tab: '{{ session('active_tab', 'personales') }}',
+        tab: '{{ session('active_tab', 'resumen') }}',
+        isEditModalOpen: false,
         healthSystem: '{{ old('health_system', $employee->health_system ?? '') }}',
         nationality: '{{ old('nationality', $employee->nationality ?? 'Chile') }}',
         searchNationality: '',
@@ -39,44 +109,9 @@
     }"
     x-init="
         const hash = window.location.hash.replace('#', '');
-        if (['personales','previsional','laboral'].includes(hash)) tab = hash;
+        if (['resumen','previsional','laboral'].includes(hash)) tab = hash;
     "
 >
-
-{{-- ─────────────────── CABECERA DE LA FICHA ─────────────────── --}}
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-    <div class="flex items-center gap-4">
-        {{-- Avatar --}}
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-500/25 flex-shrink-0">
-            {{ strtoupper(substr($employee->first_name ?? '?', 0, 1)) }}
-        </div>
-        <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none">
-                {{ $employee->full_name ?: 'Colaborador sin nombre' }}
-            </h1>
-            <p class="text-sm text-slate-500 mt-1 font-medium">
-                {{ $employee->position ?? 'Sin cargo asignado' }}
-                @if($employee->company)
-                    &nbsp;·&nbsp; {{ $employee->company->razon_social ?? $employee->company->name }}
-                @endif
-            </p>
-        </div>
-    </div>
-
-    {{-- Barra de completitud --}}
-    <div class="flex-shrink-0 w-full sm:w-48">
-        <div class="flex justify-between items-center mb-1.5">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ficha completada</span>
-            <span class="text-[11px] font-black text-slate-700">{{ $employee->completion_percentage }}%</span>
-        </div>
-        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div class="h-2 rounded-full transition-all duration-500
-                {{ $employee->completion_percentage >= 80 ? 'bg-emerald-500' : ($employee->completion_percentage >= 50 ? 'bg-amber-400' : 'bg-rose-400') }}"
-                style="width: {{ $employee->completion_percentage }}%">
-            </div>
-        </div>
-    </div>
-</div>
 
 {{-- ─────────────────── MENSAJES FLASH ─────────────────── --}}
 @if(session('success'))
@@ -105,7 +140,7 @@
     {{-- Tab bar --}}
     <div class="flex border-b border-slate-100 bg-slate-50/50">
         @foreach([
-            ['key' => 'personales',  'label' => 'Datos Personales',   'icon' => 'fa-user'],
+            ['key' => 'resumen',  'label' => 'Resumen',   'icon' => 'fa-id-card'],
             ['key' => 'previsional', 'label' => 'Info. Previsional',   'icon' => 'fa-shield-halved'],
             ['key' => 'laboral',     'label' => 'Datos Laborales',     'icon' => 'fa-briefcase'],
         ] as $t)
@@ -123,19 +158,94 @@
     </div>
 
     {{-- ════════════════════════════════════════
-         PESTAÑA 1 — DATOS PERSONALES
+         PESTAÑA 1 — RESUMEN
     ═════════════════════════════════════════ --}}
-    <div x-show="tab === 'personales'" x-transition:enter="transition ease-out duration-150"
+    <div x-show="tab === 'resumen'" x-transition:enter="transition ease-out duration-150"
         x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="p-6 sm:p-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-id-card text-blue-500 text-sm"></i> Resumen del Colaborador
+                </h2>
+                <button @click="isEditModalOpen = true" type="button" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 text-sm font-bold rounded-xl transition-all shadow-sm">
+                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    Editar Información
+                </button>
+            </div>
 
-        <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6 sm:p-8">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="section" value="personales">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {{-- Cargo Actual --}}
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Cargo Actual</h3>
+                    </div>
+                    <p class="text-lg font-black text-slate-800">{{ $employee->position ?? 'Sin cargo asignado' }}</p>
+                </div>
 
-            <h2 class="text-base font-black text-slate-800 mb-6 flex items-center gap-2">
-                <i class="fas fa-user text-blue-500 text-sm"></i> Datos Personales
-            </h2>
+                {{-- Jefe Directo --}}
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Jefe Directo</h3>
+                    </div>
+                    <p class="text-lg font-black text-slate-800">{{ $employee->manager->full_name ?? 'No asignado' }}</p>
+                </div>
+
+                {{-- Vacaciones --}}
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                            <i class="fas fa-umbrella-beach"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Vacaciones</h3>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <p class="text-lg font-black text-slate-800">15</p>
+                        <span class="text-sm font-semibold text-slate-500">días disp.</span>
+                    </div>
+                </div>
+
+                {{-- Último Sueldo --}}
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Últ. Sueldo</h3>
+                    </div>
+                    <p class="text-lg font-black text-slate-800">$850.000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ─────────────────── MODAL DE EDICIÓN DE DATOS PERSONALES ─────────────────── --}}
+    <div x-show="isEditModalOpen" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div x-show="isEditModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="isEditModalOpen" @click.away="isEditModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-visible rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-2xl">
+                    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-user-edit text-blue-500"></i>
+                            Editar Información Personal
+                        </h3>
+                        <button @click="isEditModalOpen = false" type="button" class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="section" value="personales">
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
@@ -268,14 +378,21 @@
 
             </div>{{-- /grid --}}
 
-            <div class="mt-8 flex justify-end">
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" @click="isEditModalOpen = false"
+                    class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                    Cancelar
+                </button>
                 <button type="submit"
                     class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
                     <i class="fas fa-floppy-disk text-xs"></i>
-                    Guardar datos personales
+                    Guardar Cambios
                 </button>
             </div>
         </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- ════════════════════════════════════════
@@ -362,7 +479,7 @@
                     </label>
                     <select name="afp_id"
                         class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('afp_id') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Seleccionar —</option>
+                        <option value="">No cotiza (Exento / Jubilado)</option>
                         @foreach($afps as $afp)
                             <option value="{{ $afp->id }}"
                                 {{ old('afp_id', $employee->afp_id) == $afp->id ? 'selected' : '' }}>

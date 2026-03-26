@@ -125,6 +125,15 @@ class Employee extends Model
         return $this->hasMany('Modules\Payroll\Models\EmployeeItem', 'employee_id');
     }
 
+    /**
+     * Historial de liquidaciones de sueldo procesadas para este colaborador.
+     * Usa FQCN string para evitar dependencia circular de namespace con el módulo Payroll.
+     */
+    public function payrolls(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany('Modules\Payroll\Models\Payroll', 'employee_id');
+    }
+
     protected $appends = ['full_name', 'completion_percentage'];
 
     public function getFullNameAttribute()

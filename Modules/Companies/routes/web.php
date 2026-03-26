@@ -31,6 +31,10 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::delete('companies/{company}/employees/{user}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroy'])
         ->name('companies.employees.destroy');
 
+    // Liquidaciones del colaborador
+    Route::get('companies/{company}/employees/{employee}/payrolls/{payroll}/pdf', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'downloadPayroll'])
+        ->name('companies.employees.payrolls.pdf');
+
     // Employee Items CRUD
     Route::post('companies/{company}/employees/{employee}/items', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'storeItem'])
         ->name('companies.employees.items.store');

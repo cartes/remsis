@@ -404,9 +404,9 @@ window.createEmployeeWizard = function () {
                         <select x-model="form.gender"
                             class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                             <option value="">Sin especificar</option>
-                            <option value="masculino">Masculino</option>
-                            <option value="femenino">Femenino</option>
-                            <option value="otro">Otro</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                            <option value="other">Otro</option>
                         </select>
                     </div>
 
@@ -505,7 +505,7 @@ window.createEmployeeWizard = function () {
                         <label class="block text-xs font-medium text-slate-600 mb-1.5">AFP</label>
                         <select x-model="form.afp_id"
                             class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
-                            <option value="">Sin AFP (independiente)</option>
+                            <option value="">No cotiza (Exento / Jubilado)</option>
                             <template x-for="afp in afps" :key="afp.id">
                                 <option :value="afp.id" x-text="afp.nombre"></option>
                             </template>
