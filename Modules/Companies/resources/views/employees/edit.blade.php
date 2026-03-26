@@ -142,7 +142,7 @@
         {{-- ── Tabs horizontales ────────────────────────────────────────── --}}
         <div class="border-b border-slate-200 mb-6">
             <nav class="flex gap-1 -mb-px overflow-x-auto">
-                @foreach ([['resumen', 'Resumen'], ['liquidaciones', 'Liquidaciones'], ['documentos', 'Documentos'], ['items', 'Ítems']] as [$key, $label])
+                @foreach ([['resumen', 'Resumen'], ['liquidaciones', 'Liquidaciones'], ['documentos', 'Documentos'], ['conceptos', 'Conceptos de Pago']] as [$key, $label])
                     <button type="button" @click="tab = '{{ $key }}'"
                         class="whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors"
                         :class="tab === '{{ $key }}'
@@ -1627,7 +1627,7 @@
         {{-- ════════════════════════════════════════════════════════════════ --}}
         {{-- TAB: ÍTEMS                                                      --}}
         {{-- ════════════════════════════════════════════════════════════════ --}}
-        <div x-show="tab === 'items'" x-cloak x-data="{ itemTab: 'haberes' }">
+        <div x-show="tab === 'conceptos'" x-cloak x-data="{ itemTab: 'haberes' }">
 
             {{-- Sub-tabs --}}
             <div class="flex gap-1 mb-5">
