@@ -35,6 +35,14 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::get('companies/{company}/employees/{employee}/payrolls/{payroll}/pdf', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'downloadPayroll'])
         ->name('companies.employees.payrolls.pdf');
 
+    // Carpeta Digital (Documentos)
+    Route::post('companies/{company}/employees/{employee}/documents', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'store'])
+        ->name('companies.employees.documents.store');
+    Route::get('companies/{company}/employees/{employee}/documents/{document}/download', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'download'])
+        ->name('companies.employees.documents.download');
+    Route::delete('companies/{company}/employees/{employee}/documents/{document}', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'destroy'])
+        ->name('companies.employees.documents.destroy');
+
     // Employee Items CRUD
     Route::post('companies/{company}/employees/{employee}/items', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'storeItem'])
         ->name('companies.employees.items.store');

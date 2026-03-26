@@ -134,6 +134,14 @@ class Employee extends Model
         return $this->hasMany('Modules\Payroll\Models\Payroll', 'employee_id');
     }
 
+    /**
+     * Carpeta digital: contratos, anexos y comprobantes del colaborador.
+     */
+    public function documents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany('Modules\Employees\Models\EmployeeDocument', 'employee_id');
+    }
+
     protected $appends = ['full_name', 'completion_percentage'];
 
     public function getFullNameAttribute()
