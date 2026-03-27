@@ -9,6 +9,7 @@ use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
 use Modules\Companies\Models\CostCenter;
 use Modules\Employees\Models\Employee;
+use Modules\Employees\Models\EmployeeLog;
 
 class EmployeesController extends Controller
 {
@@ -31,12 +32,18 @@ class EmployeesController extends Controller
 
     public function edit($id)
     {
-        $employee    = Employee::with(['afp', 'isapre', 'ccaf', 'bank', 'costCenter', 'company', 'user'])->findOrFail($id);
+        $employee = Employee::with([
+            'afp', 'isapre', 'ccaf', 'bank', 'costCenter', 'company', 'user',
+            'logs'      => fn ($q) => $q->latest(),
+            'logs.user',
+        ])->findOrFail($id);
+
         $afps        = Afp::orderBy('nombre')->get();
         $isapres     = Isapre::orderBy('nombre')->get();
         $costCenters = CostCenter::where('company_id', $employee->company_id)->active()->orderBy('name')->get();
+        $fieldLabels = EmployeeLog::$fieldLabels;
 
-        return view('employees::edit', compact('employee', 'afps', 'isapres', 'costCenters'));
+        return view('employees::edit', compact('employee', 'afps', 'isapres', 'costCenters', 'fieldLabels'));
     }
 
     public function update(Request $request, $id)

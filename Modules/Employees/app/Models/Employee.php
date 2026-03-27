@@ -142,6 +142,14 @@ class Employee extends Model
         return $this->hasMany('Modules\Employees\Models\EmployeeDocument', 'employee_id');
     }
 
+    /**
+     * Bitácora de auditoría: todos los eventos registrados para este colaborador.
+     */
+    public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EmployeeLog::class, 'employee_id');
+    }
+
     protected $appends = ['full_name', 'completion_percentage'];
 
     public function getFullNameAttribute()

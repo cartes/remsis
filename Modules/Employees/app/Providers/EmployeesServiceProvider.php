@@ -4,6 +4,8 @@ namespace Modules\Employees\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Employees\Models\Employee;
+use Modules\Employees\Observers\EmployeeObserver;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,6 +29,8 @@ class EmployeesServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+
+        Employee::observe(EmployeeObserver::class);
     }
 
     /**

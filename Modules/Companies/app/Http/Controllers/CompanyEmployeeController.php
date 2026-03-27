@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
+use Modules\Employees\Models\EmployeeLog;
 use Modules\Payroll\Models\EmployeeItem;
 use Modules\Payroll\Models\Item;
 use Modules\Users\Models\User;
@@ -311,6 +312,8 @@ class CompanyEmployeeController extends Controller
             'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item',
             'payrolls'  => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
             'documents' => fn ($q) => $q->latest(),
+            'logs'      => fn ($q) => $q->latest(),
+            'logs.user',
         ]);
 
         $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();
@@ -319,9 +322,10 @@ class CompanyEmployeeController extends Controller
         $bancos      = \Modules\AdminPanel\Models\Bank::orderBy('name')->get();
         $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
         $catalogItems = Item::forCompany($company->id)->orderBy('name')->get();
+        $fieldLabels = EmployeeLog::$fieldLabels;
 
         return view('companies::employees.edit', compact(
-            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems'
+            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels'
         ));
     }
 
