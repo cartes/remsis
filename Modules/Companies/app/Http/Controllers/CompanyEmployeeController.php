@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
@@ -15,10 +14,21 @@ use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\EmployeeItem;
 use Modules\Payroll\Models\Item;
 use Modules\Users\Models\User;
+use Modules\Companies\Services\EmployeeService;
 use Throwable;
 
 class CompanyEmployeeController extends Controller
 {
+    private EmployeeService $employeeService;
+
+    public function __construct(EmployeeService $employeeService)
+    {
+        $this->employeeService = $employeeService;
+    }
+
+    /**
+     * Almacena un nuevo empleado y su usuario asociado.
+     */
     public function store(Request $request, Company $company)
     {
         $this->authorizeCompanyAccess($company);
@@ -60,56 +70,9 @@ class CompanyEmployeeController extends Controller
             'bank_account_number' => 'nullable|required_if:payment_method,transferencia|string|max:50',
         ]);
 
-        DB::beginTransaction();
         try {
-            // 1. Crear usuario
-            $user = User::create([
-                'name'       => trim($validated['first_name'] . ' ' . $validated['last_name']),
-                'email'      => $validated['email'],
-                'password'   => Hash::make($validated['password']),
-                'status'     => true,
-            ]);
-
-            $user->assignRole('employee');
-
-            // 2. Crear registro de empleado con todos los campos del wizard
-            $employee = Employee::create([
-                'user_id'             => $user->id,
-                'company_id'          => $company->id,
-                'first_name'          => $validated['first_name'],
-                'last_name'           => $validated['last_name'],
-                'email'               => $validated['email'],
-                'rut'                 => $validated['rut'] ?? null,
-                'birth_date'          => $validated['birth_date'] ?? null,
-                'gender'              => $validated['gender'] ?? null,
-                'phone'               => $validated['phone'] ?? null,
-                'address'             => $validated['address'] ?? null,
-                'nationality'         => $validated['nationality'] ?? null,
-                'position'            => $validated['position'] ?? null,
-                'hire_date'           => $validated['hire_date'] ?? null,
-                'contract_type'       => $validated['contract_type'] ?? null,
-                'work_schedule_type'  => $validated['work_schedule_type'] ?? 'full_time',
-                'cost_center_id'      => $validated['cost_center_id'] ?? null,
-                'afp_id'              => $validated['afp_id'] ?? null,
-                'health_system'       => $validated['health_system'] ?? 'fonasa',
-                'isapre_id'           => $validated['isapre_id'] ?? null,
-                'health_contribution' => $validated['health_contribution'] ?? null,
-                'ccaf_id'             => $validated['ccaf_id'] ?? null,
-                'apv_amount'          => $validated['apv_amount'] ?? null,
-                'salary'              => $validated['salary'] ?? null,
-                'salary_type'         => $validated['salary_type'] ?? 'mensual',
-                'num_dependents'      => $validated['num_dependents'] ?? 0,
-                'bank_id'             => $validated['bank_id'] ?? null,
-                'bank_account_type'   => $validated['bank_account_type'] ?? null,
-                'bank_account_number' => $validated['bank_account_number'] ?? null,
-                'payment_method'      => $validated['payment_method'] ?? 'efectivo',
-                'is_in_payroll'       => true,
-                'status'              => 'active',
-            ]);
-
-            DB::commit();
+            $employee = $this->employeeService->createEmployee($validated, $company);
         } catch (Throwable $e) {
-            DB::rollBack();
             Log::error('Error al crear colaborador: ' . $e->getMessage(), [
                 'file'    => $e->getFile() . ':' . $e->getLine(),
                 'company' => $company->id,
@@ -128,33 +91,30 @@ class CompanyEmployeeController extends Controller
             'status' => 'success',
             'message' => 'Colaborador creado y vinculado correctamente.',
             'employee' => [
-                'id' => $employee->id, // Add this line
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'status' => $user->status,
+                'id' => $employee->id,
+                'user_id' => $employee->user_id,
+                'name' => $employee->user->name ?? '',
+                'email' => $employee->user->email ?? '',
+                'status' => $employee->user->status ?? true,
             ],
         ]);
     }
 
+    /**
+     * Desvincula un empleado de una empresa.
+     */
     public function destroy(Company $company, User $user)
     {
         $this->authorizeCompanyAccess($company);
 
         // En este sistema, "Nómina" gestiona al usuario como empleado.
         // Desvincular implica borrar el registro en 'employees'.
-        // Si el usuario SOLO tiene el rol employee, podríamos borrar al usuario también,
-        // pero para evitar pérdida de datos accidental, solo desvinculamos o borramos employee.
-
         $employee = Employee::where('user_id', $user->id)
             ->where('company_id', $company->id)
             ->first();
 
         if ($employee) {
             $employee->delete();
-
-            // Opcional: si queremos borrar al usuario físico si no tiene otros roles
-            // $user->delete();
             session()->flash('success', 'Colaborador desvinculado de la empresa.');
         }
 
@@ -164,6 +124,9 @@ class CompanyEmployeeController extends Controller
         ]);
     }
 
+    /**
+     * Obtiene los datos de nómina de un empleado.
+     */
     public function getPayroll(Company $company, Employee $employee)
     {
         $this->authorizeCompanyAccess($company);
@@ -176,11 +139,14 @@ class CompanyEmployeeController extends Controller
         ]);
     }
 
+    /**
+     * Actualiza los datos de nómina de un empleado.
+     */
     public function updatePayroll(Request $request, Company $company, Employee $employee)
     {
         $this->authorizeCompanyAccess($company);
 
-        // Limpiar strings vacíos para que las reglas 'nullable' funcionen incluso si el middleware central no está activo
+        // Limpiar strings vacíos para que las reglas 'nullable' funcionen
         $input = $request->all();
         foreach ($input as $key => $value) {
             if (is_string($value)) {
@@ -188,7 +154,6 @@ class CompanyEmployeeController extends Controller
                 if ($trimmed === '') {
                     $input[$key] = null;
                 } elseif ($key === 'is_in_payroll') {
-                    // Handle boolean strings from FormData
                     if ($trimmed === 'true') {
                         $input[$key] = true;
                     }
@@ -208,7 +173,7 @@ class CompanyEmployeeController extends Controller
             'email' => [
                 'nullable',
                 'email',
-                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($employee->user_id),
+                Rule::unique('users', 'email')->ignore($employee->user_id),
             ],
             'phone' => 'nullable|string',
             'birth_date' => 'nullable|date',
@@ -269,40 +234,7 @@ class CompanyEmployeeController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($employee, $user, $validated, $newProfilePhotoPath) {
-                $employeeData = $validated;
-                if (isset($employeeData['part_time_schedule']) && is_string($employeeData['part_time_schedule'])) {
-                    $employeeData['part_time_schedule'] = json_decode($employeeData['part_time_schedule'], true);
-                }
-                unset($employeeData['profile_photo']);
-
-                $employee->update($employeeData);
-
-                $changed = false;
-
-                if (! empty($validated['first_name']) && ! empty($validated['last_name'])) {
-                    $newName = trim("{$validated['first_name']} {$validated['last_name']}");
-
-                    if ($user->name !== $newName) {
-                        $user->name = $newName;
-                        $changed = true;
-                    }
-                }
-
-                if (! empty($validated['email']) && $user->email !== $validated['email']) {
-                    $user->email = $validated['email'];
-                    $changed = true;
-                }
-
-                if ($newProfilePhotoPath !== null) {
-                    $user->profile_photo = $newProfilePhotoPath;
-                    $changed = true;
-                }
-
-                if ($changed) {
-                    $user->save();
-                }
-            });
+            $this->employeeService->updateEmployee($employee, $validated, $newProfilePhotoPath);
         } catch (Throwable $exception) {
             if ($newProfilePhotoPath !== null && Storage::disk('public')->exists($newProfilePhotoPath)) {
                 Storage::disk('public')->delete($newProfilePhotoPath);
@@ -327,6 +259,9 @@ class CompanyEmployeeController extends Controller
         ]);
     }
 
+    /**
+     * Busca empleados dentro de la compañía.
+     */
     public function search(Request $request, Company $company)
     {
         $this->authorizeCompanyAccess($company);
@@ -349,6 +284,9 @@ class CompanyEmployeeController extends Controller
         return response()->json($employees);
     }
 
+    /**
+     * Verifica que el usuario autenticado tenga acceso a la empresa.
+     */
     private function authorizeCompanyAccess(Company $company): void
     {
         $user = auth()->user();
@@ -362,6 +300,9 @@ class CompanyEmployeeController extends Controller
     // Ficha de edición del colaborador (admin)
     // -------------------------------------------------------------------------
 
+    /**
+     * Muestra la vista de edición del empleado.
+     */
     public function edit(Company $company, Employee $employee)
     {
         $this->authorizeCompanyAccess($company);
@@ -384,6 +325,9 @@ class CompanyEmployeeController extends Controller
         ));
     }
 
+    /**
+     * Actualiza la información personal, laboral o previsional de un empleado (vista).
+     */
     public function update(Request $request, Company $company, Employee $employee)
     {
         $this->authorizeCompanyAccess($company);
@@ -443,20 +387,26 @@ class CompanyEmployeeController extends Controller
         return back()->with('success', 'Información actualizada correctamente.');
     }
 
+    /**
+     * Descarga la liquidación de sueldo del empleado.
+     */
     public function downloadPayroll(Company $company, Employee $employee, \Modules\Payroll\Models\Payroll $payroll)
     {
         $this->authorizeCompanyAccess($company);
 
         abort_unless($payroll->employee_id === $employee->id, 404);
 
-        // TODO: integrar librería PDF (ej. barryvdh/laravel-dompdf) y renderizar la liquidación
+        // POR HACER: integrar librería PDF (ej. barryvdh/laravel-dompdf) y renderizar la liquidación
         abort(501, 'Generación de PDF pendiente de implementación.');
     }
 
     // -------------------------------------------------------------------------
-    // CRUD de employee_items
+    // CRUD de employee_items (ítems del colaborador)
     // -------------------------------------------------------------------------
 
+    /**
+     * Agrega un nuevo ítem a la ficha del colaborador.
+     */
     public function storeItem(Request $request, Company $company, Employee $employee)
     {
         $this->authorizeCompanyAccess($company);
@@ -470,7 +420,7 @@ class CompanyEmployeeController extends Controller
             'notes'              => 'nullable|string|max:500',
         ]);
 
-        // Verificar que el item pertenece a esta empresa
+        // Verificar que el ítem pertenece a esta empresa
         $item = Item::where('id', $validated['item_id'])
             ->where('company_id', $company->id)
             ->firstOrFail();
@@ -490,6 +440,9 @@ class CompanyEmployeeController extends Controller
         return response()->json(['success' => true, 'item' => $employeeItem->load('item')]);
     }
 
+    /**
+     * Actualiza un ítem asociado al colaborador.
+     */
     public function updateItem(Request $request, Company $company, Employee $employee, EmployeeItem $employeeItem)
     {
         $this->authorizeCompanyAccess($company);
@@ -508,6 +461,9 @@ class CompanyEmployeeController extends Controller
         return response()->json(['success' => true, 'item' => $employeeItem->load('item')]);
     }
 
+    /**
+     * Elimina un ítem asociado al colaborador.
+     */
     public function destroyItem(Company $company, Employee $employee, EmployeeItem $employeeItem)
     {
         $this->authorizeCompanyAccess($company);
