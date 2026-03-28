@@ -808,24 +808,76 @@
                                         <div class="flex justify-between text-sm">
                                             <span class="text-slate-600">Sueldo Base</span>
                                             <span class="font-mono font-bold"
-                                                x-text="formatCLP(selectedPayslip?.gross_salary || selectedPayslip?.total_earnings)"></span>
+                                                x-text="formatCLP(selectedPayslip?.base_salary)"></span>
                                         </div>
-                                        <div class="flex justify-between text-sm">
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.gratification_amount > 0">
                                             <span class="text-slate-600">Gratificación Legal</span>
-                                            <span class="font-mono text-slate-400 italic">Incluida</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.gratification_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.overtime_amount > 0">
+                                            <span class="text-slate-600">Horas Extras</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.overtime_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.comisiones_amount > 0">
+                                            <span class="text-slate-600">Comisiones</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.comisiones_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.bonos_imponibles_amount > 0">
+                                            <span class="text-slate-600">Bonos Imponibles</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.bonos_imponibles_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.semana_corrida_amount > 0">
+                                            <span class="text-slate-600">Semana Corrida</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.semana_corrida_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.aguinaldos_amount > 0">
+                                            <span class="text-slate-600">Aguinaldos</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.aguinaldos_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm pt-2 border-t border-slate-50">
+                                            <span class="text-slate-900 font-bold">Total Haberes Imponibles</span>
+                                            <span class="font-mono font-bold text-slate-900"
+                                                x-text="formatCLP(selectedPayslip?.gross_salary)"></span>
                                         </div>
                                     </div>
                                     {{-- No Imponibles --}}
                                     <div class="space-y-2 pt-2">
                                         <p class="text-[9px] font-bold text-slate-300 uppercase italic">Haberes No
                                             Imponibles</p>
-                                        <div class="flex justify-between text-sm">
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.mobility_allowance > 0">
                                             <span class="text-slate-600">Asignación Movilización</span>
-                                            <span class="font-mono text-slate-400 italic">$ 0</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.mobility_allowance)"></span>
                                         </div>
-                                        <div class="flex justify-between text-sm">
+                                        <div class="flex justify-between text-sm"
+                                            x-show="selectedPayslip?.meal_allowance > 0">
                                             <span class="text-slate-600">Asignación Colación</span>
-                                            <span class="font-mono text-slate-400 italic">$ 0</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.meal_allowance)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm"
+                                            x-show="(selectedPayslip?.non_taxable_earnings - (selectedPayslip?.mobility_allowance || 0) - (selectedPayslip?.meal_allowance || 0)) > 0">
+                                            <span class="text-slate-600">Otros No Imponibles</span>
+                                            <span class="font-mono font-bold"
+                                                x-text="formatCLP(selectedPayslip?.non_taxable_earnings - (selectedPayslip?.mobility_allowance || 0) - (selectedPayslip?.meal_allowance || 0))"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm pt-2 border-t border-slate-50">
+                                            <span class="text-slate-900 font-bold">Total Haberes No Imponibles</span>
+                                            <span class="font-mono font-bold text-slate-900"
+                                                x-text="formatCLP(selectedPayslip?.non_taxable_earnings)"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -834,7 +886,7 @@
                                         Haberes</span>
                                     <span
                                         class="text-lg font-black text-slate-900 underline decoration-slate-200 underline-offset-4"
-                                        x-text="formatCLP(selectedPayslip?.gross_salary || selectedPayslip?.total_earnings)"></span>
+                                        x-text="formatCLP(selectedPayslip?.total_earnings)"></span>
                                 </div>
                             </div>
 
