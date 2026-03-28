@@ -324,6 +324,18 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                             class="fas fa-user-shield w-5 text-center {{ ($activeTab ?? '') === 'users' ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
                         <span x-show="!sidebarCollapsed">Usuarios y Accesos</span>
                     </a>
+                    <a href="{{ route('companies.items.index', ['company' => $company]) }}"
+                        title="Catálogo de Conceptos"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Catálogo de Conceptos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
+                                '{{ $activeTab ?? '' }}'
+                                === 'items') ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-tags w-5 text-center {{ ($activeTab ?? '') === 'items' ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
+                        <span x-show="!sidebarCollapsed">Catálogo de Conceptos</span>
+                    </a>
                 </div>
             </div>
 
