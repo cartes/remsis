@@ -5,8 +5,6 @@ namespace Modules\AdminPanel\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-// use Modules\Companies\Models\Company;
-
 class Mutual extends Model
 {
     use HasFactory;
@@ -17,9 +15,4 @@ class Mutual extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = ['nombre'];
-
-    // public function companies()
-    // {
-    //     return $this->hasMany(Company::class);
-    // }
 }
