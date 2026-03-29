@@ -12,7 +12,14 @@ trait BelongsToTenant
         static::addGlobalScope('tenant', function (Builder $builder) {
             $tenantContext = app(TenantContext::class);
 
-            if ($tenantContext->isBypassed() || ! $tenantContext->hasTenant()) {
+            if ($tenantContext->isBypassed()) {
+                return;
+            }
+
+            if (! $tenantContext->hasTenant()) {
+                // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
+                // prevenimos la consulta de todos los registros forzando un resultado vacío.
+                $builder->whereRaw('1 = 0');
                 return;
             }
 
@@ -26,8 +33,14 @@ trait BelongsToTenant
             $tenantContext = app(TenantContext::class);
             $tenantColumn = static::getTenantColumn();
 
-            if ($tenantContext->isBypassed() || ! $tenantContext->hasTenant() || ! empty($model->{$tenantColumn})) {
+            if ($tenantContext->isBypassed() || ! empty($model->{$tenantColumn})) {
                 return;
+            }
+
+            if (! $tenantContext->hasTenant()) {
+                // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
+                // lanzamos una excepción para evitar la creación de registros huérfanos.
+                throw new \RuntimeException('No se puede crear el modelo sin un tenant activo.');
             }
 
             $model->{$tenantColumn} = $tenantContext->companyId();

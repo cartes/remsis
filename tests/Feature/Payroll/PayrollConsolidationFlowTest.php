@@ -25,6 +25,7 @@ class PayrollConsolidationFlowTest extends TestCase
             'allows_overtime' => true,
         ]);
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $actor = User::factory()->create([
             'company_id' => $company->id,
         ]);
@@ -49,7 +50,9 @@ class PayrollConsolidationFlowTest extends TestCase
             'end_date' => '2026-03-31',
             'status' => PayrollPeriod::STATUS_DRAFT,
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $calculateResponse = $this->actingAs($actor)->post(
             route('companies.payroll-periods.calculate', ['company' => $company, 'period' => $period])
         );
@@ -58,13 +61,16 @@ class PayrollConsolidationFlowTest extends TestCase
             route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $period->id])
         );
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $payroll = Payroll::where('employee_id', $employee->id)
             ->where('payroll_period_id', $period->id)
             ->firstOrFail();
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
         $this->assertSame(500000.0, (float) $payroll->base_salary);
         $this->assertSame('calculated', $period->fresh()->status);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $updateResponse = $this->actingAs($actor)->putJson(
             route('companies.payroll-periods.update-line', ['company' => $company, 'period' => $period, 'payroll' => $payroll->id]),
             [
