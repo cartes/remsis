@@ -310,10 +310,11 @@ class CompanyEmployeeController extends Controller
 
         $employee->load([
             'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item',
-            'payrolls'  => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
-            'documents' => fn ($q) => $q->latest(),
-            'logs'      => fn ($q) => $q->latest(),
+            'payrolls'    => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
+            'documents'   => fn ($q) => $q->latest(),
+            'logs'        => fn ($q) => $q->latest(),
             'logs.user',
+            'attendances' => fn ($q) => $q->orderBy('date', 'desc'),
         ]);
 
         $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();

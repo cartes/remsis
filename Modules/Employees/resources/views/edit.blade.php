@@ -1,37 +1,46 @@
 <x-layouts.company :company="$employee->company" activeTab="employees">
     <div class="mb-6">
         {{-- Breadcrumb minimalista --}}
-        <nav class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 overflow-x-auto no-scrollbar py-1">
-            <a href="{{ route('companies.index') }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">Empresas</a>
+        <nav
+            class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 overflow-x-auto no-scrollbar py-1">
+            <a href="{{ route('companies.index') }}"
+                class="hover:text-blue-600 transition-colors whitespace-nowrap">Empresas</a>
             <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
-            
-            <a href="{{ route('companies.dashboard', $employee->company) }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">
+
+            <a href="{{ route('companies.dashboard', $employee->company) }}"
+                class="hover:text-blue-600 transition-colors whitespace-nowrap">
                 {{ $employee->company->razon_social ?? $employee->company->name }}
             </a>
             <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
-            
-            <a href="{{ route('companies.employees', $employee->company) }}" class="hover:text-blue-600 transition-colors whitespace-nowrap">Colaboradores</a>
+
+            <a href="{{ route('companies.employees', $employee->company) }}"
+                class="hover:text-blue-600 transition-colors whitespace-nowrap">Colaboradores</a>
             <i class="fas fa-chevron-right text-[8px] opacity-30 mx-0.5"></i>
-            
+
             <span class="text-slate-900 whitespace-nowrap">{{ $employee->full_name }}</span>
         </nav>
 
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden ring-1 ring-slate-100">
+        <div
+            class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden ring-1 ring-slate-100">
             {{-- Decoración sutil de fondo --}}
-            <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 z-0 border border-slate-100/50"></div>
-            
+            <div
+                class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 z-0 border border-slate-100/50">
+            </div>
+
             <div class="flex items-center gap-6 relative z-10">
                 {{-- Avatar --}}
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-500/20 flex-shrink-0 ring-4 ring-white">
+                <div
+                    class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-500/20 flex-shrink-0 ring-4 ring-white">
                     {{ strtoupper(substr($employee->first_name ?? '?', 0, 1)) }}
                 </div>
-                
+
                 <div>
                     <div class="flex items-center gap-3 mb-2 font-bold">
                         <h1 class="text-2xl font-black text-slate-900 tracking-tight">
                             {{ $employee->full_name ?: 'Colaborador sin nombre' }}
                         </h1>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
                             Activo
                         </span>
@@ -42,7 +51,8 @@
                             {{ $employee->position ?? 'Sin cargo asignado' }}
                         </span>
                         <span class="text-slate-300">|</span>
-                        <span class="flex items-center gap-1.5 font-mono bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                        <span
+                            class="flex items-center gap-1.5 font-mono bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
                             <i class="fas fa-id-card text-slate-400 text-xs"></i>
                             {{ $employee->rut }}
                         </span>
@@ -51,9 +61,11 @@
             </div>
 
             {{-- Barra de completitud --}}
-            <div class="flex-shrink-0 w-full sm:w-60 bg-slate-50/80 backdrop-blur-sm p-4 rounded-xl border border-slate-100 relative z-10">
+            <div
+                class="flex-shrink-0 w-full sm:w-60 bg-slate-50/80 backdrop-blur-sm p-4 rounded-xl border border-slate-100 relative z-10">
                 <div class="flex justify-between items-center mb-2.5">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                         <i class="fas fa-circle-nodes text-[8px] text-blue-400"></i>
                         Estado de la Ficha
                     </span>
@@ -69,8 +81,7 @@
         </div>
     </div>
 
-<div
-    x-data="{
+    <div x-data="{
         tab: '{{ session('active_tab', 'resumen') }}',
         isEditModalOpen: false,
         healthSystem: '{{ old('health_system', $employee->health_system ?? '') }}',
@@ -79,26 +90,26 @@
         nationalityDropdownOpen: false,
         countries: [
             'Chile',
-            'Afganistán','Alemania','Angola','Argentina','Australia','Austria',
-            'Bangladés','Bélgica','Bolivia','Brasil','Bulgaria',
-            'Canadá','Colombia','Corea del Sur','Costa Rica','Cuba',
-            'Dinamarca','República Dominicana',
-            'Ecuador','Egipto','Emiratos Árabes','Eslovaquia','España','Estados Unidos',
-            'Finlandia','Francia',
-            'Grecia','Guatemala',
-            'Haití','Países Bajos','Honduras','Hungría',
-            'India','Indonesia','Irán','Irak','Irlanda','Israel','Italia',
-            'Jamaica','Japón','Jordania',
-            'Kenia','Kuwait',
-            'Líbano','Libia',
-            'Marruecos','México',
-            'Nueva Zelanda','Nicaragua','Nigeria','Noruega',
-            'Pakistán','Panamá','Paraguay','Perú','Polonia','Portugal',
-            'Rumania','Rusia',
-            'El Salvador','Siria','Sudáfrica','Suecia','Suiza',
-            'Tailandia','Taiwán','Túnez','Turquía',
-            'Ucrania','Uruguay',
-            'Venezuela','Vietnam',
+            'Afganistán', 'Alemania', 'Angola', 'Argentina', 'Australia', 'Austria',
+            'Bangladés', 'Bélgica', 'Bolivia', 'Brasil', 'Bulgaria',
+            'Canadá', 'Colombia', 'Corea del Sur', 'Costa Rica', 'Cuba',
+            'Dinamarca', 'República Dominicana',
+            'Ecuador', 'Egipto', 'Emiratos Árabes', 'Eslovaquia', 'España', 'Estados Unidos',
+            'Finlandia', 'Francia',
+            'Grecia', 'Guatemala',
+            'Haití', 'Países Bajos', 'Honduras', 'Hungría',
+            'India', 'Indonesia', 'Irán', 'Irak', 'Irlanda', 'Israel', 'Italia',
+            'Jamaica', 'Japón', 'Jordania',
+            'Kenia', 'Kuwait',
+            'Líbano', 'Libia',
+            'Marruecos', 'México',
+            'Nueva Zelanda', 'Nicaragua', 'Nigeria', 'Noruega',
+            'Pakistán', 'Panamá', 'Paraguay', 'Perú', 'Polonia', 'Portugal',
+            'Rumania', 'Rusia',
+            'El Salvador', 'Siria', 'Sudáfrica', 'Suecia', 'Suiza',
+            'Tailandia', 'Taiwán', 'Túnez', 'Turquía',
+            'Ucrania', 'Uruguay',
+            'Venezuela', 'Vietnam',
             'Otro',
         ],
         get filteredNationalities() {
@@ -106,737 +117,870 @@
             const search = this.searchNationality.toLowerCase();
             return this.countries.filter(c => c.toLowerCase().includes(search));
         }
-    }"
-    x-init="
-        const hash = window.location.hash.replace('#', '');
-        if (['resumen','previsional','laboral','historial'].includes(hash)) tab = hash;
-    "
->
+    }" x-init="const hash = window.location.hash.replace('#', '');
+    if (['resumen', 'previsional', 'laboral', 'historial'].includes(hash)) tab = hash;">
 
-{{-- ─────────────────── MENSAJES FLASH ─────────────────── --}}
-@if(session('success'))
-<div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-    x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-    class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 mb-6 text-sm font-semibold shadow-sm">
-    <i class="fas fa-check-circle text-emerald-500"></i>
-    {{ session('success') }}
-</div>
-@endif
+        {{-- ─────────────────── MENSAJES FLASH ─────────────────── --}}
+        @if (session('success'))
+            <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
+                x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 mb-6 text-sm font-semibold shadow-sm">
+                <i class="fas fa-check-circle text-emerald-500"></i>
+                {{ session('success') }}
+            </div>
+        @endif
 
-@if($errors->any())
-<div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 mb-6 text-sm shadow-sm">
-    <i class="fas fa-circle-exclamation text-red-500 mt-0.5"></i>
-    <ul class="font-semibold space-y-0.5">
-        @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
-@endif
+        @if ($errors->any())
+            <div
+                class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 mb-6 text-sm shadow-sm">
+                <i class="fas fa-circle-exclamation text-red-500 mt-0.5"></i>
+                <ul class="font-semibold space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-{{-- ─────────────────── NAVEGACIÓN DE PESTAÑAS ─────────────────── --}}
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {{-- ─────────────────── NAVEGACIÓN DE PESTAÑAS ─────────────────── --}}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
-    {{-- Tab bar --}}
-    <div class="flex border-b border-slate-100 bg-slate-50/50">
-        @foreach([
-            ['key' => 'resumen',     'label' => 'Resumen',           'icon' => 'fa-id-card'],
-            ['key' => 'previsional', 'label' => 'Info. Previsional', 'icon' => 'fa-shield-halved'],
-            ['key' => 'laboral',     'label' => 'Datos Laborales',   'icon' => 'fa-briefcase'],
-            ['key' => 'historial',   'label' => 'Historial',         'icon' => 'fa-clock-rotate-left'],
-        ] as $t)
-        <button type="button"
-            @click="tab = '{{ $t['key'] }}'; window.location.hash = '{{ $t['key'] }}'"
-            class="flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-bold transition-all border-b-2"
-            :class="tab === '{{ $t['key'] }}'
-                ? 'border-blue-600 text-blue-700 bg-white'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-white'">
-            <i class="fas {{ $t['icon'] }} text-[13px]"
-                :class="tab === '{{ $t['key'] }}' ? 'text-blue-600' : 'text-slate-400'"></i>
-            <span class="hidden sm:inline">{{ $t['label'] }}</span>
-        </button>
-        @endforeach
-    </div>
+            {{-- Tab bar --}}
+            <div class="flex border-b border-slate-100 bg-slate-50/50">
+                @foreach ([['key' => 'resumen', 'label' => 'Resumen', 'icon' => 'fa-id-card'], ['key' => 'previsional', 'label' => 'Info. Previsional', 'icon' => 'fa-shield-halved'], ['key' => 'laboral', 'label' => 'Datos Laborales', 'icon' => 'fa-briefcase'], ['key' => 'historial', 'label' => 'Historial', 'icon' => 'fa-clock-rotate-left']] as $t)
+                    <button type="button"
+                        @click="tab = '{{ $t['key'] }}'; window.location.hash = '{{ $t['key'] }}'"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-bold transition-all border-b-2"
+                        :class="tab === '{{ $t['key'] }}'
+                            ?
+                            'border-blue-600 text-blue-700 bg-white' :
+                            'border-transparent text-slate-500 hover:text-slate-700 hover:bg-white'">
+                        <i class="fas {{ $t['icon'] }} text-[13px]"
+                            :class="tab === '{{ $t['key'] }}' ? 'text-blue-600' : 'text-slate-400'"></i>
+                        <span class="hidden sm:inline">{{ $t['label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
 
-    {{-- ════════════════════════════════════════
+            {{-- ════════════════════════════════════════
          PESTAÑA 1 — RESUMEN
     ═════════════════════════════════════════ --}}
-    <div x-show="tab === 'resumen'" x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-        <div class="p-6 sm:p-8">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-id-card text-blue-500 text-sm"></i> Resumen del Colaborador
-                </h2>
-                <button @click="isEditModalOpen = true" type="button" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 text-sm font-bold rounded-xl transition-all shadow-sm">
-                    <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    Editar Información
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {{-- Cargo Actual --}}
-                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                            <i class="fas fa-briefcase"></i>
-                        </div>
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Cargo Actual</h3>
-                    </div>
-                    <p class="text-lg font-black text-slate-800">{{ $employee->position ?? 'Sin cargo asignado' }}</p>
-                </div>
-
-                {{-- Jefe Directo --}}
-                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Jefe Directo</h3>
-                    </div>
-                    <p class="text-lg font-black text-slate-800">{{ $employee->manager->full_name ?? 'No asignado' }}</p>
-                </div>
-
-                {{-- Vacaciones --}}
-                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
-                            <i class="fas fa-umbrella-beach"></i>
-                        </div>
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Vacaciones</h3>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <p class="text-lg font-black text-slate-800">15</p>
-                        <span class="text-sm font-semibold text-slate-500">días disp.</span>
-                    </div>
-                </div>
-
-                {{-- Último Sueldo --}}
-                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Últ. Sueldo</h3>
-                    </div>
-                    <p class="text-lg font-black text-slate-800">$850.000</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ─────────────────── MODAL DE EDICIÓN DE DATOS PERSONALES ─────────────────── --}}
-    <div x-show="isEditModalOpen" style="display: none;" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div x-show="isEditModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
-        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div x-show="isEditModalOpen" @click.away="isEditModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-visible rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-2xl">
-                    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-user-edit text-blue-500"></i>
-                            Editar Información Personal
-                        </h3>
-                        <button @click="isEditModalOpen = false" type="button" class="text-slate-400 hover:text-slate-600 transition-colors">
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <div x-show="tab === 'resumen'" x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                <div class="p-6 sm:p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-id-card text-blue-500 text-sm"></i> Resumen del Colaborador
+                        </h2>
+                        <button @click="isEditModalOpen = true" type="button"
+                            class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 text-sm font-bold rounded-xl transition-all shadow-sm">
+                            <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
+                            Editar Información
                         </button>
                     </div>
 
-                    <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="section" value="personales">
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                {{-- RUT --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        RUT <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="rut"
-                        value="{{ old('rut', $employee->rut) }}"
-                        placeholder="12345678-9"
-                        @input="$el.value = window.formatRut ? window.formatRut($el.value) : $el.value"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('rut') border-red-400 bg-red-50 @enderror">
-                    @error('rut')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Email --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Correo Electrónico
-                    </label>
-                    <input type="email" name="email"
-                        value="{{ old('email', $employee->email) }}"
-                        placeholder="colaborador@empresa.cl"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('email') border-red-400 bg-red-50 @enderror">
-                    @error('email')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Nombres --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Nombres <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="first_name"
-                        value="{{ old('first_name', $employee->first_name) }}"
-                        placeholder="Juan"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('first_name') border-red-400 bg-red-50 @enderror">
-                    @error('first_name')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Apellidos --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Apellidos <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="last_name"
-                        value="{{ old('last_name', $employee->last_name) }}"
-                        placeholder="Pérez González"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('last_name') border-red-400 bg-red-50 @enderror">
-                    @error('last_name')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Fecha de Nacimiento --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Fecha de Nacimiento
-                    </label>
-                    <input type="date" name="birth_date"
-                        value="{{ old('birth_date', optional($employee->birth_date)->format('Y-m-d')) }}"
-                        max="{{ now()->subYear()->format('Y-m-d') }}"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('birth_date') border-red-400 bg-red-50 @enderror">
-                    @error('birth_date')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Género --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Género
-                    </label>
-                    <select name="gender"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('gender') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Seleccionar —</option>
-                        <option value="male"   {{ old('gender', $employee->gender) === 'male'   ? 'selected' : '' }}>Masculino</option>
-                        <option value="female" {{ old('gender', $employee->gender) === 'female' ? 'selected' : '' }}>Femenino</option>
-                        <option value="other"  {{ old('gender', $employee->gender) === 'other'  ? 'selected' : '' }}>Otro / Prefiero no indicar</option>
-                    </select>
-                    @error('gender')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Nacionalidad (Buscador) --}}
-                <div class="sm:col-span-2 relative" @click.away="nationalityDropdownOpen = false">
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Nacionalidad
-                    </label>
-                    <input type="hidden" name="nationality" :value="nationality">
-                    
-                    <div @click="nationalityDropdownOpen = !nationalityDropdownOpen"
-                        class="w-full sm:w-1/2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all cursor-pointer flex items-center justify-between"
-                        :class="nationalityDropdownOpen ? 'ring-2 ring-blue-500/20 border-blue-400' : ''">
-                        <span x-text="nationality || 'Seleccionar nacionalidad'" :class="!nationality ? 'text-slate-300' : ''"></span>
-                        <svg class="w-4 h-4 text-slate-400 transition-transform" :class="nationalityDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-
-                    {{-- Dropdown --}}
-                    <div x-show="nationalityDropdownOpen" x-cloak
-                        class="absolute z-50 mt-1 w-full sm:w-1/2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden"
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100">
-                        
-                        {{-- Search input inside dropdown --}}
-                        <div class="p-2 border-b border-slate-50">
-                            <input type="text" x-model="searchNationality" placeholder="Buscar país..."
-                                @click.stop
-                                class="w-full px-3 py-2 text-xs border border-slate-100 rounded-lg outline-none focus:bg-slate-50 transition-colors">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {{-- Cargo Actual --}}
+                        <div
+                            class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Cargo Actual</h3>
+                            </div>
+                            <p class="text-lg font-black text-slate-800">
+                                {{ $employee->position ?? 'Sin cargo asignado' }}</p>
                         </div>
 
-                        <div class="max-h-48 overflow-y-auto pt-1 pb-1 scrollbar-thin">
-                            <template x-for="country in filteredNationalities" :key="country">
-                                <div @click="nationality = country; nationalityDropdownOpen = false; searchNationality = ''"
-                                    class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors flex items-center justify-between"
-                                    :class="nationality === country ? 'bg-blue-50 text-blue-700 font-semibold' : ''">
-                                    <span x-text="country"></span>
-                                    <template x-if="nationality === country">
-                                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </template>
+                        {{-- Jefe Directo --}}
+                        <div
+                            class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
+                                    <i class="fas fa-user-tie"></i>
                                 </div>
-                            </template>
-                            <div x-show="filteredNationalities.length === 0" class="px-4 py-3 text-xs text-slate-400 italic text-center">
-                                No se encontraron resultados
+                                <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Jefe Directo</h3>
+                            </div>
+                            <p class="text-lg font-black text-slate-800">
+                                {{ $employee->manager->full_name ?? 'No asignado' }}</p>
+                        </div>
+
+                        {{-- Vacaciones --}}
+                        <div
+                            class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                                    <i class="fas fa-umbrella-beach"></i>
+                                </div>
+                                <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Vacaciones</h3>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-lg font-black text-slate-800">15</p>
+                                <span class="text-sm font-semibold text-slate-500">días disp.</span>
                             </div>
                         </div>
+
+                        {{-- Último Sueldo --}}
+                        <div
+                            class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">Últ. Sueldo</h3>
+                            </div>
+                            <p class="text-lg font-black text-slate-800">$850.000</p>
+                        </div>
                     </div>
-                    @error('nationality')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-            </div>{{-- /grid --}}
-
-            <div class="mt-8 flex justify-end gap-3">
-                <button type="button" @click="isEditModalOpen = false"
-                    class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-                    Cancelar
-                </button>
-                <button type="submit"
-                    class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
-                    <i class="fas fa-floppy-disk text-xs"></i>
-                    Guardar Cambios
-                </button>
-            </div>
-        </form>
                 </div>
             </div>
-        </div>
-    </div>
 
-    {{-- ════════════════════════════════════════
+            {{-- ─────────────────── MODAL DE EDICIÓN DE DATOS PERSONALES ─────────────────── --}}
+            <div x-show="isEditModalOpen" style="display: none;" class="relative z-50" aria-labelledby="modal-title"
+                role="dialog" aria-modal="true">
+                <div x-show="isEditModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div x-show="isEditModalOpen" @click.away="isEditModalOpen = false"
+                            x-transition:enter="ease-out duration-300"
+                            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave="ease-in duration-200"
+                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                            class="relative transform overflow-visible rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-2xl">
+                            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                                <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                                    <i class="fas fa-user-edit text-blue-500"></i>
+                                    Editar Información Personal
+                                </h3>
+                                <button @click="isEditModalOpen = false" type="button"
+                                    class="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="section" value="personales">
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                                    {{-- RUT --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            RUT <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="rut"
+                                            value="{{ old('rut', $employee->rut) }}" placeholder="12345678-9"
+                                            @input="$el.value = window.formatRut ? window.formatRut($el.value) : $el.value"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('rut') border-red-400 bg-red-50 @enderror">
+                                        @error('rut')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Email --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Correo Electrónico
+                                        </label>
+                                        <input type="email" name="email"
+                                            value="{{ old('email', $employee->email) }}"
+                                            placeholder="colaborador@empresa.cl"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('email') border-red-400 bg-red-50 @enderror">
+                                        @error('email')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Nombres --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Nombres <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="first_name"
+                                            value="{{ old('first_name', $employee->first_name) }}" placeholder="Juan"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('first_name') border-red-400 bg-red-50 @enderror">
+                                        @error('first_name')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Apellidos --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Apellidos <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="last_name"
+                                            value="{{ old('last_name', $employee->last_name) }}"
+                                            placeholder="Pérez González"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('last_name') border-red-400 bg-red-50 @enderror">
+                                        @error('last_name')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Fecha de Nacimiento --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Fecha de Nacimiento
+                                        </label>
+                                        <input type="date" name="birth_date"
+                                            value="{{ old('birth_date', optional($employee->birth_date)->format('Y-m-d')) }}"
+                                            max="{{ now()->subYear()->format('Y-m-d') }}"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('birth_date') border-red-400 bg-red-50 @enderror">
+                                        @error('birth_date')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Género --}}
+                                    <div>
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Género
+                                        </label>
+                                        <select name="gender"
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('gender') border-red-400 bg-red-50 @enderror">
+                                            <option value="">— Seleccionar —</option>
+                                            <option value="male"
+                                                {{ old('gender', $employee->gender) === 'male' ? 'selected' : '' }}>
+                                                Masculino</option>
+                                            <option value="female"
+                                                {{ old('gender', $employee->gender) === 'female' ? 'selected' : '' }}>
+                                                Femenino</option>
+                                            <option value="other"
+                                                {{ old('gender', $employee->gender) === 'other' ? 'selected' : '' }}>
+                                                Otro / Prefiero no indicar</option>
+                                        </select>
+                                        @error('gender')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Nacionalidad (Buscador) --}}
+                                    <div class="sm:col-span-2 relative" @click.away="nationalityDropdownOpen = false">
+                                        <label
+                                            class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                            Nacionalidad
+                                        </label>
+                                        <input type="hidden" name="nationality" :value="nationality">
+
+                                        <div @click="nationalityDropdownOpen = !nationalityDropdownOpen"
+                                            class="w-full sm:w-1/2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all cursor-pointer flex items-center justify-between"
+                                            :class="nationalityDropdownOpen ? 'ring-2 ring-blue-500/20 border-blue-400' : ''">
+                                            <span x-text="nationality || 'Seleccionar nacionalidad'"
+                                                :class="!nationality ? 'text-slate-300' : ''"></span>
+                                            <svg class="w-4 h-4 text-slate-400 transition-transform"
+                                                :class="nationalityDropdownOpen ? 'rotate-180' : ''" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+
+                                        {{-- Dropdown --}}
+                                        <div x-show="nationalityDropdownOpen" x-cloak
+                                            class="absolute z-50 mt-1 w-full sm:w-1/2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 scale-95"
+                                            x-transition:enter-end="opacity-100 scale-100">
+
+                                            {{-- Search input inside dropdown --}}
+                                            <div class="p-2 border-b border-slate-50">
+                                                <input type="text" x-model="searchNationality"
+                                                    placeholder="Buscar país..." @click.stop
+                                                    class="w-full px-3 py-2 text-xs border border-slate-100 rounded-lg outline-none focus:bg-slate-50 transition-colors">
+                                            </div>
+
+                                            <div class="max-h-48 overflow-y-auto pt-1 pb-1 scrollbar-thin">
+                                                <template x-for="country in filteredNationalities"
+                                                    :key="country">
+                                                    <div @click="nationality = country; nationalityDropdownOpen = false; searchNationality = ''"
+                                                        class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors flex items-center justify-between"
+                                                        :class="nationality === country ?
+                                                            'bg-blue-50 text-blue-700 font-semibold' : ''">
+                                                        <span x-text="country"></span>
+                                                        <template x-if="nationality === country">
+                                                            <svg class="w-3.5 h-3.5 text-blue-500" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="3" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                                <div x-show="filteredNationalities.length === 0"
+                                                    class="px-4 py-3 text-xs text-slate-400 italic text-center">
+                                                    No se encontraron resultados
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @error('nationality')
+                                            <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                </div>{{-- /grid --}}
+
+                                <div class="mt-8 flex justify-end gap-3">
+                                    <button type="button" @click="isEditModalOpen = false"
+                                        class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit"
+                                        class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
+                                        <i class="fas fa-floppy-disk text-xs"></i>
+                                        Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ════════════════════════════════════════
          PESTAÑA 2 — INFORMACIÓN PREVISIONAL
     ═════════════════════════════════════════ --}}
-    <div x-show="tab === 'previsional'" x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+            <div x-show="tab === 'previsional'" x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
 
-        <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6 sm:p-8">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="section" value="previsional">
+                <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6 sm:p-8">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="section" value="previsional">
 
-            <h2 class="text-base font-black text-slate-800 mb-6 flex items-center gap-2">
-                <i class="fas fa-shield-halved text-blue-500 text-sm"></i> Información Previsional
-            </h2>
+                    <h2 class="text-base font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-shield-halved text-blue-500 text-sm"></i> Información Previsional
+                    </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                {{-- Sistema de Salud --}}
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
-                        Institución de Salud
-                    </label>
-                    <div class="flex gap-3">
-                        @foreach(['fonasa' => 'FONASA', 'isapre' => 'ISAPRE'] as $val => $lbl)
-                        <label class="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all"
-                            :class="healthSystem === '{{ $val }}'
-                                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'">
-                            <input type="radio" name="health_system" value="{{ $val }}"
-                                x-model="healthSystem"
-                                {{ old('health_system', $employee->health_system) === $val ? 'checked' : '' }}
-                                class="sr-only">
-                            <span class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
-                                :class="healthSystem === '{{ $val }}' ? 'border-blue-500 bg-blue-500' : 'border-slate-300'">
-                                <span class="w-1.5 h-1.5 rounded-full bg-white"
-                                    x-show="healthSystem === '{{ $val }}'"></span>
-                            </span>
-                            <span class="font-black text-sm">{{ $lbl }}</span>
-                        </label>
-                        @endforeach
+                        {{-- Sistema de Salud --}}
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-2">
+                                Institución de Salud
+                            </label>
+                            <div class="flex gap-3">
+                                @foreach (['fonasa' => 'FONASA', 'isapre' => 'ISAPRE'] as $val => $lbl)
+                                    <label
+                                        class="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all"
+                                        :class="healthSystem === '{{ $val }}'
+                                            ?
+                                            'border-blue-500 bg-blue-50 text-blue-700' :
+                                            'border-slate-200 bg-white text-slate-600 hover:border-slate-300'">
+                                        <input type="radio" name="health_system" value="{{ $val }}"
+                                            x-model="healthSystem"
+                                            {{ old('health_system', $employee->health_system) === $val ? 'checked' : '' }}
+                                            class="sr-only">
+                                        <span
+                                            class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                                            :class="healthSystem === '{{ $val }}' ? 'border-blue-500 bg-blue-500' :
+                                                'border-slate-300'">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"
+                                                x-show="healthSystem === '{{ $val }}'"></span>
+                                        </span>
+                                        <span class="font-black text-sm">{{ $lbl }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('health_system')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Isapre + Valor plan (solo si isapre) --}}
+                        <div x-show="healthSystem === 'isapre'" x-transition>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Isapre
+                            </label>
+                            <select name="isapre_id"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('isapre_id') border-red-400 bg-red-50 @enderror">
+                                <option value="">— Seleccionar —</option>
+                                @foreach ($isapres as $isapre)
+                                    <option value="{{ $isapre->id }}"
+                                        {{ old('isapre_id', $employee->isapre_id) == $isapre->id ? 'selected' : '' }}>
+                                        {{ $isapre->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('isapre_id')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div x-show="healthSystem === 'isapre'" x-transition>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Valor Plan de Salud <span class="text-slate-400 font-medium normal-case">(CLP)</span>
+                            </label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
+                                <input type="number" name="health_contribution"
+                                    value="{{ old('health_contribution', $employee->health_contribution) }}"
+                                    placeholder="0" min="0"
+                                    class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('health_contribution') border-red-400 bg-red-50 @enderror">
+                            </div>
+                            @error('health_contribution')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- AFP --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                AFP
+                            </label>
+                            <select name="afp_id"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('afp_id') border-red-400 bg-red-50 @enderror">
+                                <option value="">No cotiza (Exento / Jubilado)</option>
+                                @foreach ($afps as $afp)
+                                    <option value="{{ $afp->id }}"
+                                        {{ old('afp_id', $employee->afp_id) == $afp->id ? 'selected' : '' }}>
+                                        {{ $afp->nombre }}
+                                        @if ($afp->rate)
+                                            ({{ $afp->rate }}%)
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('afp_id')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Tipo de Contrato / Seguro Cesantía --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Seguro de Cesantía
+                                <span class="text-slate-400 font-medium normal-case">(tipo de contrato)</span>
+                            </label>
+                            <select name="contract_type"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('contract_type') border-red-400 bg-red-50 @enderror">
+                                <option value="">— Seleccionar —</option>
+                                <option value="indefinido"
+                                    {{ old('contract_type', $employee->contract_type) === 'indefinido' ? 'selected' : '' }}>
+                                    Indefinido</option>
+                                <option value="plazo_fijo"
+                                    {{ old('contract_type', $employee->contract_type) === 'plazo_fijo' ? 'selected' : '' }}>
+                                    Plazo Fijo</option>
+                                <option value="obra_faena"
+                                    {{ old('contract_type', $employee->contract_type) === 'obra_faena' ? 'selected' : '' }}>
+                                    Obra o Faena</option>
+                                <option value="honorarios"
+                                    {{ old('contract_type', $employee->contract_type) === 'honorarios' ? 'selected' : '' }}>
+                                    Honorarios</option>
+                            </select>
+                            @error('contract_type')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- APV --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                APV <span class="text-slate-400 font-medium normal-case">(Ahorro Previsional
+                                    Voluntario)</span>
+                            </label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
+                                <input type="number" name="apv_amount"
+                                    value="{{ old('apv_amount', $employee->apv_amount) }}" placeholder="0"
+                                    min="0"
+                                    class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('apv_amount') border-red-400 bg-red-50 @enderror">
+                            </div>
+                            @error('apv_amount')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                    </div>{{-- /grid --}}
+
+                    {{-- Info note --}}
+                    <div class="mt-6 flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                        <i class="fas fa-circle-info text-blue-400 text-sm mt-0.5 flex-shrink-0"></i>
+                        <p class="text-xs text-blue-700 font-semibold leading-relaxed">
+                            Las tasas de AFP y los topes de salud se aplican automáticamente al calcular la liquidación,
+                            según los parámetros legales vigentes.
+                        </p>
                     </div>
-                    @error('health_system')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
 
-                {{-- Isapre + Valor plan (solo si isapre) --}}
-                <div x-show="healthSystem === 'isapre'" x-transition>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Isapre
-                    </label>
-                    <select name="isapre_id"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('isapre_id') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Seleccionar —</option>
-                        @foreach($isapres as $isapre)
-                            <option value="{{ $isapre->id }}"
-                                {{ old('isapre_id', $employee->isapre_id) == $isapre->id ? 'selected' : '' }}>
-                                {{ $isapre->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('isapre_id')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                <div x-show="healthSystem === 'isapre'" x-transition>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Valor Plan de Salud <span class="text-slate-400 font-medium normal-case">(CLP)</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                        <input type="number" name="health_contribution"
-                            value="{{ old('health_contribution', $employee->health_contribution) }}"
-                            placeholder="0"
-                            min="0"
-                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('health_contribution') border-red-400 bg-red-50 @enderror">
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                            class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
+                            <i class="fas fa-floppy-disk text-xs"></i>
+                            Guardar datos previsionales
+                        </button>
                     </div>
-                    @error('health_contribution')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- AFP --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        AFP
-                    </label>
-                    <select name="afp_id"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('afp_id') border-red-400 bg-red-50 @enderror">
-                        <option value="">No cotiza (Exento / Jubilado)</option>
-                        @foreach($afps as $afp)
-                            <option value="{{ $afp->id }}"
-                                {{ old('afp_id', $employee->afp_id) == $afp->id ? 'selected' : '' }}>
-                                {{ $afp->nombre }}
-                                @if($afp->rate) ({{ $afp->rate }}%) @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('afp_id')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Tipo de Contrato / Seguro Cesantía --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Seguro de Cesantía
-                        <span class="text-slate-400 font-medium normal-case">(tipo de contrato)</span>
-                    </label>
-                    <select name="contract_type"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('contract_type') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Seleccionar —</option>
-                        <option value="indefinido"  {{ old('contract_type', $employee->contract_type) === 'indefinido'  ? 'selected' : '' }}>Indefinido</option>
-                        <option value="plazo_fijo"  {{ old('contract_type', $employee->contract_type) === 'plazo_fijo'  ? 'selected' : '' }}>Plazo Fijo</option>
-                        <option value="obra_faena"  {{ old('contract_type', $employee->contract_type) === 'obra_faena'  ? 'selected' : '' }}>Obra o Faena</option>
-                        <option value="honorarios"  {{ old('contract_type', $employee->contract_type) === 'honorarios'  ? 'selected' : '' }}>Honorarios</option>
-                    </select>
-                    @error('contract_type')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- APV --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        APV <span class="text-slate-400 font-medium normal-case">(Ahorro Previsional Voluntario)</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                        <input type="number" name="apv_amount"
-                            value="{{ old('apv_amount', $employee->apv_amount) }}"
-                            placeholder="0"
-                            min="0"
-                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('apv_amount') border-red-400 bg-red-50 @enderror">
-                    </div>
-                    @error('apv_amount')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-            </div>{{-- /grid --}}
-
-            {{-- Info note --}}
-            <div class="mt-6 flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                <i class="fas fa-circle-info text-blue-400 text-sm mt-0.5 flex-shrink-0"></i>
-                <p class="text-xs text-blue-700 font-semibold leading-relaxed">
-                    Las tasas de AFP y los topes de salud se aplican automáticamente al calcular la liquidación, según los parámetros legales vigentes.
-                </p>
+                </form>
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <button type="submit"
-                    class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
-                    <i class="fas fa-floppy-disk text-xs"></i>
-                    Guardar datos previsionales
-                </button>
-            </div>
-        </form>
-    </div>
-
-    {{-- ════════════════════════════════════════
+            {{-- ════════════════════════════════════════
          PESTAÑA 3 — DATOS LABORALES
     ═════════════════════════════════════════ --}}
-    <div x-show="tab === 'laboral'" x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+            <div x-show="tab === 'laboral'" x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
 
-        <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6 sm:p-8">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="section" value="laboral">
+                <form method="POST" action="{{ route('employees.update', $employee) }}" class="p-6 sm:p-8">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="section" value="laboral">
 
-            <h2 class="text-base font-black text-slate-800 mb-6 flex items-center gap-2">
-                <i class="fas fa-briefcase text-blue-500 text-sm"></i> Datos Laborales
-            </h2>
+                    <h2 class="text-base font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-briefcase text-blue-500 text-sm"></i> Datos Laborales
+                    </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                {{-- Cargo --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Cargo / Puesto
-                    </label>
-                    <input type="text" name="position"
-                        value="{{ old('position', $employee->position) }}"
-                        placeholder="Analista de RR.HH."
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('position') border-red-400 bg-red-50 @enderror">
-                    @error('position')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Centro de Costo / Departamento --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Departamento / Área
-                    </label>
-                    <select name="cost_center_id"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('cost_center_id') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Sin asignar —</option>
-                        @foreach($costCenters as $cc)
-                            <option value="{{ $cc->id }}"
-                                {{ old('cost_center_id', $employee->cost_center_id) == $cc->id ? 'selected' : '' }}>
-                                @if($cc->code) [{{ $cc->code }}] @endif {{ $cc->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('cost_center_id')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Fecha de Ingreso --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Fecha de Ingreso
-                    </label>
-                    <input type="date" name="hire_date"
-                        value="{{ old('hire_date', optional($employee->hire_date)->format('Y-m-d')) }}"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('hire_date') border-red-400 bg-red-50 @enderror">
-                    @error('hire_date')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Tipo de Remuneración --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Tipo de Remuneración
-                    </label>
-                    <select name="salary_type"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('salary_type') border-red-400 bg-red-50 @enderror">
-                        <option value="">— Seleccionar —</option>
-                        <option value="mensual"   {{ old('salary_type', $employee->salary_type) === 'mensual'   ? 'selected' : '' }}>Mensual</option>
-                        <option value="quincenal" {{ old('salary_type', $employee->salary_type) === 'quincenal' ? 'selected' : '' }}>Quincenal</option>
-                        <option value="semanal"   {{ old('salary_type', $employee->salary_type) === 'semanal'   ? 'selected' : '' }}>Semanal</option>
-                    </select>
-                    @error('salary_type')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Sueldo Base --}}
-                <div>
-                    <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                        Sueldo Base <span class="text-slate-400 font-medium normal-case">(bruto CLP)</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                        <input type="number" name="salary"
-                            value="{{ old('salary', $employee->salary) }}"
-                            placeholder="800000"
-                            min="0"
-                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('salary') border-red-400 bg-red-50 @enderror">
-                    </div>
-                    @error('salary')<p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Colación y Movilización — ahora gestionadas en Ítems --}}
-                <div class="col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+                        {{-- Cargo --}}
                         <div>
-                            <p class="text-xs font-semibold text-slate-700 mb-1">Colación y Movilización</p>
-                            <p class="text-xs text-slate-500">Estos haberes se gestionan desde la ficha del colaborador → pestaña <strong>Ítems</strong>.</p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>{{-- /grid --}}
-
-            {{-- Toggle: Genera Liquidación --}}
-            <div class="mt-6 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4">
-                <div>
-                    <p class="text-sm font-black text-slate-800">Genera Liquidación de Sueldo</p>
-                    <p class="text-xs text-slate-500 mt-0.5 font-medium">
-                        Al desactivar, el colaborador queda excluido del cálculo de nómina mensual.
-                    </p>
-                </div>
-                <label x-data="{ on: {{ $employee->is_in_payroll ? 'true' : 'false' }} }"
-                    class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
-                    <input type="hidden" name="is_in_payroll" value="0">
-                    <input type="checkbox" name="is_in_payroll" value="1"
-                        x-model="on"
-                        class="sr-only peer">
-                    <div @click="on = !on"
-                        class="w-12 h-6 rounded-full border-2 transition-all cursor-pointer flex-shrink-0"
-                        :class="on ? 'bg-blue-600 border-blue-600' : 'bg-slate-200 border-slate-300'">
-                        <div class="w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 mt-0.5"
-                            :class="on ? 'translate-x-6 ml-0.5' : 'translate-x-0.5'">
-                        </div>
-                    </div>
-                    <span class="ml-3 text-sm font-black"
-                        :class="on ? 'text-blue-700' : 'text-slate-400'"
-                        x-text="on ? 'Activo' : 'Inactivo'">
-                    </span>
-                </label>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <button type="submit"
-                    class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
-                    <i class="fas fa-floppy-disk text-xs"></i>
-                    Guardar datos laborales
-                </button>
-            </div>
-        </form>
-    </div>
-
-</div>{{-- /panel --}}
-
-{{-- ════════════════════════════════════════
-     PESTAÑA 4 — HISTORIAL
-═════════════════════════════════════════ --}}
-<div x-show="tab === 'historial'" x-cloak
-    x-transition:enter="transition ease-out duration-150"
-    x-transition:enter-start="opacity-0 translate-y-1"
-    x-transition:enter-end="opacity-100 translate-y-0"
-    class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-0 -mt-px">
-
-    <div class="p-6 sm:p-8">
-
-        {{-- Encabezado --}}
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
-                <i class="fas fa-clock-rotate-left text-blue-500 text-sm"></i>
-                Historial del Colaborador
-            </h2>
-            <span class="text-xs text-slate-400 font-semibold bg-slate-100 px-2.5 py-1 rounded-full">
-                {{ $employee->logs->count() }} {{ $employee->logs->count() === 1 ? 'registro' : 'registros' }}
-            </span>
-        </div>
-
-        @forelse($employee->logs as $log)
-
-            @php
-                $typeConfig = [
-                    'creacion'     => ['dot' => 'bg-emerald-500', 'icon' => 'fa-user-plus',        'badge' => 'bg-emerald-100 text-emerald-700 border-emerald-200'],
-                    'remuneracion' => ['dot' => 'bg-violet-500',  'icon' => 'fa-money-bill-wave',  'badge' => 'bg-violet-100 text-violet-700 border-violet-200'],
-                    'contrato'     => ['dot' => 'bg-blue-500',    'icon' => 'fa-file-contract',    'badge' => 'bg-blue-100 text-blue-700 border-blue-200'],
-                    'ausentismo'   => ['dot' => 'bg-amber-500',   'icon' => 'fa-calendar-xmark',   'badge' => 'bg-amber-100 text-amber-700 border-amber-200'],
-                    'sistema'      => ['dot' => 'bg-slate-400',   'icon' => 'fa-gear',             'badge' => 'bg-slate-100 text-slate-500 border-slate-200'],
-                    'auditoria'    => ['dot' => 'bg-slate-500',   'icon' => 'fa-pen-to-square',    'badge' => 'bg-slate-100 text-slate-600 border-slate-200'],
-                ];
-                $cfg   = $typeConfig[$log->type] ?? $typeConfig['auditoria'];
-                $label = \Modules\Employees\Models\EmployeeLog::$typeLabels[$log->type] ?? 'Auditoría';
-            @endphp
-
-            <div class="flex gap-4">
-
-                {{-- Línea vertical + punto de color --}}
-                <div class="flex flex-col items-center flex-shrink-0">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-slate-50 {{ $cfg['dot'] }}">
-                        <i class="fas {{ $cfg['icon'] }} text-white text-[11px]"></i>
-                    </div>
-                    @unless($loop->last)
-                        <div class="w-0.5 flex-1 bg-slate-200 my-1 min-h-[1.5rem]"></div>
-                    @endunless
-                </div>
-
-                {{-- Tarjeta del evento --}}
-                <div class="flex-1 pb-6">
-                    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-
-                        {{-- Cabecera: badge + fecha --}}
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border {{ $cfg['badge'] }}">
-                                {{ $label }}
-                            </span>
-                            <span class="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
-                                <i class="fas fa-clock opacity-60 text-[9px]"></i>
-                                {{ $log->created_at->format('d/m/Y') }}
-                                <span class="text-slate-200 mx-0.5">·</span>
-                                {{ $log->created_at->format('H:i') }} hrs
-                            </span>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Cargo / Puesto
+                            </label>
+                            <input type="text" name="position" value="{{ old('position', $employee->position) }}"
+                                placeholder="Analista de RR.HH."
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('position') border-red-400 bg-red-50 @enderror">
+                            @error('position')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        {{-- Descripción --}}
-                        <p class="text-sm text-slate-700 font-semibold">{{ $log->description }}</p>
+                        {{-- Centro de Costo / Departamento --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Departamento / Área
+                            </label>
+                            <select name="cost_center_id"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('cost_center_id') border-red-400 bg-red-50 @enderror">
+                                <option value="">— Sin asignar —</option>
+                                @foreach ($costCenters as $cc)
+                                    <option value="{{ $cc->id }}"
+                                        {{ old('cost_center_id', $employee->cost_center_id) == $cc->id ? 'selected' : '' }}>
+                                        @if ($cc->code)
+                                            [{{ $cc->code }}]
+                                        @endif {{ $cc->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('cost_center_id')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                        {{-- Detalle expandible de valores anteriores / nuevos --}}
-                        @if($log->old_values || $log->new_values)
-                            <div x-data="{ openDetail: false }" class="mt-3">
-                                <button @click="openDetail = !openDetail" type="button"
-                                    class="flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-blue-600 transition-colors group">
-                                    <i class="fas fa-code-compare text-[10px] group-hover:text-blue-500 transition-colors"></i>
-                                    <span x-text="openDetail ? 'Ocultar detalle' : 'Ver detalle del cambio'"></span>
-                                    <i class="fas fa-chevron-down text-[9px] transition-transform duration-200"
-                                        :class="openDetail ? 'rotate-180' : ''"></i>
-                                </button>
+                        {{-- Fecha de Ingreso --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Fecha de Ingreso
+                            </label>
+                            <input type="date" name="hire_date"
+                                value="{{ old('hire_date', optional($employee->hire_date)->format('Y-m-d')) }}"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('hire_date') border-red-400 bg-red-50 @enderror">
+                            @error('hire_date')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                                <div x-show="openDetail"
-                                    x-transition:enter="transition ease-out duration-150"
-                                    x-transition:enter-start="opacity-0 -translate-y-1"
-                                    x-transition:enter-end="opacity-100 translate-y-0"
-                                    class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {{-- Tipo de Remuneración --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Tipo de Remuneración
+                            </label>
+                            <select name="salary_type"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('salary_type') border-red-400 bg-red-50 @enderror">
+                                <option value="">— Seleccionar —</option>
+                                <option value="mensual"
+                                    {{ old('salary_type', $employee->salary_type) === 'mensual' ? 'selected' : '' }}>
+                                    Mensual</option>
+                                <option value="quincenal"
+                                    {{ old('salary_type', $employee->salary_type) === 'quincenal' ? 'selected' : '' }}>
+                                    Quincenal</option>
+                                <option value="semanal"
+                                    {{ old('salary_type', $employee->salary_type) === 'semanal' ? 'selected' : '' }}>
+                                    Semanal</option>
+                            </select>
+                            @error('salary_type')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                                    @if($log->old_values)
-                                        <div class="bg-red-50 border border-red-100 rounded-lg p-3">
-                                            <p class="font-black text-red-500 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1">
-                                                <i class="fas fa-minus-circle"></i> Antes
-                                            </p>
-                                            @foreach($log->old_values as $campo => $valor)
-                                                <p class="text-slate-600 mb-0.5 truncate">
-                                                    <span class="font-bold">{{ $campo }}:</span>
-                                                    {{ is_null($valor) ? '—' : $valor }}
-                                                </p>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                        {{-- Sueldo Base --}}
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Sueldo Base <span class="text-slate-400 font-medium normal-case">(bruto CLP)</span>
+                            </label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
+                                <input type="number" name="salary" value="{{ old('salary', $employee->salary) }}"
+                                    placeholder="800000" min="0"
+                                    class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('salary') border-red-400 bg-red-50 @enderror">
+                            </div>
+                            @error('salary')
+                                <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
 
-                                    @if($log->new_values)
-                                        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                                            <p class="font-black text-emerald-600 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1">
-                                                <i class="fas fa-plus-circle"></i> Después
-                                            </p>
-                                            @foreach($log->new_values as $campo => $valor)
-                                                <p class="text-slate-600 mb-0.5 truncate">
-                                                    <span class="font-bold">{{ $campo }}:</span>
-                                                    {{ is_null($valor) ? '—' : $valor }}
-                                                </p>
-                                            @endforeach
-                                        </div>
-                                    @endif
-
+                        {{-- Colación y Movilización — ahora gestionadas en Ítems --}}
+                        <div class="col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div>
+                                    <p class="text-xs font-semibold text-slate-700 mb-1">Colación y Movilización</p>
+                                    <p class="text-xs text-slate-500">Estos haberes se gestionan desde la ficha del
+                                        colaborador → pestaña <strong>Ítems</strong>.</p>
                                 </div>
                             </div>
-                        @endif
+                        </div>
 
-                        {{-- Pie: usuario responsable --}}
-                        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
-                            <i class="fas fa-user-shield text-[10px]"></i>
-                            <span>{{ $log->user->name ?? 'Sistema' }}</span>
+                    </div>{{-- /grid --}}
+
+                    {{-- Toggle: Genera Liquidación --}}
+                    <div
+                        class="mt-6 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4">
+                        <div>
+                            <p class="text-sm font-black text-slate-800">Genera Liquidación de Sueldo</p>
+                            <p class="text-xs text-slate-500 mt-0.5 font-medium">
+                                Al desactivar, el colaborador queda excluido del cálculo de nómina mensual.
+                            </p>
+                        </div>
+                        <label x-data="{ on: {{ $employee->is_in_payroll ? 'true' : 'false' }} }"
+                            class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
+                            <input type="hidden" name="is_in_payroll" value="0">
+                            <input type="checkbox" name="is_in_payroll" value="1" x-model="on"
+                                class="sr-only peer">
+                            <div @click="on = !on"
+                                class="w-12 h-6 rounded-full border-2 transition-all cursor-pointer flex-shrink-0"
+                                :class="on ? 'bg-blue-600 border-blue-600' : 'bg-slate-200 border-slate-300'">
+                                <div class="w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 mt-0.5"
+                                    :class="on ? 'translate-x-6 ml-0.5' : 'translate-x-0.5'">
+                                </div>
+                            </div>
+                            <span class="ml-3 text-sm font-black" :class="on ? 'text-blue-700' : 'text-slate-400'"
+                                x-text="on ? 'Activo' : 'Inactivo'">
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                            class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
+                            <i class="fas fa-floppy-disk text-xs"></i>
+                            Guardar datos laborales
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>{{-- /panel --}}
+
+        {{-- ════════════════════════════════════════
+     PESTAÑA 4 — HISTORIAL
+═════════════════════════════════════════ --}}
+        <div x-show="tab === 'historial'" x-cloak x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-0 -mt-px">
+
+            <div class="p-6 sm:p-8">
+
+                {{-- Encabezado --}}
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-clock-rotate-left text-blue-500 text-sm"></i>
+                        Historial del Colaborador
+                    </h2>
+                    <span class="text-xs text-slate-400 font-semibold bg-slate-100 px-2.5 py-1 rounded-full">
+                        {{ $employee->logs->count() }} {{ $employee->logs->count() === 1 ? 'registro' : 'registros' }}
+                    </span>
+                </div>
+
+                @forelse($employee->logs as $log)
+
+                    @php
+                        $typeConfig = [
+                            'creacion' => [
+                                'dot' => 'bg-emerald-500',
+                                'icon' => 'fa-user-plus',
+                                'badge' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                            ],
+                            'remuneracion' => [
+                                'dot' => 'bg-violet-500',
+                                'icon' => 'fa-money-bill-wave',
+                                'badge' => 'bg-violet-100 text-violet-700 border-violet-200',
+                            ],
+                            'contrato' => [
+                                'dot' => 'bg-blue-500',
+                                'icon' => 'fa-file-contract',
+                                'badge' => 'bg-blue-100 text-blue-700 border-blue-200',
+                            ],
+                            'ausentismo' => [
+                                'dot' => 'bg-amber-500',
+                                'icon' => 'fa-calendar-xmark',
+                                'badge' => 'bg-amber-100 text-amber-700 border-amber-200',
+                            ],
+                            'sistema' => [
+                                'dot' => 'bg-slate-400',
+                                'icon' => 'fa-gear',
+                                'badge' => 'bg-slate-100 text-slate-500 border-slate-200',
+                            ],
+                            'auditoria' => [
+                                'dot' => 'bg-slate-500',
+                                'icon' => 'fa-pen-to-square',
+                                'badge' => 'bg-slate-100 text-slate-600 border-slate-200',
+                            ],
+                        ];
+                        $cfg = $typeConfig[$log->type] ?? $typeConfig['auditoria'];
+                        $label = \Modules\Employees\Models\EmployeeLog::$typeLabels[$log->type] ?? 'Auditoría';
+                    @endphp
+
+                    <div class="flex gap-4">
+
+                        {{-- Línea vertical + punto de color --}}
+                        <div class="flex flex-col items-center flex-shrink-0">
+                            <div
+                                class="w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-slate-50 {{ $cfg['dot'] }}">
+                                <i class="fas {{ $cfg['icon'] }} text-white text-[11px]"></i>
+                            </div>
+                            @unless ($loop->last)
+                                <div class="w-0.5 flex-1 bg-slate-200 my-1 min-h-[1.5rem]"></div>
+                            @endunless
+                        </div>
+
+                        {{-- Tarjeta del evento --}}
+                        <div class="flex-1 pb-6">
+                            <div
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+
+                                {{-- Cabecera: badge + fecha --}}
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border {{ $cfg['badge'] }}">
+                                        {{ $label }}
+                                    </span>
+                                    <span class="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
+                                        <i class="fas fa-clock opacity-60 text-[9px]"></i>
+                                        {{ $log->created_at->format('d/m/Y') }}
+                                        <span class="text-slate-200 mx-0.5">·</span>
+                                        {{ $log->created_at->format('H:i') }} hrs
+                                    </span>
+                                </div>
+
+                                {{-- Descripción --}}
+                                <p class="text-sm text-slate-700 font-semibold">{{ $log->description }}</p>
+
+                                {{-- Detalle expandible de valores anteriores / nuevos --}}
+                                @if ($log->old_values || $log->new_values)
+                                    <div x-data="{ openDetail: false }" class="mt-3">
+                                        <button @click="openDetail = !openDetail" type="button"
+                                            class="flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-blue-600 transition-colors group">
+                                            <i
+                                                class="fas fa-code-compare text-[10px] group-hover:text-blue-500 transition-colors"></i>
+                                            <span
+                                                x-text="openDetail ? 'Ocultar detalle' : 'Ver detalle del cambio'"></span>
+                                            <i class="fas fa-chevron-down text-[9px] transition-transform duration-200"
+                                                :class="openDetail ? 'rotate-180' : ''"></i>
+                                        </button>
+
+                                        <div x-show="openDetail" x-transition:enter="transition ease-out duration-150"
+                                            x-transition:enter-start="opacity-0 -translate-y-1"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+
+                                            @if ($log->old_values)
+                                                <div class="bg-red-50 border border-red-100 rounded-lg p-3">
+                                                    <p
+                                                        class="font-black text-red-500 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1">
+                                                        <i class="fas fa-minus-circle"></i> Antes
+                                                    </p>
+                                                    @foreach ($log->old_values as $campo => $valor)
+                                                        <p class="text-slate-600 mb-0.5 truncate">
+                                                            <span class="font-bold">{{ $campo }}:</span>
+                                                            {{ is_null($valor) ? '—' : $valor }}
+                                                        </p>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            @if ($log->new_values)
+                                                <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+                                                    <p
+                                                        class="font-black text-emerald-600 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1">
+                                                        <i class="fas fa-plus-circle"></i> Después
+                                                    </p>
+                                                    @foreach ($log->new_values as $campo => $valor)
+                                                        <p class="text-slate-600 mb-0.5 truncate">
+                                                            <span class="font-bold">{{ $campo }}:</span>
+                                                            {{ is_null($valor) ? '—' : $valor }}
+                                                        </p>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Pie: usuario responsable --}}
+                                <div
+                                    class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
+                                    <i class="fas fa-user-shield text-[10px]"></i>
+                                    <span>{{ $log->user->name ?? 'Sistema' }}</span>
+                                </div>
+
+                            </div>
                         </div>
 
                     </div>
-                </div>
+
+                @empty
+
+                    {{-- Estado vacío --}}
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div
+                            class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 shadow-inner">
+                            <i class="fas fa-clock-rotate-left text-2xl text-slate-300"></i>
+                        </div>
+                        <h3 class="text-sm font-black text-slate-700 mb-1">Sin registros aún</h3>
+                        <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
+                            Aún no hay registros en el historial de este colaborador.
+                            Los cambios se guardarán automáticamente a partir de ahora.
+                        </p>
+                    </div>
+
+                @endforelse
 
             </div>
+        </div>{{-- /historial --}}
 
-        @empty
-
-            {{-- Estado vacío --}}
-            <div class="flex flex-col items-center justify-center py-16 text-center">
-                <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 shadow-inner">
-                    <i class="fas fa-clock-rotate-left text-2xl text-slate-300"></i>
-                </div>
-                <h3 class="text-sm font-black text-slate-700 mb-1">Sin registros aún</h3>
-                <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
-                    Aún no hay registros en el historial de este colaborador.
-                    Los cambios se guardarán automáticamente a partir de ahora.
-                </p>
-            </div>
-
-        @endforelse
-
-    </div>
-</div>{{-- /historial --}}
-
-</div>{{-- /x-data --}}
+    </div>{{-- /x-data --}}
 
 </x-layouts.company>

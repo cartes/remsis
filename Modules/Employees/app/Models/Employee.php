@@ -150,6 +150,14 @@ class Employee extends Model
         return $this->hasMany(EmployeeLog::class, 'employee_id');
     }
 
+    /**
+     * Registros de asistencia del colaborador.
+     */
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class, 'employee_id');
+    }
+
     protected $appends = ['full_name', 'completion_percentage'];
 
     public function getFullNameAttribute()

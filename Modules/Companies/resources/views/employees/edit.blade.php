@@ -142,7 +142,7 @@
         {{-- ── Tabs horizontales ────────────────────────────────────────── --}}
         <div class="border-b border-slate-200 mb-6">
             <nav class="flex gap-1 -mb-px overflow-x-auto">
-                @foreach ([['resumen', 'Resumen'], ['liquidaciones', 'Liquidaciones'], ['documentos', 'Documentos'], ['historial', 'Historial'], ['conceptos', 'Conceptos de Pago']] as [$key, $label])
+                @foreach ([['resumen', 'Resumen'], ['liquidaciones', 'Liquidaciones'], ['documentos', 'Documentos'], ['historial', 'Historial'], ['conceptos', 'Conceptos de Pago'], ['asistencia', 'Asistencia']] as [$key, $label])
                     <button type="button" @click="tab = '{{ $key }}'"
                         class="whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors"
                         :class="tab === '{{ $key }}'
@@ -179,6 +179,7 @@
         @include('companies::employees.partials.tab_documentos')
         @include('companies::employees.partials.tab_conceptos')
         @include('companies::employees.partials.tab_historial')
+        @include('companies::employees.partials.tab_asistencia')
 
     </div>{{-- /x-data principal --}}
 
