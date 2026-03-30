@@ -23,6 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveTenantContext::class,
         ]);
 
+        $middleware->priority([
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            \App\Http\Middleware\ResolveTenantContext::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

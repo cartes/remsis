@@ -243,456 +243,357 @@
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative w-full sm:max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden" @click.stop>
+                    class="relative w-full sm:max-w-5xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[700px]" @click.stop>
 
-                    {{-- Header del modal --}}
-                    <div
-                        class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white sticky top-0 z-10">
-                        <h3 id="modal-edit-title" class="text-base font-bold text-slate-900 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                            Editar Información
-                            <span class="text-slate-400 font-medium">· {{ $employee->full_name }}</span>
-                        </h3>
-                        <button type="button" @click="isEditModalOpen = false"
-                            class="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    {{-- Sidebar de Navegación --}}
+                    <div class="w-full md:w-80 bg-slate-50 border-r border-slate-100 flex flex-col flex-shrink-0">
+                        <div class="p-8 pb-4">
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-200">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Perfil</h3>
+                                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Edición de Ficha</p>
+                                </div>
+                            </div>
 
-                    {{-- Tabs internos del modal --}}
-                    <div class="flex border-b border-slate-100 bg-slate-50/60 overflow-x-auto">
-                        @foreach ([['personal', 'Personal'], ['laboral', 'Laboral'], ['previsional', 'Previsional'], ['remuneraciones', 'Remuneraciones']] as [$mKey, $mLabel])
-                            <button type="button" @click="modalTab = '{{ $mKey }}'"
-                                class="whitespace-nowrap px-5 py-3 text-sm font-semibold border-b-2 transition-colors"
-                                :class="modalTab === '{{ $mKey }}'
-                                    ?
-                                    'border-slate-900 text-slate-900 bg-white' :
-                                    'border-transparent text-slate-500 hover:text-slate-700'">
-                                {{ $mLabel }}
+                            <nav class="space-y-1">
+                                @foreach ([
+                                    ['personal', 'Datos Personales', 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                                    ['laboral', 'Información Laboral', 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
+                                    ['previsional', 'Previsión y Salud', 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'],
+                                    ['remuneraciones', 'Remuneraciones', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z']
+                                ] as [$key, $label, $icon])
+                                    <button type="button" @click="modalTab = '{{ $key }}'"
+                                        class="w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm font-semibold transition-all group"
+                                        :class="modalTab === '{{ $key }}' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 border border-transparent'">
+                                        <svg class="w-4 h-4 transition-colors" :class="modalTab === '{{ $key }}' ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon }}" />
+                                        </svg>
+                                        {{ $label }}
+                                    </button>
+                                @endforeach
+                            </nav>
+                        </div>
+
+                        <div class="mt-auto p-8 border-t border-slate-100 bg-white/50">
+                            <button type="button" @click="isEditModalOpen = false"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancelar Edición
                             </button>
-                        @endforeach
+                        </div>
                     </div>
 
-                    {{-- ── SECCIÓN: PERSONAL ── --}}
-                    <div x-show="modalTab === 'personal'" class="p-6">
-                        <form method="POST"
-                            action="{{ route('companies.employees.update', [$company, $employee]) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="section" value="personal">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Nombre <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="text" name="first_name"
-                                        value="{{ old('first_name', $employee->first_name) }}"
-                                        class="w-full rounded-xl border @error('first_name') border-red-400 bg-red-50 @else border-slate-200 @enderror px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    @error('first_name')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
+                    {{-- Contenedor de Formularios --}}
+                    <div class="flex-1 min-w-0 flex flex-col bg-white overflow-hidden">
+                        <div class="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                            
+                            {{-- SECCIÓN: PERSONAL --}}
+                            <div x-show="modalTab === 'personal'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4">
+                                <div class="mb-8">
+                                    <h2 class="text-2xl font-bold text-slate-900 leading-tight">Datos Personales</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Información básica e identificación del colaborador.</p>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Apellido <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="text" name="last_name"
-                                        value="{{ old('last_name', $employee->last_name) }}"
-                                        class="w-full rounded-xl border @error('last_name') border-red-400 bg-red-50 @else border-slate-200 @enderror px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    @error('last_name')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">RUT</label>
-                                    <input type="text" name="rut" value="{{ old('rut', $employee->rut) }}"
-                                        placeholder="12.345.678-9"
-                                        class="w-full rounded-xl border @error('rut') border-red-400 bg-red-50 @else border-slate-200 @enderror px-3.5 py-2.5 text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    @error('rut')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Correo
-                                        Electrónico</label>
-                                    <input type="email" name="email"
-                                        value="{{ old('email', $employee->email) }}"
-                                        class="w-full rounded-xl border @error('email') border-red-400 bg-red-50 @else border-slate-200 @enderror px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    @error('email')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Fecha de
-                                        Nacimiento</label>
-                                    <input type="date" name="birth_date"
-                                        value="{{ old('birth_date', $employee->birth_date?->format('Y-m-d')) }}"
-                                        max="{{ now()->subYear()->format('Y-m-d') }}"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Género</label>
-                                    <select name="gender"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">Seleccionar</option>
-                                        <option value="male"
-                                            {{ old('gender', $employee->gender) === 'male' ? 'selected' : '' }}>
-                                            Masculino</option>
-                                        <option value="female"
-                                            {{ old('gender', $employee->gender) === 'female' ? 'selected' : '' }}>
-                                            Femenino</option>
-                                        <option value="other"
-                                            {{ old('gender', $employee->gender) === 'other' ? 'selected' : '' }}>Otro
-                                        </option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-semibold text-slate-600 mb-1.5">Nacionalidad</label>
-                                    <input type="text" name="nationality"
-                                        value="{{ old('nationality', $employee->nationality) }}"
-                                        placeholder="Chileno/a"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Teléfono</label>
-                                    <input type="text" name="phone"
-                                        value="{{ old('phone', $employee->phone) }}" placeholder="+56 9 1234 5678"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Dirección</label>
-                                    <input type="text" name="address"
-                                        value="{{ old('address', $employee->address) }}"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                            </div>
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="isEditModalOpen = false"
-                                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                                    Cancelar
-                                </button>
-                                <button type="submit"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Guardar Cambios
-                                </button>
-                            </div>
-                        </form>
-                    </div>
 
-                    {{-- ── SECCIÓN: LABORAL ── --}}
-                    <div x-show="modalTab === 'laboral'" class="p-6">
-                        <form method="POST"
-                            action="{{ route('companies.employees.update', [$company, $employee]) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="section" value="laboral">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Cargo /
-                                        Puesto</label>
-                                    <input type="text" name="position"
-                                        value="{{ old('position', $employee->position) }}"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Fecha de
-                                        Ingreso</label>
-                                    <input type="date" name="hire_date"
-                                        value="{{ old('hire_date', $employee->hire_date?->format('Y-m-d')) }}"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tipo de
-                                        Contrato</label>
-                                    <select name="contract_type"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">Seleccionar</option>
-                                        @foreach (['indefinido' => 'Indefinido', 'plazo_fijo' => 'Plazo Fijo', 'por_obra' => 'Por Obra', 'honorarios' => 'Honorarios'] as $val => $label)
-                                            <option value="{{ $val }}"
-                                                {{ old('contract_type', $employee->contract_type) === $val ? 'selected' : '' }}>
-                                                {{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Jornada</label>
-                                    <select name="work_schedule_type"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="full_time"
-                                            {{ old('work_schedule_type', $employee->work_schedule_type) === 'full_time' ? 'selected' : '' }}>
-                                            Jornada Completa</option>
-                                        <option value="part_time"
-                                            {{ old('work_schedule_type', $employee->work_schedule_type) === 'part_time' ? 'selected' : '' }}>
-                                            Jornada Parcial</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Centro de
-                                        Costo</label>
-                                    <select name="cost_center_id"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">Sin asignar</option>
-                                        @foreach ($costCenters as $cc)
-                                            <option value="{{ $cc->id }}"
-                                                {{ old('cost_center_id', $employee->cost_center_id) == $cc->id ? 'selected' : '' }}>
-                                                {{ $cc->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="flex items-center gap-3 pt-5">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="hidden" name="is_in_payroll" value="0">
-                                        <input type="checkbox" name="is_in_payroll" value="1"
-                                            class="sr-only peer"
-                                            {{ old('is_in_payroll', $employee->is_in_payroll) ? 'checked' : '' }}>
-                                        <div
-                                            class="w-10 h-6 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-all peer-focus:ring-2 peer-focus:ring-slate-900/20">
+                                <form method="POST" action="{{ route('companies.employees.update', [$company, $employee]) }}" class="space-y-6">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="section" value="personal">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nombres <span class="text-red-500">*</span></label>
+                                            <input type="text" name="first_name" value="{{ old('first_name', $employee->first_name) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
                                         </div>
-                                        <div
-                                            class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-all peer-checked:translate-x-4">
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Apellidos <span class="text-red-500">*</span></label>
+                                            <input type="text" name="last_name" value="{{ old('last_name', $employee->last_name) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
                                         </div>
-                                    </label>
-                                    <span class="text-sm font-medium text-slate-700">Genera liquidación de
-                                        sueldo</span>
-                                </div>
-                            </div>
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="isEditModalOpen = false"
-                                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                                    Cancelar
-                                </button>
-                                <button type="submit"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Guardar Cambios
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    {{-- ── SECCIÓN: PREVISIONAL ── --}}
-                    <div x-show="modalTab === 'previsional'" class="p-6">
-                        <form method="POST"
-                            action="{{ route('companies.employees.update', [$company, $employee]) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="section" value="previsional">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">AFP</label>
-                                    <select name="afp_id"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">No cotiza (Exento / Jubilado)</option>
-                                        @foreach ($afps as $afp)
-                                            <option value="{{ $afp->id }}"
-                                                {{ old('afp_id', $employee->afp_id) == $afp->id ? 'selected' : '' }}>
-                                                {{ $afp->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">CCAF</label>
-                                    <select name="ccaf_id"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">No cotiza</option>
-                                        @foreach ($ccafs as $ccaf)
-                                            <option value="{{ $ccaf->id }}"
-                                                {{ old('ccaf_id', $employee->ccaf_id) == $ccaf->id ? 'selected' : '' }}>
-                                                {{ $ccaf->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-600 mb-2">Sistema de
-                                        Salud</label>
-                                    <div class="flex gap-2 mb-3">
-                                        <button type="button" @click="healthSystem = 'fonasa'"
-                                            class="flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-all"
-                                            :class="healthSystem === 'fonasa' ? 'border-slate-900 bg-slate-900 text-white' :
-                                                'border-slate-200 text-slate-600 hover:border-slate-300'">
-                                            Fonasa
-                                        </button>
-                                        <button type="button" @click="healthSystem = 'isapre'"
-                                            class="flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-all"
-                                            :class="healthSystem === 'isapre' ? 'border-slate-900 bg-slate-900 text-white' :
-                                                'border-slate-200 text-slate-600 hover:border-slate-300'">
-                                            Isapre
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">RUT</label>
+                                            <input type="text" name="rut" value="{{ old('rut', $employee->rut) }}" placeholder="12.345.678-9"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-mono text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico</label>
+                                            <input type="email" name="email" value="{{ old('email', $employee->email) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">F. de Nacimiento</label>
+                                            <input type="date" name="birth_date" value="{{ old('birth_date', $employee->birth_date?->format('Y-m-d')) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Género</label>
+                                            <select name="gender" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">Seleccionar</option>
+                                                <option value="male" {{ old('gender', $employee->gender) === 'male' ? 'selected' : '' }}>Masculino</option>
+                                                <option value="female" {{ old('gender', $employee->gender) === 'female' ? 'selected' : '' }}>Femenino</option>
+                                                <option value="other" {{ old('gender', $employee->gender) === 'other' ? 'selected' : '' }}>Otro</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nacionalidad</label>
+                                            <input type="text" name="nationality" value="{{ old('nationality', $employee->nationality) }}" placeholder="Chileno/a"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Teléfono</label>
+                                            <input type="text" name="phone" value="{{ old('phone', $employee->phone) }}" placeholder="+56 9 1234 5678"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div class="col-span-full">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dirección</label>
+                                            <input type="text" name="address" value="{{ old('address', $employee->address) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-8 flex justify-end">
+                                        <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                                            Guardar Cambios
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
                                         </button>
                                     </div>
-                                    <input type="hidden" name="health_system" :value="healthSystem">
-                                </div>
-                                <div x-show="healthSystem === 'isapre'" x-transition>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Isapre</label>
-                                    <select name="isapre_id"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="">Seleccionar Isapre</option>
-                                        @foreach ($isapres as $isapre)
-                                            <option value="{{ $isapre->id }}"
-                                                {{ old('isapre_id', $employee->isapre_id) == $isapre->id ? 'selected' : '' }}>
-                                                {{ $isapre->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div x-show="healthSystem === 'isapre'" x-transition>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Monto Plan de
-                                        Salud ($)</label>
-                                    <div class="relative">
-                                        <span
-                                            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">$</span>
-                                        <input type="number" name="health_contribution"
-                                            value="{{ old('health_contribution', $employee->health_contribution) }}"
-                                            placeholder="0" min="0"
-                                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">APV Mensual
-                                        ($)</label>
-                                    <div class="relative">
-                                        <span
-                                            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">$</span>
-                                        <input type="number" name="apv_amount"
-                                            value="{{ old('apv_amount', $employee->apv_amount) }}" placeholder="0"
-                                            min="0"
-                                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    </div>
-                                </div>
+                                </form>
                             </div>
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="isEditModalOpen = false"
-                                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                                    Cancelar
-                                </button>
-                                <button type="submit"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Guardar Cambios
-                                </button>
-                            </div>
-                        </form>
-                    </div>
 
-                    {{-- ── SECCIÓN: REMUNERACIONES ── --}}
-                    <div x-show="modalTab === 'remuneraciones'" class="p-6">
-                        <form method="POST"
-                            action="{{ route('companies.employees.update', [$company, $employee]) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="section" value="remuneraciones">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Sueldo Base
-                                        ($)</label>
-                                    <div class="relative">
-                                        <span
-                                            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">$</span>
-                                        <input type="number" name="salary"
-                                            value="{{ old('salary', $employee->salary) }}" placeholder="0"
-                                            min="0"
-                                            class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border @error('salary') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    </div>
-                                    @error('salary')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
+                            {{-- SECCIÓN: LABORAL --}}
+                            <div x-show="modalTab === 'laboral'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4">
+                                <div class="mb-8">
+                                    <h2 class="text-2xl font-bold text-slate-900 leading-tight">Información Laboral</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Configuración del cargo y relación contractual.</p>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tipo de
-                                        Salario</label>
-                                    <select name="salary_type"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                        <option value="mensual"
-                                            {{ old('salary_type', $employee->salary_type) === 'mensual' ? 'selected' : '' }}>
-                                            Mensual</option>
-                                        <option value="quincenal"
-                                            {{ old('salary_type', $employee->salary_type) === 'quincenal' ? 'selected' : '' }}>
-                                            Quincenal</option>
-                                        <option value="semanal"
-                                            {{ old('salary_type', $employee->salary_type) === 'semanal' ? 'selected' : '' }}>
-                                            Semanal</option>
-                                    </select>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-600 mb-2">Método de
-                                        Pago</label>
-                                    <div class="flex gap-2">
-                                        @foreach (['efectivo' => 'Efectivo', 'cheque' => 'Cheque', 'transferencia' => 'Transferencia'] as $val => $label)
-                                            <button type="button" @click="paymentMethod = '{{ $val }}'"
-                                                class="flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-all"
-                                                :class="paymentMethod === '{{ $val }}' ?
-                                                    'border-slate-900 bg-slate-900 text-white' :
-                                                    'border-slate-200 text-slate-600 hover:border-slate-300'">
-                                                {{ $label }}
-                                            </button>
-                                        @endforeach
+
+                                <form method="POST" action="{{ route('companies.employees.update', [$company, $employee]) }}" class="space-y-6">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="section" value="laboral">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cargo Actual</label>
+                                            <input type="text" name="position" value="{{ old('position', $employee->position) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">F. de Ingreso</label>
+                                            <input type="date" name="hire_date" value="{{ old('hire_date', $employee->hire_date?->format('Y-m-d')) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tipo de Contrato</label>
+                                            <select name="contract_type" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">Seleccionar</option>
+                                                @foreach(['indefinido'=>'Indefinido','plazo_fijo'=>'Plazo Fijo','por_obra'=>'Por Obra','honorarios'=>'Honorarios'] as $val => $label)
+                                                    <option value="{{ $val }}" {{ old('contract_type', $employee->contract_type) === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Jornada</label>
+                                            <select name="work_schedule_type" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="full_time" {{ old('work_schedule_type', $employee->work_schedule_type) === 'full_time' ? 'selected' : '' }}>Jornada Completa</option>
+                                                <option value="part_time" {{ old('work_schedule_type', $employee->work_schedule_type) === 'part_time' ? 'selected' : '' }}>Jornada Parcial</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Centro de Costo</label>
+                                            <select name="cost_center_id" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">Sin asignar</option>
+                                                @foreach($costCenters as $cc)
+                                                    <option value="{{ $cc->id }}" {{ old('cost_center_id', $employee->cost_center_id) == $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-full">
+                                            <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100/50">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="relative inline-flex items-center cursor-pointer">
+                                                        <input type="hidden" name="is_in_payroll" value="0">
+                                                        <input type="checkbox" name="is_in_payroll" value="1" class="sr-only peer" {{ old('is_in_payroll', $employee->is_in_payroll) ? 'checked' : '' }}>
+                                                        <div class="w-12 h-7 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-all"></div>
+                                                        <div class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow transition-all peer-checked:translate-x-5"></div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="text-sm font-bold text-slate-900">Generar Liquidación</h4>
+                                                        <p class="text-xs text-slate-500">Incluir a este colaborador en los procesos de nómina mensuales.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <input type="hidden" name="payment_method" :value="paymentMethod">
-                                </div>
-                                <div x-show="paymentMethod === 'transferencia'"
-                                    class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3" x-transition>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Banco</label>
-                                        <select name="bank_id"
-                                            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                            <option value="">Seleccionar banco</option>
-                                            @foreach ($bancos as $banco)
-                                                <option value="{{ $banco->id }}"
-                                                    {{ old('bank_id', $employee->bank_id) == $banco->id ? 'selected' : '' }}>
-                                                    {{ $banco->name }}</option>
-                                            @endforeach
-                                        </select>
+
+                                    <div class="mt-8 flex justify-end">
+                                        <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                                            Guardar Cambios
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Tipo de
-                                            Cuenta</label>
-                                        <select name="bank_account_type"
-                                            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                            <option value="corriente"
-                                                {{ old('bank_account_type', $employee->bank_account_type) === 'corriente' ? 'selected' : '' }}>
-                                                Corriente</option>
-                                            <option value="vista"
-                                                {{ old('bank_account_type', $employee->bank_account_type) === 'vista' ? 'selected' : '' }}>
-                                                Vista / RUT</option>
-                                            <option value="ahorro"
-                                                {{ old('bank_account_type', $employee->bank_account_type) === 'ahorro' ? 'selected' : '' }}>
-                                                Ahorro</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">N° de
-                                            Cuenta</label>
-                                        <input type="text" name="bank_account_number"
-                                            value="{{ old('bank_account_number', $employee->bank_account_number) }}"
-                                            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
-                                    </div>
-                                </div>
+                                </form>
                             </div>
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="isEditModalOpen = false"
-                                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                                    Cancelar
-                                </button>
-                                <button type="submit"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Guardar Cambios
-                                </button>
+
+                            {{-- SECCIÓN: PREVISIONAL --}}
+                            <div x-show="modalTab === 'previsional'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4">
+                                <div class="mb-8">
+                                    <h2 class="text-2xl font-bold text-slate-900 leading-tight">Previsión y Salud</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Entidades de cotización y planes de salud.</p>
+                                </div>
+
+                                <form method="POST" action="{{ route('companies.employees.update', [$company, $employee]) }}" class="space-y-6">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="section" value="previsional">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">AFP</label>
+                                            <select name="afp_id" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">No cotiza (Exento / Jubilado)</option>
+                                                @foreach($afps as $afp)
+                                                    <option value="{{ $afp->id }}" {{ old('afp_id', $employee->afp_id) == $afp->id ? 'selected' : '' }}>{{ $afp->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">CCAF</label>
+                                            <select name="ccaf_id" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">No cotiza</option>
+                                                @foreach($ccafs as $ccaf)
+                                                    <option value="{{ $ccaf->id }}" {{ old('ccaf_id', $employee->ccaf_id) == $ccaf->id ? 'selected' : '' }}>{{ $ccaf->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-full">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Sistema de Salud</label>
+                                            <div class="flex p-1.5 bg-slate-100 rounded-2xl w-full sm:w-80">
+                                                <button type="button" @click="healthSystem = 'fonasa'"
+                                                    class="flex-1 px-4 py-2 text-xs font-bold rounded-xl transition-all"
+                                                    :class="healthSystem === 'fonasa' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                                                    FONASA
+                                                </button>
+                                                <button type="button" @click="healthSystem = 'isapre'"
+                                                    class="flex-1 px-4 py-2 text-xs font-bold rounded-xl transition-all"
+                                                    :class="healthSystem === 'isapre' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                                                    ISAPRE
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="health_system" :value="healthSystem">
+                                        </div>
+                                        <div x-show="healthSystem === 'isapre'" class="col-span-1" x-transition>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Isapre</label>
+                                            <select name="isapre_id" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">Seleccionar Isapre</option>
+                                                @foreach($isapres as $isapre)
+                                                    <option value="{{ $isapre->id }}" {{ old('isapre_id', $employee->isapre_id) == $isapre->id ? 'selected' : '' }}>{{ $isapre->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div x-show="healthSystem === 'isapre'" class="col-span-1" x-transition>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Monto Plan ($)</label>
+                                            <input type="number" name="health_contribution" value="{{ old('health_contribution', $employee->health_contribution) }}"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-8 flex justify-end">
+                                        <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                                            Guardar Cambios
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+
+                            {{-- SECCIÓN: REMUNERACIONES --}}
+                            <div x-show="modalTab === 'remuneraciones'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4">
+                                <div class="mb-8">
+                                    <h2 class="text-2xl font-bold text-slate-900 leading-tight">Remuneraciones</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Configuración salarial y forma de pago.</p>
+                                </div>
+
+                                <form method="POST" action="{{ route('companies.employees.update', [$company, $employee]) }}" class="space-y-6">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="section" value="remuneraciones">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sueldo Base ($)</label>
+                                            <input type="number" name="salary" value="{{ old('salary', $employee->salary) }}" placeholder="0"
+                                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Periodicidad</label>
+                                            <select name="salary_type" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="mensual" {{ old('salary_type', $employee->salary_type) === 'mensual' ? 'selected' : '' }}>Mensual</option>
+                                                <option value="quincenal" {{ old('salary_type', $employee->salary_type) === 'quincenal' ? 'selected' : '' }}>Quincenal</option>
+                                                <option value="semanal" {{ old('salary_type', $employee->salary_type) === 'semanal' ? 'selected' : '' }}>Semanal</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-full">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Método de Pago</label>
+                                            <div class="flex p-1.5 bg-slate-100 rounded-2xl w-full sm:w-96">
+                                                @foreach(['efectivo'=>'Efectivo','cheque'=>'Cheque','transferencia'=>'Transferencia'] as $val => $label)
+                                                    <button type="button" @click="paymentMethod = '{{ $val }}'"
+                                                        class="flex-1 px-4 py-2 text-xs font-bold rounded-xl transition-all uppercase tracking-tighter"
+                                                        :class="paymentMethod === '{{ $val }}' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                                                        {{ $label }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                            <input type="hidden" name="payment_method" :value="paymentMethod">
+                                        </div>
+
+                                        <div x-show="paymentMethod === 'transferencia'" class="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2" x-transition>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Banco</label>
+                                                <select name="bank_id" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900">
+                                                    <option value="">Seleccionar banco</option>
+                                                    @foreach($bancos as $banco)
+                                                        <option value="{{ $banco->id }}" {{ old('bank_id', $employee->bank_id) == $banco->id ? 'selected' : '' }}>{{ $banco->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tipo de Cuenta</label>
+                                                <select name="bank_account_type" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900">
+                                                    <option value="corriente" {{ old('bank_account_type', $employee->bank_account_type) === 'corriente' ? 'selected' : '' }}>Corriente</option>
+                                                    <option value="vista" {{ old('bank_account_type', $employee->bank_account_type) === 'vista' ? 'selected' : '' }}>Vista / RUT</option>
+                                                    <option value="ahorro" {{ old('bank_account_type', $employee->bank_account_type) === 'ahorro' ? 'selected' : '' }}>Ahorro</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">N° Cuenta</label>
+                                                <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number) }}"
+                                                    class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-8 flex justify-end">
+                                        <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
+                                            Guardar Cambios
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
                     </div>
 
                 </div>{{-- /panel --}}
