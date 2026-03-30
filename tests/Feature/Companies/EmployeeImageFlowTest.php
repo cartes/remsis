@@ -20,6 +20,7 @@ class EmployeeImageFlowTest extends TestCase
 
         [$company, $actor] = $this->createActorForCompany();
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $employeeUser = User::factory()->create([
             'profile_photo' => 'legacy/profile-photos/ana.jpg',
         ]);
@@ -32,7 +33,9 @@ class EmployeeImageFlowTest extends TestCase
             'first_name' => 'Ana',
             'last_name' => 'Pérez',
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $response = $this->actingAs($actor)->getJson(
             route('companies.employees.payroll', [$company, $employee])
         );
@@ -48,6 +51,7 @@ class EmployeeImageFlowTest extends TestCase
 
         [$company, $actor] = $this->createActorForCompany();
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $employeeUser = User::factory()->create([
             'email' => 'ana@example.com',
             'profile_photo' => 'legacy/profile-photos/ana-old.jpg',
@@ -61,7 +65,9 @@ class EmployeeImageFlowTest extends TestCase
             'first_name' => 'Ana',
             'last_name' => 'Pérez',
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $response = $this->actingAs($actor)->post(
             route('companies.employees.payroll.update', [$company, $employee]),
             [
@@ -100,6 +106,7 @@ class EmployeeImageFlowTest extends TestCase
 
         $existingPhoto = 'legacy/profile-photos/existing.jpg';
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $employeeUser = User::factory()->create([
             'email' => 'empleado@example.com',
             'profile_photo' => $existingPhoto,
@@ -113,7 +120,9 @@ class EmployeeImageFlowTest extends TestCase
             'first_name' => 'Empleado',
             'last_name' => 'Demo',
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $response = $this->actingAs($actor)->putJson(
             route('companies.employees.payroll.update', [$company, $employee]),
             [
@@ -137,11 +146,14 @@ class EmployeeImageFlowTest extends TestCase
 
         [$company, $actor] = $this->createActorForCompany();
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $employee = Employee::create([
             'user_id' => User::factory()->create()->id,
             'company_id' => $company->id,
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
+        app(\App\Support\Tenancy\TenantContext::class)->initializeForUser($actor);
         $response = $this->actingAs($actor)->post(
             route('companies.employees.payroll.update', [$company, $employee]),
             [
@@ -157,6 +169,7 @@ class EmployeeImageFlowTest extends TestCase
 
     public function test_payroll_routes_return_not_found_when_employee_belongs_to_another_company(): void
     {
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         [$companyA, $actor] = $this->createActorForCompany('Empresa A', '11111111-1');
 
         $companyB = Company::create([
@@ -169,6 +182,7 @@ class EmployeeImageFlowTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'company_id' => $companyB->id,
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
         $this->actingAs($actor)
             ->getJson(route('companies.employees.payroll', [$companyA, $employee]))
@@ -185,6 +199,7 @@ class EmployeeImageFlowTest extends TestCase
         string $name = 'Empresa Uno',
         string $rut = '12345678-9'
     ): array {
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
         $company = Company::create([
             'name' => $name,
             'razon_social' => "{$name} SpA",
@@ -194,6 +209,7 @@ class EmployeeImageFlowTest extends TestCase
         $actor = User::factory()->create([
             'company_id' => $company->id,
         ]);
+        app(\App\Support\Tenancy\TenantContext::class)->bypass(false);
 
         return [$company, $actor];
     }

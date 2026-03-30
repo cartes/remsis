@@ -24,6 +24,9 @@ class GlobalTenantScopeTest extends TestCase
 
     public function test_models_are_automatically_scoped_by_selected_company_in_session()
     {
+        // Bypass temporarily to create records for different companies
+        app(TenantContext::class)->bypass();
+
         // 1. Create two companies
         $company1 = Company::create(['razon_social' => 'Company One', 'rut' => '1-1', 'name' => 'Company One']);
         $company2 = Company::create(['razon_social' => 'Company Two', 'rut' => '2-2', 'name' => 'Company Two']);
@@ -48,6 +51,9 @@ class GlobalTenantScopeTest extends TestCase
             'rut' => '22-2',
             'email' => 'jane@company2.com',
         ]);
+
+        // Disable bypass to test strict filtering
+        app(TenantContext::class)->bypass(false);
 
         // 3. Create a user and select Company 1 in session
         $user = User::factory()->create();
@@ -75,9 +81,11 @@ class GlobalTenantScopeTest extends TestCase
 
     public function test_new_records_are_automatically_assigned_to_the_current_tenant()
     {
+        app(TenantContext::class)->bypass();
         $company = Company::create(['razon_social' => 'Auto Tenant Corp', 'rut' => '3-3', 'name' => 'Auto Tenant Corp']);
         $user = User::factory()->create();
         $user->assignRole('admin');
+        app(TenantContext::class)->bypass(false);
 
         session(['selected_company_id' => $company->id]);
         $this->actingAs($user);
@@ -97,6 +105,7 @@ class GlobalTenantScopeTest extends TestCase
 
     public function test_payroll_models_also_respect_the_tenant_scope()
     {
+        app(TenantContext::class)->bypass();
         $company1 = Company::create(['razon_social' => 'Payroll C1', 'rut' => '4-4', 'name' => 'Payroll C1']);
         $company2 = Company::create(['razon_social' => 'Payroll C2', 'rut' => '5-5', 'name' => 'Payroll C2']);
 
@@ -119,6 +128,7 @@ class GlobalTenantScopeTest extends TestCase
             'end_date' => '2024-01-31',
             'status' => 'open',
         ]);
+        app(TenantContext::class)->bypass(false);
 
         $user = User::factory()->create();
         $user->assignRole('admin');
