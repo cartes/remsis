@@ -121,18 +121,7 @@
                                     </div>
                                 </div>
                             </th>
-                            <th class="px-6 py-4 text-center overflow-visible">
-                                <div class="group relative flex items-center justify-center">
-                                    <span>Porcentaje</span>
-                                    <div
-                                        class="hidden group-hover:block absolute z-50 bg-gray-900 text-white text-[10px] font-medium px-2 py-1 rounded shadow-lg top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap normal-case tracking-normal">
-                                        Datos completados para remuneraciones
-                                        <div
-                                            class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45">
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
+
                             <th class="px-6 py-4 text-right overflow-visible">
                                 <div class="group relative flex items-center justify-end">
                                     <span>Acciones</span>
@@ -191,18 +180,7 @@
                                         {{ $emp->user->status ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <div class="flex flex-col items-center gap-1">
-                                        <div class="w-full bg-gray-100 rounded-full h-1.5 max-w-[80px]">
-                                            <div class="h-1.5 rounded-full {{ $emp->completion_percentage > 90 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-amber-400' }}"
-                                                style="width: {{ $emp->completion_percentage }}%"></div>
-                                        </div>
-                                        <span
-                                            class="text-[10px] font-black {{ $emp->completion_percentage > 90 ? 'text-green-600' : 'text-gray-500' }}">
-                                            {{ $emp->completion_percentage }}%
-                                        </span>
-                                    </div>
-                                </td>
+
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button type="button"
@@ -217,7 +195,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-20 text-center">
+                                <td colspan="3" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center opacity-30">
                                         <i class="fas fa-users-slash text-5xl mb-4"></i>
                                         <p class="text-sm font-medium">No hay colaboradores registrados en esta empresa
