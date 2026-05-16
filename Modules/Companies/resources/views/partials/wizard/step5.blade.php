@@ -78,3 +78,22 @@
                     {{-- Mensaje info para efectivo/cheque --}}
                     <div x-show="form.payment_method !== 'transferencia'"
                         x-transition:enter="ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 px-5 py-4"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-sm text-slate-500">
+                            El pago se registra como
+                            <span class="font-semibold text-slate-700" x-text="form.payment_method === 'cheque' ? 'cheque' : 'efectivo'"></span>.
+                            No se requieren datos bancarios adicionales.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
