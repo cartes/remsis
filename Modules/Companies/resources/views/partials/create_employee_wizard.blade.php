@@ -293,7 +293,7 @@ window.createEmployeeWizard = function () {
         </div>
 
         {{-- ── Form Body (scrollable) ───────────────────────────────── --}}
-        <div class="flex-1 overflow-y-auto px-8 py-6">
+        <div class="flex-1 min-h-0 overflow-y-auto px-8 py-6">
 
             @include("companies::partials.wizard.step1")
             @include("companies::partials.wizard.step2")
