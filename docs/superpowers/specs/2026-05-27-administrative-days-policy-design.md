@@ -83,6 +83,8 @@ Esto permite:
 - mantener trazabilidad del uso,
 - evitar cálculos frágiles sobre históricos de asistencia.
 
+El saldo de ciclo será además el **snapshot canónico** de la política aplicada en ese ciclo. Los históricos no dependerán de leer la política viva de empresa.
+
 ### 3. Consumo desde asistencia
 
 El uso de un día administrativo no se registrará en una pantalla nueva. Se integrará al flujo actual de asistencia del colaborador.
@@ -139,6 +141,9 @@ policy_id
 cycle_key               string
 cycle_starts_on         date
 cycle_ends_on           date
+policy_snapshot_days    decimal(5,2)
+policy_snapshot_unit    enum(full_day, half_day)
+policy_snapshot_cycle   enum(annual, semiannual)
 assigned_units          decimal(5,2)
 used_units              decimal(5,2)
 available_units         decimal(5,2)
@@ -149,8 +154,19 @@ updated_at
 Reglas:
 
 - índice único por `company_id + employee_id + cycle_key`,
+- `policy_id` es solo referencia de origen; el histórico debe confiar en los campos snapshot del balance,
 - `available_units` **se mantendrá persistido** y se actualizará en cada operación de consumo o reversa,
 - `assigned_units` debe reflejar exactamente el cupo vigente del ciclo, no un cálculo dinámico posterior.
+
+### Semántica de unidades
+
+`days_per_cycle`, `assigned_units`, `used_units` y `available_units` siempre se expresan en **días equivalentes**.
+
+Ejemplos:
+
+- política `full_day` con `3` => saldo de `3.0`, cada uso descuenta `1.0`,
+- política `half_day` con `3` => saldo de `3.0`, cada uso descuenta `0.5`, por lo tanto permite hasta 6 medios días,
+- política `half_day` con `1.5` => saldo de `1.5`, permite 3 medios días.
 
 ### Formato de `cycle_key`
 
@@ -193,6 +209,14 @@ La solución asume un único `attendance_record` por colaborador y fecha, y esa 
 - índice único por `employee_id + date` en `attendance_records`,
 - limpieza previa de duplicados si existieran datos históricos incompatibles,
 - el flujo seguirá usando `updateOrCreate` sobre esa clave canónica.
+
+### Regla de limpieza de duplicados
+
+Si la migración detecta más de un registro para el mismo `employee_id + date`:
+
+- se conserva el registro con `updated_at` más reciente, o el de `id` mayor si no hay diferencia útil,
+- los demás se registran en un reporte de migración para auditoría,
+- el registro superviviente se normaliza al contrato canónico de `justification_type`.
 
 ---
 
@@ -354,6 +378,20 @@ Si la política se desactiva:
 
 Si luego se reactiva dentro del mismo ciclo, se retoman los saldos existentes; no se reasignan unidades.
 
+Si la política permanece desactivada hasta un ciclo posterior:
+
+- no se hace backfill de ciclos omitidos,
+- al reactivarse se crea saldo solo para el ciclo vigente al momento de la reactivación,
+- los ciclos transcurridos sin política activa quedan sin saldo y sin derecho retroactivo.
+
+### Relación con payroll cerrado o pagado
+
+Si el registro de asistencia pertenece a un período cuyo payroll está `closed` o `paid`:
+
+- no se permitirá editar ni eliminar un día administrativo desde el flujo normal,
+- primero deberá reabrirse el período según las reglas de payroll,
+- esto evita desalinear asistencia, saldo y liquidación ya cerrada.
+
 ---
 
 ## Manejo de errores y validaciones
@@ -408,7 +446,7 @@ Responsable de:
 - coordinar en transacción asistencia + usage + balance,
 - manejar la reversa cuando el registro deja de ser administrativo o se elimina.
 
-Los controladores solo orquestan request/response. `EmployeeService` o el punto actual de alta/reactivación delega la provisión en `AdministrativeDayProvisioner`. Payroll consume el contrato resultante, pero no recalcula saldos ni resuelve ciclos.
+`AdministrativeDayAttendanceService` es el **dueño final de persistir** asistencia, usage y balance cuando el evento corresponde a un administrativo. Los controladores solo orquestan request/response. `EmployeeService` o el punto actual de alta/reactivación delega la provisión en `AdministrativeDayProvisioner`. Payroll consume el contrato resultante, pero no recalcula saldos ni resuelve ciclos.
 
 ---
 
