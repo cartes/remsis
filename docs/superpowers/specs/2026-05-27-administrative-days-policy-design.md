@@ -122,6 +122,8 @@ Reglas:
 
 - un solo registro activo por empresa,
 - `days_per_cycle` admite decimal para soportar cupos equivalentes cuando la unidad sea medio día,
+- si `unit = full_day`, `days_per_cycle` solo admite enteros positivos (`1`, `2`, `3`, ...),
+- si `unit = half_day`, `days_per_cycle` solo admite múltiplos de `0.5`,
 - no se agregan campos de arrastre ni calendario flexible en esta fase.
 
 ## Saldos por colaborador
@@ -145,7 +147,7 @@ updated_at
 
 Reglas:
 
-- índice único por `employee_id + cycle_key`,
+- índice único por `company_id + employee_id + cycle_key`,
 - `available_units` **se mantendrá persistido** y se actualizará en cada operación de consumo o reversa,
 - `assigned_units` debe reflejar exactamente el cupo vigente del ciclo, no un cálculo dinámico posterior.
 
@@ -177,6 +179,12 @@ updated_at
 
 Esto evita depender de inferencias sobre `attendance_records` al momento de rehacer saldo.
 
+Reglas:
+
+- `attendance_record_id` debe ser **único** dentro de esta tabla para garantizar relación 1:1 entre asistencia y consumo,
+- editar un registro existente debe actualizar el usage actual, no crear uno nuevo,
+- borrar asistencia debe borrar o revertir su usage dentro de la misma transacción.
+
 ---
 
 ## Cambios en asistencia
@@ -191,6 +199,20 @@ En `Companies > Colaborador > Asistencia`:
 - mantener `ausente` como estado técnico y agregar una justificación explícita `administrative_day`.
 
 La recomendación es **mantener el patrón actual de ausencias justificadas y agregar una justificación explícita `administrative_day`**, porque minimiza ruptura visual y aprovecha la lógica ya existente de motivos.
+
+### Contrato canónico de `justification_type`
+
+La implementación debe dejar un set canónico único y compartido entre UI, asistencia y payroll:
+
+- `administrative_day`
+- `permiso_con_goce`
+- `permiso_sin_goce`
+- `licencia_medica`
+- `inasistencia_injustificada`
+- `accidente_trabajo`
+- `suspension_disciplinaria`
+
+Payroll y asistencia no deben usar aliases alternativos en inglés para estos valores.
 
 ### Representación de medios días
 
@@ -257,7 +279,9 @@ Los servicios `ProcessEmployeePayroll` y `PayrollCalculationService` hoy filtran
 
 Al guardar una política nueva o reactivada:
 
-- se crea o sincroniza el saldo del ciclo actual para colaboradores activos de la empresa.
+- **activación inicial** en una empresa sin política previa: crea saldos del ciclo actual para colaboradores activos,
+- **reactivación** de una política previamente desactivada dentro del mismo ciclo: reutiliza los saldos ya existentes, sin recalcular ni volver a asignar cupo,
+- **edición** de cantidad, unidad o ciclo sobre una política ya activa: no toca saldos del ciclo actual; aplica recién al siguiente ciclo.
 
 ### Alta de colaborador
 
@@ -270,6 +294,14 @@ Cuando se cree un nuevo colaborador en una empresa con política activa:
 - Si un colaborador vuelve a estar activo dentro de la **misma empresa** y ya tiene saldo en el ciclo vigente, se reutiliza ese saldo con su remanente real.
 - Si vuelve a estar activo y no tiene saldo en el ciclo vigente, se crea uno nuevo con el cupo completo del ciclo.
 - Si un colaborador cambia de empresa, el saldo anterior queda histórico en la empresa origen y la empresa destino evalúa su propia política como un caso nuevo.
+
+### Definición de colaborador activo
+
+Para esta fase, un colaborador activo es aquel que:
+
+- pertenece a la empresa,
+- no está eliminado lógicamente,
+- y tiene usuario con estado activo cuando exista relación de usuario.
 
 ### Uso de administrativo
 
@@ -289,6 +321,17 @@ Cuando el sistema detecte un nuevo ciclo:
 
 La transición puede resolverse de forma lazy al primer uso/consulta del nuevo ciclo, sin exigir un job inicial.
 
+### Desactivación de política
+
+Si la política se desactiva:
+
+- no se crean nuevos consumos administrativos mientras esté desactivada,
+- los saldos existentes quedan históricos y visibles,
+- los consumos ya registrados no se alteran,
+- payroll e historial siguen leyendo esos registros normalmente.
+
+Si luego se reactiva dentro del mismo ciclo, se retoman los saldos existentes; no se reasignan unidades.
+
 ---
 
 ## Manejo de errores y validaciones
@@ -302,6 +345,40 @@ La transición puede resolverse de forma lazy al primer uso/consulta del nuevo c
 ### Regla obligatoria
 
 Los cambios de política afectan **solo desde el siguiente ciclo**, salvo activación inicial en una empresa sin política previa. Eso evita recalcular saldos ya usados dentro del mismo semestre o año.
+
+---
+
+## Responsabilidades de servicios
+
+Para evitar repartir la lógica entre controladores y modelos sin un contrato claro, la implementación debe separarse al menos así:
+
+### `AdministrativeDayCycleResolver`
+
+Responsable de:
+
+- resolver el ciclo vigente según fecha y tipo de ciclo,
+- producir `cycle_key`, `cycle_starts_on` y `cycle_ends_on`.
+
+### `AdministrativeDayBalanceService`
+
+Responsable de:
+
+- crear saldo inicial del ciclo,
+- obtener o crear saldo vigente,
+- descontar unidades,
+- revertir unidades,
+- aplicar bloqueo transaccional sobre el saldo.
+
+### `AdministrativeDayAttendanceService`
+
+Responsable de:
+
+- validar si un registro de asistencia corresponde a administrativo,
+- persistir o actualizar `administrative_day_usages`,
+- coordinar en transacción asistencia + usage + balance,
+- manejar la reversa cuando el registro deja de ser administrativo o se elimina.
+
+Los controladores solo orquestan request/response. Payroll consume el contrato resultante, pero no recalcula saldos ni resuelve ciclos.
 
 ---
 
