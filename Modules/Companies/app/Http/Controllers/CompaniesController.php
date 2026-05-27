@@ -84,7 +84,18 @@ class CompaniesController extends Controller
         if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
             abort(403);
         }
-        $company->load('economicActivity');
+        $company->load(['economicActivity', 'administrativeDayPolicy']);
+
+        $isPolicyLocked = false;
+        if ($company->administrativeDayPolicy && $company->administrativeDayPolicy->is_enabled) {
+            $resolver = app(\Modules\Employees\Services\AdministrativeDayCycleResolver::class);
+            $resolved = $resolver->resolve(now(), $company->administrativeDayPolicy->cycle_type);
+            $isPolicyLocked = \Modules\Employees\Models\AdministrativeDayUsage::where('company_id', $company->id)
+                ->whereHas('balance', function ($q) use ($resolved) {
+                    $q->where('cycle_key', $resolved['cycle_key']);
+                })
+                ->exists();
+        }
 
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
         $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
@@ -107,7 +118,13 @@ class CompaniesController extends Controller
             $enabledTaxableItemIds = $company->taxableItems()->wherePivot('is_enabled', true)->pluck('taxable_items_catalog.id')->toArray();
         }
 
-        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales', 'taxableItems', 'enabledTaxableItemIds'));
+        // Cargar solicitudes de días administrativos de la empresa
+        $dayRequests = \Modules\Employees\Models\AdministrativeDayRequest::where('company_id', $company->id)
+            ->with(['employee', 'resolver'])
+            ->orderBy('requested_date', 'desc')
+            ->get();
+
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales', 'taxableItems', 'enabledTaxableItemIds', 'isPolicyLocked', 'dayRequests'));
     }
 
     public function employees(Company $company)
@@ -180,7 +197,68 @@ class CompaniesController extends Controller
             'dia_pago_dia.required_if' => 'Debes indicar el día cuando el pago es “Día fijo”.',
         ]);
 
+        // Validar política de días administrativos si se intenta habilitar
+        $policyRules = [];
+        if ($request->boolean('administrative_day_policy_enabled')) {
+            $policyRules = [
+                'administrative_day_policy_days' => 'required|numeric|min:0.5|max:365',
+                'administrative_day_policy_unit' => 'required|in:full_day,half_day',
+                'administrative_day_policy_cycle' => 'required|in:annual,semiannual',
+            ];
+        }
+
+        if (!empty($policyRules)) {
+            $request->validate($policyRules, [
+                'administrative_day_policy_days.required' => 'La cantidad de días administrativos es obligatoria.',
+                'administrative_day_policy_days.numeric' => 'La cantidad de días administrativos debe ser numérica.',
+                'administrative_day_policy_days.min' => 'La cantidad de días administrativos debe ser al menos 0.5.',
+                'administrative_day_policy_unit.required' => 'La unidad de la política es obligatoria.',
+                'administrative_day_policy_cycle.required' => 'El tipo de ciclo es obligatorio.',
+            ]);
+        }
+
+        // Verificar si la política está bloqueada por consumos existentes
+        $existingPolicy = $company->administrativeDayPolicy;
+        $isLocked = false;
+        if ($existingPolicy && $existingPolicy->is_enabled) {
+            $resolver = app(\Modules\Employees\Services\AdministrativeDayCycleResolver::class);
+            $resolved = $resolver->resolve(now(), $existingPolicy->cycle_type);
+            $isLocked = \Modules\Employees\Models\AdministrativeDayUsage::where('company_id', $company->id)
+                ->whereHas('balance', function ($q) use ($resolved) {
+                    $q->where('cycle_key', $resolved['cycle_key']);
+                })
+                ->exists();
+        }
+
+        if ($isLocked) {
+            if ($request->has('administrative_day_policy_days') && (float) $request->input('administrative_day_policy_days') !== (float) $existingPolicy->days_per_cycle) {
+                return back()->withErrors(['administrative_day_policy_days' => 'No se puede modificar la cantidad de días porque ya existen consumos en el ciclo actual.']);
+            }
+            if ($request->has('administrative_day_policy_unit') && $request->input('administrative_day_policy_unit') !== $existingPolicy->unit) {
+                return back()->withErrors(['administrative_day_policy_unit' => 'No se puede modificar la unidad porque ya existen consumos en el ciclo actual.']);
+            }
+            if ($request->has('administrative_day_policy_cycle') && $request->input('administrative_day_policy_cycle') !== $existingPolicy->cycle_type) {
+                return back()->withErrors(['administrative_day_policy_cycle' => 'No se puede modificar el tipo de ciclo porque ya existen consumos en el ciclo actual.']);
+            }
+        }
+
         $company->update($data);
+
+        // Guardar o actualizar la política de días administrativos
+        $isEnabled = $request->boolean('administrative_day_policy_enabled');
+        $policy = $company->administrativeDayPolicy()->updateOrCreate(
+            ['company_id' => $company->id],
+            [
+                'is_enabled' => $isEnabled,
+                'days_per_cycle' => $isEnabled ? (float) $request->input('administrative_day_policy_days') : ($existingPolicy->days_per_cycle ?? 0.0),
+                'unit' => $isEnabled ? $request->input('administrative_day_policy_unit') : ($existingPolicy->unit ?? 'full_day'),
+                'cycle_type' => $isEnabled ? $request->input('administrative_day_policy_cycle') : ($existingPolicy->cycle_type ?? 'annual'),
+            ]
+        );
+
+        if ($isEnabled) {
+            app(\Modules\Employees\Services\AdministrativeDayProvisioner::class)->provisionCompany($company);
+        }
 
         if ($user->hasAnyRole(['super-admin', 'admin', 'contador']) && $request->has('taxable_items_config')) {
             $taxableItemsInput = $request->input('taxable_items', []);

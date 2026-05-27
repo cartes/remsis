@@ -125,6 +125,16 @@ class Company extends Model
         return $this->belongsTo(\Modules\Core\Models\EconomicActivity::class);
     }
 
+    public function administrativeDayPolicy()
+    {
+        return $this->hasOne(CompanyAdministrativeDayPolicy::class);
+    }
+
+    public function dayRequests()
+    {
+        return $this->hasMany(\Modules\Employees\Models\AdministrativeDayRequest::class);
+    }
+
     public function taxableItems()
     {
         return $this->belongsToMany(\Modules\AdminPanel\Models\TaxableItem::class, 'company_taxable_item', 'company_id', 'taxable_item_id')

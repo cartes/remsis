@@ -26,7 +26,16 @@ class ProcessEmployeePayroll
                         $q->where('status', 'ausente')
                             ->where(function ($q2) {
                                 $q2->where('is_justified', false)
-                                   ->orWhereIn('justification_type', ['unpaid_leave', 'work_accident', 'suspension', 'unjustified']);
+                                   ->orWhereIn('justification_type', [
+                                       'permiso_sin_goce',
+                                       'unpaid_leave',
+                                       'accidente_trabajo',
+                                       'work_accident',
+                                       'suspension_disciplinaria',
+                                       'suspension',
+                                       'inasistencia_injustificada',
+                                       'unjustified'
+                                   ]);
                             });
                     });
             })

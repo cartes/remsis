@@ -39,7 +39,20 @@ class EmployeeHomeController extends Controller
             ->with(['company', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter'])
             ->first();
 
-        return view('employees::profile.show', compact('user', 'employee'));
+        $balance = null;
+        $requests = collect();
+
+        if ($employee) {
+            $balanceService = app(\Modules\Employees\Services\AdministrativeDayBalanceService::class);
+            $balance = $balanceService->getOrCreateBalance($employee, now());
+
+            $requests = \Modules\Employees\Models\AdministrativeDayRequest::where('employee_id', $employee->id)
+                ->with('resolver')
+                ->orderBy('requested_date', 'desc')
+                ->get();
+        }
+
+        return view('employees::profile.show', compact('user', 'employee', 'balance', 'requests'));
     }
 
     /**

@@ -11,7 +11,11 @@ class EventServiceProvider extends ServiceProvider
      *
      * @var array<string, array<int, string>>
      */
-    protected $listen = [];
+    protected $listen = [
+        \Modules\Employees\Events\AdministrativeDayRequested::class => [
+            \Modules\Employees\Listeners\NotifyCompanyAdmins::class,
+        ],
+    ];
 
     /**
      * Indicates if events should be discovered.

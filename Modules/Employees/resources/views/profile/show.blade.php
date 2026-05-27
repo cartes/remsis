@@ -30,7 +30,7 @@
             $aniosEmpresa = $emp?->hire_date ? $emp->hire_date->diffInYears(now()) : null;
         @endphp
 
-        <div x-data="{ activeTab: 'resumen', dropdownItemsOpen: false }" @click.away="dropdownItemsOpen = false" class="min-h-screen bg-slate-50">
+        <div x-data="{ activeTab: '{{ session('success') || $errors->any() ? 'asistencia' : 'resumen' }}', dropdownItemsOpen: false, showRequestModal: {{ $errors->any() ? 'true' : 'false' }} }" @click.away="dropdownItemsOpen = false" class="min-h-screen bg-slate-50">
 
             {{-- ══════════════ HEADER ══════════════ --}}
             <div class="bg-white border-b border-slate-200">
@@ -578,23 +578,244 @@
 
                     {{-- ════ ASISTENCIA ════ --}}
                     <div x-show="activeTab === 'asistencia'" x-cloak>
-                        <div class="bg-white rounded-lg shadow-sm p-4 border border-slate-100">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-sm font-bold text-slate-700">Registro de Asistencia</h3>
-                                <span
-                                    class="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full font-medium">Próximamente</span>
+                        
+                        @if ($balance)
+                            {{-- Balance de Días Administrativos --}}
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 mb-6">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-900">Días Administrativos</h3>
+                                        <p class="text-xs text-slate-500 mt-0.5">Control de saldos y solicitudes para el ciclo actual ({{ \Carbon\Carbon::parse($balance->cycle_starts_on)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($balance->cycle_ends_on)->format('d/m/Y') }})</p>
+                                    </div>
+                                    <button @click="showRequestModal = true" 
+                                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-sm shadow-blue-500/10">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Solicitar Día Administrativo
+                                    </button>
+                                </div>
+
+                                {{-- Tarjetas de Saldos --}}
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-black text-slate-800">{{ number_format((float) $balance->assigned_units, 1) }}</p>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Asignados</p>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-lg bg-slate-200/50 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-violet-50/50 border border-violet-100 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-black text-violet-700">{{ number_format((float) $balance->used_units, 1) }}</p>
+                                            <p class="text-xs font-bold text-violet-400 uppercase tracking-wider mt-0.5">Utilizados</p>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-black text-emerald-700">{{ number_format((float) $balance->available_units, 1) }}</p>
+                                            <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider mt-0.5">Disponibles</p>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 8h6m-6 4h6m-6 4h6M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Historial de Solicitudes --}}
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Mis Solicitudes</h4>
+                                    
+                                    @if ($requests->isEmpty())
+                                        <div class="text-center py-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                                            <p class="text-sm font-semibold text-slate-500">No has ingresado solicitudes aún</p>
+                                            <p class="text-xs text-slate-400 mt-0.5">Cualquier día administrativo que solicites aparecerá registrado aquí.</p>
+                                        </div>
+                                    @else
+                                        <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                                            <table class="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                        <th class="px-4 py-3">Fecha</th>
+                                                        <th class="px-4 py-3">Comentarios</th>
+                                                        <th class="px-4 py-3">Estado</th>
+                                                        <th class="px-4 py-3">Resolución</th>
+                                                        <th class="px-4 py-3 text-right">Acción</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-50 text-sm">
+                                                    @foreach ($requests as $req)
+                                                        <tr class="hover:bg-slate-50/30 transition-colors">
+                                                            <td class="px-4 py-3 font-semibold text-slate-800">
+                                                                {{ \Carbon\Carbon::parse($req->requested_date)->format('d/m/Y') }}
+                                                            </td>
+                                                            <td class="px-4 py-3 text-xs text-slate-600 max-w-xs truncate" title="{{ $req->notes }}">
+                                                                {{ $req->notes ?? '—' }}
+                                                            </td>
+                                                            <td class="px-4 py-3">
+                                                                @if ($req->status === 'pending')
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Pendiente</span>
+                                                                @elseif ($req->status === 'approved')
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Aprobada</span>
+                                                                @elseif ($req->status === 'rejected')
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">Rechazada</span>
+                                                                @elseif ($req->status === 'cancelled')
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">Cancelada</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="px-4 py-3 text-xs text-slate-500">
+                                                                @if ($req->status === 'approved')
+                                                                    Aprobada por {{ $req->resolver?->name ?? 'Administrador' }}
+                                                                @elseif ($req->status === 'rejected')
+                                                                    <span class="text-rose-600" title="Motivo: {{ $req->rejection_reason }}">
+                                                                        Rechazada por {{ $req->resolver?->name ?? 'Administrador' }}
+                                                                        @if($req->rejection_reason)
+                                                                            <span class="block text-[10px] text-slate-400 italic font-normal">{{ $req->rejection_reason }}</span>
+                                                                        @endif
+                                                                    </span>
+                                                                @elseif ($req->status === 'cancelled')
+                                                                    Cancelada por mí
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                            <td class="px-4 py-3 text-right">
+                                                                @if ($req->status === 'pending')
+                                                                    <form action="{{ route('employee.requests.cancel', $req) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta solicitud?');" class="inline">
+                                                                        @csrf
+                                                                        <button type="submit" class="text-xs font-bold text-rose-600 hover:text-rose-800 transition-colors">
+                                                                            Cancelar
+                                                                        </button>
+                                                                    </form>
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="grid grid-cols-4 gap-3 mb-6 opacity-40">
-                                @foreach ([['Días trabajados', '22', 'text-emerald-600'], ['Atrasos', '0', 'text-amber-600'], ['Ausencias', '0', 'text-red-500'], ['Horas extra', '0', 'text-blue-600']] as [$l, $v, $c])
-                                    <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center">
+                        @else
+                            {{-- Mensaje de Política Desactivada --}}
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-800">Días Administrativos Desactivados</h3>
+                                        <p class="text-xs text-slate-500 mt-1">La política de días administrativos no está configurada o se encuentra desactivada para esta empresa. Para más información, consulte con el departamento de Recursos Humanos.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Registro de Asistencia Regular (Próximamente) --}}
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200/80">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Registro de Asistencia General</h3>
+                                    <p class="text-xs text-slate-400 mt-0.5">Control de marcas de entrada, salida, horas extraordinarias y atrasos.</p>
+                                </div>
+                                <span class="text-xs bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-1 rounded-full font-medium">Próximamente</span>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 opacity-50 select-none">
+                                @foreach ([['Días trabajados', '22', 'text-emerald-600'], ['Atrasos', '0', 'text-amber-600'], ['Ausencias', '0', 'text-rose-500'], ['Horas extra', '0', 'text-blue-600']] as [$l, $v, $c])
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-150 text-center">
                                         <p class="text-2xl font-black {{ $c }}">{{ $v }}</p>
                                         <p class="text-xs text-slate-500 mt-0.5">{{ $l }}</p>
                                     </div>
                                 @endforeach
                             </div>
-                            <p class="text-center text-xs text-slate-400">El módulo de asistencia estará disponible
-                                próximamente.</p>
                         </div>
+
+                        {{-- Modal de Solicitud --}}
+                        <div x-show="showRequestModal" 
+                             class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto" 
+                             x-cloak>
+                            {{-- Backdrop --}}
+                            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+                                 @click="showRequestModal = false"></div>
+
+                            {{-- Modal Content --}}
+                            <div class="relative bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 mx-4 transform transition-all duration-300"
+                                 x-show="showRequestModal"
+                                 x-transition:enter="ease-out duration-300"
+                                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                 x-transition:leave="ease-in duration-200"
+                                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-base font-bold text-slate-950">Solicitar Día Administrativo</h3>
+                                    <button @click="showRequestModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <form action="{{ route('employee.requests.store') }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label for="requested_date" class="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha Solicitada</label>
+                                        <input type="date" 
+                                               id="requested_date" 
+                                               name="requested_date" 
+                                               required 
+                                               min="{{ date('Y-m-d') }}"
+                                               value="{{ old('requested_date') }}"
+                                               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                        @error('requested_date')
+                                            <p class="text-xs text-rose-500 mt-1 font-medium">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="notes" class="block text-xs font-bold text-slate-500 uppercase mb-1">Motivo / Notas (Opcional)</label>
+                                        <textarea id="notes" 
+                                                  name="notes" 
+                                                  rows="3" 
+                                                  placeholder="Explica brevemente la razón de tu solicitud..."
+                                                  class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">{{ old('notes') }}</textarea>
+                                        @error('notes')
+                                            <p class="text-xs text-rose-500 mt-1 font-medium">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-2 pt-2">
+                                        <button type="button" 
+                                                @click="showRequestModal = false"
+                                                class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-all">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" 
+                                                class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-sm shadow-blue-500/20">
+                                            Enviar Solicitud
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
                     </div>
 
                     {{-- ════ DOCUMENTOS ════ --}}

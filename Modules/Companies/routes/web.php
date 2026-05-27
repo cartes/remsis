@@ -41,6 +41,12 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::delete('companies/{company}/employees/{employee}/attendance/{attendance}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroyAttendance'])
         ->name('companies.employees.attendance.destroy');
 
+    // Gestión de Solicitudes de Días Administrativos
+    Route::post('companies/{company}/requests/{dayRequest}/approve', [\Modules\Companies\Http\Controllers\CompanyRequestController::class, 'approve'])
+        ->name('companies.requests.approve');
+    Route::post('companies/{company}/requests/{dayRequest}/reject', [\Modules\Companies\Http\Controllers\CompanyRequestController::class, 'reject'])
+        ->name('companies.requests.reject');
+
     // Carpeta Digital (Documentos)
     Route::post('companies/{company}/employees/{employee}/documents', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'store'])
         ->name('companies.employees.documents.store');

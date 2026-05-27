@@ -49,6 +49,7 @@ class AttendanceRecord extends Model
         'permiso_sin_goce'           => 'Permiso sin Goce de Sueldo (Descuenta)',
         'accidente_trabajo'          => 'Accidente del Trabajo (Descuenta)',
         'suspension_disciplinaria'   => 'Sanción/Suspensión Disciplinaria (Descuenta)',
+        'administrative_day'         => 'Día Administrativo (No descuenta)',
     ];
 
     public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo

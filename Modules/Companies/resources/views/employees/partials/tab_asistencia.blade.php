@@ -10,6 +10,8 @@
     justificationType: 'inasistencia_injustificada',
     justificationReason: '',
     attendanceId: null,
+    hasAdminDayPolicy: {{ $administrativeDayBalance ? 'true' : 'false' }},
+    availableAdminDays: {{ $administrativeDayBalance ? (float) $administrativeDayBalance->available_units : 0.0 }},
 
     openAddModal() {
         this.modalTitle = 'Registrar Marca / Inasistencia';
@@ -55,7 +57,7 @@
     @endphp
 
     {{-- ── Bento Box: tarjetas de resumen ────────────────────────────── --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 @if($administrativeDayBalance) xl:grid-cols-4 @endif gap-4 mb-6">
 
         {{-- Horas Extras --}}
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-4">
@@ -101,6 +103,25 @@
                 <p class="text-2xl font-bold text-slate-900 leading-tight">{{ number_format($totalDelayMins) }}</p>
             </div>
         </div>
+
+        {{-- Días Administrativos Disponibles (Si la política está activa) --}}
+        @if($administrativeDayBalance)
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="1.8"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Días Admin. Disponibles</p>
+                    <p class="text-2xl font-bold text-slate-900 leading-tight">
+                        {{ number_format((float) $administrativeDayBalance->available_units, 1) }} / {{ number_format((float) $administrativeDayBalance->assigned_units, 1) }}
+                    </p>
+                </div>
+            </div>
+        @endif
     </div>
 
     {{-- ── Tabla de Marcas ────────────────────────────────────────────── --}}
@@ -346,6 +367,11 @@
                                     <template x-if="status === 'ausente'">
                                         <option value="permiso_con_goce">Permiso con Goce de Sueldo (No descuenta)</option>
                                     </template>
+                                    <template x-if="status === 'ausente' && hasAdminDayPolicy">
+                                        <option value="administrative_day" :disabled="availableAdminDays <= 0 && justificationType !== 'administrative_day'">
+                                            Día Administrativo (No descuenta)
+                                        </option>
+                                    </template>
                                     <template x-if="status === 'ausente'">
                                         <option value="permiso_sin_goce">Permiso sin Goce de Sueldo (Descuenta)</option>
                                     </template>
@@ -356,6 +382,15 @@
                                         <option value="suspension_disciplinaria">Sanción/Suspensión Disciplinaria (Descuenta)</option>
                                     </template>
                                 </select>
+                                
+                                <div x-show="status === 'ausente' && justificationType === 'administrative_day' && hasAdminDayPolicy" class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-800 flex items-center gap-1.5" x-transition>
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Saldo disponible de días administrativos: <strong x-text="availableAdminDays"></strong> días.</span>
+                                </div>
+                                <div x-show="status === 'ausente' && justificationType === 'administrative_day' && hasAdminDayPolicy && availableAdminDays <= 0 && modalTitle !== 'Editar Marca / Inasistencia'" class="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-800 flex items-start gap-1.5" x-transition>
+                                    <i class="fas fa-exclamation-triangle mt-0.5"></i>
+                                    <span>Advertencia: El colaborador no tiene saldo disponible en este ciclo. El guardado podría fallar.</span>
+                                </div>
                             </div>
 
                             {{-- Hidden para inasistencia injustificada --}}

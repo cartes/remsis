@@ -2,7 +2,7 @@
     $requestedSection = old('section', request('section'));
     $requestedTab = old('tab', request('tab'));
     $companyDataTabs = ['ident', 'dir'];
-    $remunerationTabs = ['remu', 'cost-centers', 'banco', 'rep', 'meta'];
+    $remunerationTabs = ['remu', 'requests', 'cost-centers', 'banco', 'rep', 'meta'];
     $initialSection = in_array($requestedSection, ['company-data', 'remunerations'], true)
         ? $requestedSection
         : (in_array($requestedTab, $remunerationTabs, true) ? 'remunerations' : 'company-data');
@@ -28,6 +28,7 @@
                     activeTab: @json($initialTab),
                     diaPago: @json(old('dia_pago', $company->dia_pago)),
                     showEssentialsModal: false,
+                    rejectingRequest: null,
                     loadingEssentials: false,
                     essentials: {
                         razon_social: @json($company->razon_social),
@@ -255,6 +256,15 @@
                         <i class="fas fa-money-bill-wave"></i>
                         Configuración de Remuneraciones
                     </button>
+                    <button @click="activeTab = 'requests'"
+                        :class="{
+                            'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'requests',
+                            'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50 border-transparent': activeTab !== 'requests'
+                        }"
+                        class="px-6 py-3 text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus:outline-none border-b-0 mr-1 rounded-t-lg">
+                        <i class="fas fa-clipboard-list"></i>
+                        Solicitudes
+                    </button>
                     <button @click="activeTab = 'cost-centers'"
                         :class="{
                             'bg-white border-gray-200 border-t border-l border-r text-blue-700 rounded-t-lg font-bold -mb-px z-10 shadow-sm': activeTab === 'cost-centers',
@@ -295,6 +305,14 @@
             </div>
 
 
+            {{-- Requests Tab --}}
+            <div x-show="activeTab === 'requests'"
+                class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm p-6"
+                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0">
+                @include('companies::partials.requests_tab')
+            </div>
+
             {{-- Cost Centers Tab --}}
             <div x-show="activeTab === 'cost-centers'"
                 class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm p-6"
@@ -303,7 +321,7 @@
                 @include('companies::partials.cost_centers_tab')
             </div>
 
-            <div x-show="activeTab !== 'cost-centers'"
+            <div x-show="activeTab !== 'cost-centers' && activeTab !== 'requests'"
                 class="bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-sm">
                 <form method="POST" action="{{ route('companies.update', $company) }}" class="p-6">
                     @csrf
@@ -637,6 +655,70 @@
                                     <p>La suma del horario (<span x-text="calculateScheduleHours()"></span> hrs) no
                                         coincide
                                         con las horas semanales definidas.</p>
+                            </div>
+                        </div>
+
+                        {{-- Política de Días Administrativos --}}
+                        <div class="mt-8 border-t border-gray-100 pt-6" x-data="{
+                            policyEnabled: {{ old('administrative_day_policy_enabled', $company->administrativeDayPolicy->is_enabled ?? false) ? 'true' : 'false' }},
+                            isLocked: {{ $isPolicyLocked ? 'true' : 'false' }}
+                        }">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Días Administrativos</h3>
+                            <p class="text-sm text-gray-500 mb-4">Configura la política de días administrativos con goce de sueldo para los colaboradores.</p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="administrative_day_policy_enabled" value="1"
+                                            class="sr-only peer" x-model="policyEnabled" :disabled="isLocked">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-700">Habilitar Política de Días Administrativos</span>
+                                    </label>
+                                    @if ($isPolicyLocked)
+                                        <p class="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                            <i class="fas fa-lock"></i> La política está bloqueada porque ya existen consumos registrados en el ciclo actual.
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <div x-show="policyEnabled" x-transition class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    {{-- Cantidad de días --}}
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Días por Ciclo</label>
+                                        <input type="number" step="0.5" name="administrative_day_policy_days"
+                                            value="{{ old('administrative_day_policy_days', $company->administrativeDayPolicy->days_per_cycle ?? '') }}"
+                                            :disabled="isLocked"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-500">
+                                        @error('administrative_day_policy_days')
+                                            <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Unidad --}}
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Unidad de Consumo</label>
+                                        <select name="administrative_day_policy_unit" :disabled="isLocked"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-500">
+                                            <option value="full_day" @selected(old('administrative_day_policy_unit', $company->administrativeDayPolicy->unit ?? 'full_day') === 'full_day')>Día Completo (1.0)</option>
+                                            <option value="half_day" @selected(old('administrative_day_policy_unit', $company->administrativeDayPolicy->unit ?? '') === 'half_day')>Medio Día (0.5)</option>
+                                        </select>
+                                        @error('administrative_day_policy_unit')
+                                            <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Ciclo --}}
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Ciclo</label>
+                                        <select name="administrative_day_policy_cycle" :disabled="isLocked"
+                                            class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-500">
+                                            <option value="annual" @selected(old('administrative_day_policy_cycle', $company->administrativeDayPolicy->cycle_type ?? 'annual') === 'annual')>Anual</option>
+                                            <option value="semiannual" @selected(old('administrative_day_policy_cycle', $company->administrativeDayPolicy->cycle_type ?? '') === 'semiannual')>Semestral</option>
+                                        </select>
+                                        @error('administrative_day_policy_cycle')
+                                            <p class="text-red-600 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                         </div>

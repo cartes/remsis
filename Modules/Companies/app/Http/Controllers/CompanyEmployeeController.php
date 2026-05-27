@@ -325,8 +325,15 @@ class CompanyEmployeeController extends Controller
         $catalogItems = Item::forCompany($company->id)->orderBy('name')->get();
         $fieldLabels = EmployeeLog::$fieldLabels;
 
+        $administrativeDayBalance = null;
+        $administrativeDayPolicy = \Modules\Companies\Models\CompanyAdministrativeDayPolicy::where('company_id', $company->id)->first();
+        if ($administrativeDayPolicy && $administrativeDayPolicy->is_enabled) {
+            $balanceService = app(\Modules\Employees\Services\AdministrativeDayBalanceService::class);
+            $administrativeDayBalance = $balanceService->getOrCreateBalance($employee, now());
+        }
+
         return view('companies::employees.edit', compact(
-            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels'
+            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels', 'administrativeDayBalance'
         ));
     }
 
@@ -493,29 +500,38 @@ class CompanyEmployeeController extends Controller
             'justification_reason' => 'nullable|string|max:1000',
         ]);
 
+        $date = $validated['date'];
+
+        // Verificar período cerrado/pagado
+        $isPeriodLocked = \Modules\Payroll\Models\PayrollPeriod::where('company_id', $company->id)
+            ->whereIn('status', [\Modules\Payroll\Models\PayrollPeriod::STATUS_CLOSED, \Modules\Payroll\Models\PayrollPeriod::STATUS_PAID])
+            ->where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
+            ->exists();
+
+        if ($isPeriodLocked) {
+            return back()->withErrors(['date' => 'No se pueden registrar o modificar marcas de asistencia en un período de nómina cerrado o pagado.']);
+        }
+
         $isJustified = filter_var($request->input('is_justified', false), FILTER_VALIDATE_BOOLEAN);
         $justificationType = $validated['justification_type'] ?? null;
         $justificationReason = $validated['justification_reason'] ?? null;
 
         // Limpiar justificaciones si el estado no es ausente o licencia
-        if (!in_array($validated['status'], ['ausente', 'licencia'])) {
+        if (!in_array($validated['status'], ['ausente', 'licencia'], true)) {
             $isJustified = false;
             $justificationType = null;
             $justificationReason = null;
         }
 
-        \Modules\Employees\Models\AttendanceRecord::updateOrCreate(
-            [
-                'employee_id' => $employee->id,
-                'date' => $validated['date'],
-            ],
-            [
-                'status' => $validated['status'],
-                'is_justified' => $isJustified,
-                'justification_type' => $justificationType,
-                'justification_reason' => $justificationReason,
-            ]
-        );
+        $attendanceService = app(\Modules\Employees\Services\AdministrativeDayAttendanceService::class);
+        $attendanceService->storeOrUpdateAttendance($employee, [
+            'date' => $date,
+            'status' => $validated['status'],
+            'is_justified' => $isJustified,
+            'justification_type' => $justificationType,
+            'justification_reason' => $justificationReason,
+        ]);
 
         return back()
             ->with('success', 'Registro de asistencia/ausencia guardado correctamente.')
@@ -530,7 +546,21 @@ class CompanyEmployeeController extends Controller
         $this->authorizeCompanyAccess($company);
         abort_unless($attendance->employee_id === $employee->id, 404);
 
-        $attendance->delete();
+        $date = $attendance->date;
+
+        // Verificar período cerrado/pagado
+        $isPeriodLocked = \Modules\Payroll\Models\PayrollPeriod::where('company_id', $company->id)
+            ->whereIn('status', [\Modules\Payroll\Models\PayrollPeriod::STATUS_CLOSED, \Modules\Payroll\Models\PayrollPeriod::STATUS_PAID])
+            ->where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
+            ->exists();
+
+        if ($isPeriodLocked) {
+            return back()->withErrors(['date' => 'No se pueden eliminar marcas de asistencia en un período de nómina cerrado o pagado.']);
+        }
+
+        $attendanceService = app(\Modules\Employees\Services\AdministrativeDayAttendanceService::class);
+        $attendanceService->deleteAttendance($employee, $attendance);
 
         return back()
             ->with('success', 'Registro de asistencia/ausencia eliminado correctamente.')
