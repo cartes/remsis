@@ -269,6 +269,12 @@ El flujo actual de asistencia está modelado por fecha, con un único registro o
 
 En esta fase no se modelarán dos bloques horarios distintos dentro de un mismo día. El medio día se entiende como una unidad administrativa de consumo, no como un turno parcial detallado.
 
+Además, un día administrativo —sea completo o medio día— se tratará como un registro de ausencia administrativa para esa fecha. Por eso:
+
+- no puede coexistir con `clock_in`, `clock_out`, atraso ni horas extra en la misma fecha,
+- no puede combinarse con un estado parcial de asistencia dentro del mismo registro diario,
+- si negocio requiere combinar presencia parcial + administrativo en una fecha, eso queda fuera de esta fase y requerirá un modelo intradía distinto.
+
 El modal debe mostrar:
 
 - saldo disponible del ciclo actual,
@@ -292,6 +298,12 @@ Al editar o eliminar un administrativo:
 - se recompone el saldo del ciclo.
 
 La persistencia de asistencia, usage y balance debe resolverse siempre en una sola transacción.
+
+Si una edición cambia la fecha y con ello cambia el ciclo:
+
+- primero se revierte el usage del ciclo origen dentro de la transacción,
+- luego se intenta aplicar el usage en el ciclo destino,
+- si la aplicación en destino falla por saldo o por regla de período cerrado, toda la transacción revierte y el saldo origen queda intacto.
 
 ---
 
@@ -346,7 +358,9 @@ Para esta fase, un colaborador activo es aquel que:
 
 - pertenece a la empresa,
 - no está eliminado lógicamente,
-- y tiene usuario con estado activo cuando exista relación de usuario.
+- y, si tiene usuario asociado, `user.status = true`.
+
+Esa definición será la fuente de verdad para activación inicial, altas, reingresos y creación de saldos por nuevo ciclo.
 
 ### Uso de administrativo
 
@@ -388,7 +402,9 @@ Si la política permanece desactivada hasta un ciclo posterior:
 
 Si el registro de asistencia pertenece a un período cuyo payroll está `closed` o `paid`:
 
+- no se permitirá crear nuevos administrativos en fechas dentro de ese período,
 - no se permitirá editar ni eliminar un día administrativo desde el flujo normal,
+- no se permitirá mover un administrativo desde un período abierto hacia uno `closed` o `paid`, ni viceversa,
 - primero deberá reabrirse el período según las reglas de payroll,
 - esto evita desalinear asistencia, saldo y liquidación ya cerrada.
 
