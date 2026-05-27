@@ -54,10 +54,14 @@ Cada empresa tendrá una política activa de días administrativos con estos atr
 - `days_per_cycle`
 - `unit` (`full_day` o `half_day`)
 - `cycle_type` (`annual` o `semiannual`)
-- `cycle_start_month`
-- `expires_at_cycle_end` (`true` en esta fase)
 
 La política vive en el contexto de empresa y se administra desde la ficha `companies.edit`, dentro de la sección **Remuneraciones**.
+
+En esta fase, para evitar sobreconfiguración:
+
+- `annual` siempre corre del **1 de enero al 31 de diciembre**,
+- `semiannual` siempre corre en **enero-junio** y **julio-diciembre**,
+- el vencimiento al cierre del ciclo es obligatorio y no configurable.
 
 ### 2. Saldo por colaborador y ciclo
 
@@ -91,6 +95,8 @@ Cuando RRHH registre un administrativo:
 4. persiste el consumo ligado al registro de asistencia,
 5. deja el evento marcado como **no descontable** para payroll.
 
+Todas estas operaciones deben ocurrir dentro de **una sola transacción** y con bloqueo del saldo del ciclo (`lockForUpdate` o equivalente) para evitar sobreconsumo si dos usuarios editan al mismo colaborador al mismo tiempo.
+
 ---
 
 ## Modelo de datos propuesto
@@ -108,8 +114,6 @@ is_enabled
 days_per_cycle          decimal(5,2)
 unit                    enum(full_day, half_day)
 cycle_type              enum(annual, semiannual)
-cycle_start_month       tinyint
-expires_at_cycle_end    boolean
 created_at
 updated_at
 ```
@@ -118,7 +122,7 @@ Reglas:
 
 - un solo registro activo por empresa,
 - `days_per_cycle` admite decimal para soportar cupos equivalentes cuando la unidad sea medio día,
-- `cycle_start_month` permite resolver el inicio real del ciclo sin hardcodear enero/julio en la lógica.
+- no se agregan campos de arrastre ni calendario flexible en esta fase.
 
 ## Saldos por colaborador
 
@@ -142,8 +146,15 @@ updated_at
 Reglas:
 
 - índice único por `employee_id + cycle_key`,
-- `available_units` puede mantenerse persistido por claridad operativa, o derivarse en mutator si se quiere reducir duplicación,
+- `available_units` **se mantendrá persistido** y se actualizará en cada operación de consumo o reversa,
 - `assigned_units` debe reflejar exactamente el cupo vigente del ciclo, no un cálculo dinámico posterior.
+
+### Formato de `cycle_key`
+
+- anual: `2026`
+- semestral: `2026-S1` o `2026-S2`
+
+Esto deja una clave humana, estable y fácil de indexar.
 
 ## Consumos
 
@@ -181,6 +192,17 @@ En `Companies > Colaborador > Asistencia`:
 
 La recomendación es **mantener el patrón actual de ausencias justificadas y agregar una justificación explícita `administrative_day`**, porque minimiza ruptura visual y aprovecha la lógica ya existente de motivos.
 
+### Representación de medios días
+
+El flujo actual de asistencia está modelado por fecha, con un único registro operativo por día. Para no romper ese contrato:
+
+- un día administrativo de empresa configurado como `half_day` consumirá `0.5` unidades,
+- seguirá existiendo **un solo registro de asistencia por colaborador y fecha**,
+- no se permitirán dos administrativos distintos en la misma fecha,
+- la UI debe etiquetar ese registro como **Medio día administrativo** cuando la política de la empresa use `half_day`.
+
+En esta fase no se modelarán dos bloques horarios distintos dentro de un mismo día. El medio día se entiende como una unidad administrativa de consumo, no como un turno parcial detallado.
+
 El modal debe mostrar:
 
 - saldo disponible del ciclo actual,
@@ -202,6 +224,8 @@ Al editar o eliminar un administrativo:
 
 - se ajusta o elimina el consumo asociado,
 - se recompone el saldo del ciclo.
+
+La persistencia de asistencia, usage y balance debe resolverse siempre en una sola transacción.
 
 ---
 
@@ -241,6 +265,12 @@ Cuando se cree un nuevo colaborador en una empresa con política activa:
 
 - el sistema debe generar su saldo del ciclo vigente usando la política actual.
 
+### Reingresos y reactivaciones
+
+- Si un colaborador vuelve a estar activo dentro de la **misma empresa** y ya tiene saldo en el ciclo vigente, se reutiliza ese saldo con su remanente real.
+- Si vuelve a estar activo y no tiene saldo en el ciclo vigente, se crea uno nuevo con el cupo completo del ciclo.
+- Si un colaborador cambia de empresa, el saldo anterior queda histórico en la empresa origen y la empresa destino evalúa su propia política como un caso nuevo.
+
 ### Uso de administrativo
 
 1. RRHH abre la pestaña Asistencia del colaborador.
@@ -267,11 +297,11 @@ La transición puede resolverse de forma lazy al primer uso/consulta del nuevo c
 - No permitir consumo si el saldo disponible es menor al valor de la unidad configurada.
 - No permitir configuraciones incompletas al activar la política.
 - No mezclar administrativos con justificaciones incompatibles en un mismo registro.
-- Si la política cambia durante un ciclo, la implementación debe definir explícitamente si afecta solo ciclos futuros o también saldos vigentes.
+- Los cambios de política nunca recalculan retroactivamente saldos ya emitidos en el ciclo vigente.
 
-### Regla recomendada
+### Regla obligatoria
 
-Los cambios de política afectan **desde el siguiente ciclo**, salvo activación inicial en una empresa sin política previa. Eso evita recalcular saldos ya usados dentro del mismo semestre o año.
+Los cambios de política afectan **solo desde el siguiente ciclo**, salvo activación inicial en una empresa sin política previa. Eso evita recalcular saldos ya usados dentro del mismo semestre o año.
 
 ---
 
