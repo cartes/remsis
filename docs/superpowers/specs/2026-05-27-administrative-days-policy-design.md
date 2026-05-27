@@ -124,6 +124,7 @@ Reglas:
 - `days_per_cycle` admite decimal para soportar cupos equivalentes cuando la unidad sea medio día,
 - si `unit = full_day`, `days_per_cycle` solo admite enteros positivos (`1`, `2`, `3`, ...),
 - si `unit = half_day`, `days_per_cycle` solo admite múltiplos de `0.5`,
+- si ya existen saldos emitidos para el ciclo vigente, no se permiten cambios de `days_per_cycle`, `unit` ni `cycle_type` hasta el siguiente ciclo,
 - no se agregan campos de arrastre ni calendario flexible en esta fase.
 
 ## Saldos por colaborador
@@ -185,6 +186,14 @@ Reglas:
 - editar un registro existente debe actualizar el usage actual, no crear uno nuevo,
 - borrar asistencia debe borrar o revertir su usage dentro de la misma transacción.
 
+## Garantía de unicidad en asistencia
+
+La solución asume un único `attendance_record` por colaborador y fecha, y esa regla debe quedar garantizada a nivel persistencia:
+
+- índice único por `employee_id + date` en `attendance_records`,
+- limpieza previa de duplicados si existieran datos históricos incompatibles,
+- el flujo seguirá usando `updateOrCreate` sobre esa clave canónica.
+
 ---
 
 ## Cambios en asistencia
@@ -213,6 +222,17 @@ La implementación debe dejar un set canónico único y compartido entre UI, asi
 - `suspension_disciplinaria`
 
 Payroll y asistencia no deben usar aliases alternativos en inglés para estos valores.
+
+### Migración de valores históricos
+
+Antes de dejar activa la nueva lógica, se debe normalizar la data y el código existente hacia el contrato canónico:
+
+- `unpaid_leave` -> `permiso_sin_goce`
+- `work_accident` -> `accidente_trabajo`
+- `suspension` -> `suspension_disciplinaria`
+- `unjustified` -> `inasistencia_injustificada`
+
+Durante la transición, payroll debe leer mediante una capa de normalización centralizada para no romper históricos mientras la migración termina. Al cerrar la implementación, la persistencia nueva debe escribir solo valores canónicos.
 
 ### Representación de medios días
 
@@ -281,13 +301,14 @@ Al guardar una política nueva o reactivada:
 
 - **activación inicial** en una empresa sin política previa: crea saldos del ciclo actual para colaboradores activos,
 - **reactivación** de una política previamente desactivada dentro del mismo ciclo: reutiliza los saldos ya existentes, sin recalcular ni volver a asignar cupo,
-- **edición** de cantidad, unidad o ciclo sobre una política ya activa: no toca saldos del ciclo actual; aplica recién al siguiente ciclo.
+- **edición** de cantidad, unidad o ciclo sobre una política ya activa: si el ciclo vigente ya tiene saldos emitidos, el cambio se rechaza y deberá hacerse en el siguiente ciclo.
 
 ### Alta de colaborador
 
 Cuando se cree un nuevo colaborador en una empresa con política activa:
 
-- el sistema debe generar su saldo del ciclo vigente usando la política actual.
+- el sistema debe generar su saldo del ciclo vigente usando la política actualmente efectiva para ese ciclo,
+- como los cambios estructurales de política quedan bloqueados una vez emitidos los saldos del ciclo, un alta nueva siempre hereda la misma configuración ya aplicada al resto del ciclo.
 
 ### Reingresos y reactivaciones
 
@@ -307,9 +328,10 @@ Para esta fase, un colaborador activo es aquel que:
 
 1. RRHH abre la pestaña Asistencia del colaborador.
 2. Registra un administrativo para una fecha.
-3. El sistema valida el saldo.
-4. Si la validación pasa, persiste asistencia + consumo.
-5. El resumen del colaborador refleja el uso.
+3. El sistema resuelve el ciclo usando **la fecha del registro de asistencia**, no la fecha actual del servidor.
+4. El sistema valida el saldo de ese ciclo.
+5. Si la validación pasa, persiste asistencia + consumo.
+6. El resumen del colaborador refleja el uso.
 
 ### Cambio de ciclo
 
@@ -356,7 +378,7 @@ Para evitar repartir la lógica entre controladores y modelos sin un contrato cl
 
 Responsable de:
 
-- resolver el ciclo vigente según fecha y tipo de ciclo,
+- resolver el ciclo según **la fecha efectiva del registro** y el tipo de ciclo,
 - producir `cycle_key`, `cycle_starts_on` y `cycle_ends_on`.
 
 ### `AdministrativeDayBalanceService`
@@ -369,6 +391,14 @@ Responsable de:
 - revertir unidades,
 - aplicar bloqueo transaccional sobre el saldo.
 
+### `AdministrativeDayProvisioner`
+
+Responsable de integrarse con altas, reactivaciones y cambios de empresa:
+
+- en alta de colaborador, crea el saldo del ciclo vigente si la empresa tiene política activa,
+- en reactivación dentro de la misma empresa, reutiliza el saldo existente o lo crea si no existe,
+- en cambio de empresa, no migra saldo histórico: evalúa a la empresa destino como un alta nueva.
+
 ### `AdministrativeDayAttendanceService`
 
 Responsable de:
@@ -378,7 +408,7 @@ Responsable de:
 - coordinar en transacción asistencia + usage + balance,
 - manejar la reversa cuando el registro deja de ser administrativo o se elimina.
 
-Los controladores solo orquestan request/response. Payroll consume el contrato resultante, pero no recalcula saldos ni resuelve ciclos.
+Los controladores solo orquestan request/response. `EmployeeService` o el punto actual de alta/reactivación delega la provisión en `AdministrativeDayProvisioner`. Payroll consume el contrato resultante, pero no recalcula saldos ni resuelve ciclos.
 
 ---
 
