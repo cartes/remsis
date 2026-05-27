@@ -14,6 +14,14 @@
                 this.fetchOptions();
             }
         });
+
+        // Listen for external set-value events to programmatically select an option
+        this.$el.addEventListener('set-value', (e) => {
+            if (e.detail) {
+                this.selectedId = e.detail.id || '';
+                this.selectedLabel = e.detail.label || '';
+            }
+        });
     },
 
     async fetchOptions() {

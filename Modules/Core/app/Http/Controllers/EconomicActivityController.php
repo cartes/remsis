@@ -30,4 +30,32 @@ class EconomicActivityController extends Controller
 
         return response()->json($activities);
     }
+
+    /**
+     * Consult SII data by RUT.
+     */
+    public function consultRut(string $rut, \Modules\Core\Services\SiiService $siiService)
+    {
+        // Limpiar el RUT para una mínima validación
+        $cleanRut = preg_replace('/[^0-9kK]/', '', $rut);
+        if (strlen($cleanRut) < 8) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'RUT inválido o muy corto.',
+            ], 422);
+        }
+
+        try {
+            $data = $siiService->fetchCompanyDataByRut($rut);
+            return response()->json([
+                'status' => 'success',
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al consultar datos en el SII: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

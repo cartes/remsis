@@ -35,6 +35,12 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::get('companies/{company}/employees/{employee}/payrolls/{payroll}/pdf', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'downloadPayroll'])
         ->name('companies.employees.payrolls.pdf');
 
+    // Gestión de Asistencia y Ausencias
+    Route::post('companies/{company}/employees/{employee}/attendance', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'storeAttendance'])
+        ->name('companies.employees.attendance.store');
+    Route::delete('companies/{company}/employees/{employee}/attendance/{attendance}', [Modules\Companies\Http\Controllers\CompanyEmployeeController::class, 'destroyAttendance'])
+        ->name('companies.employees.attendance.destroy');
+
     // Carpeta Digital (Documentos)
     Route::post('companies/{company}/employees/{employee}/documents', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'store'])
         ->name('companies.employees.documents.store');

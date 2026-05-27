@@ -45,17 +45,24 @@ class EmployeeItem extends Model
      * @param  object  $uf   LegalParameter with ->value for UF
      * @param  object  $utm  LegalParameter with ->value for UTM
      * @param  int     $base Base imponible del empleado (required for PERCENTAGE unit)
+     * @param  int     $workedDays Cantidad de días trabajados en el mes
      */
-    public function resolvedAmountCLP(object $uf, object $utm, int $base = 0): int
+    public function resolvedAmountCLP(object $uf, object $utm, int $base = 0, int $workedDays = 30): int
     {
         $amount = (float) $this->amount;
 
-        return match ($this->unit) {
+        $resolved = match ($this->unit) {
             'UF'         => (int) round($amount * (float) $uf->value),
             'UTM'        => (int) round($amount * (float) $utm->value),
             'PERCENTAGE' => (int) round($base * $amount / 100),
             default      => (int) round($amount), // CLP
         };
+
+        if ($this->item && $this->item->calculation_type === Item::CALC_PROPORCIONAL_AUSENCIA) {
+            $resolved = (int) round(($resolved / 30) * $workedDays);
+        }
+
+        return $resolved;
     }
 
     /**

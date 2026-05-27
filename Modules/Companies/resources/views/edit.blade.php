@@ -117,6 +117,47 @@
                         const defined = parseFloat(this.weeklyHours) || 0;
                         return Math.abs(calculated - defined) > 0.1;
                     },
+                    consultingSii: false,
+                    async consultSii() {
+                        const rut = this.essentials.rut;
+                        if (!rut) {
+                            toast('Por favor ingresa un RUT.', 'error');
+                            return;
+                        }
+                        this.consultingSii = true;
+                        try {
+                            const url = "{{ route('sii.consultar-rut', '__RUT__') }}".replace('__RUT__', encodeURIComponent(rut));
+                            const response = await axios.get(url, { headers: { Accept: 'application/json' } });
+                            if (response.data?.status === 'success' && response.data?.data) {
+                                const data = response.data.data;
+                                this.essentials.razon_social = data.razon_social || '';
+                                
+                                // Rellenar campos de la vista principal si existen
+                                const giroInput = document.querySelector('input[name="giro"]');
+                                if (giroInput) {
+                                    giroInput.value = data.giro || '';
+                                }
+
+                                const selectEl = document.querySelector('[name="economic_activity_id"]')?.closest('[x-data]');
+                                if (selectEl && data.primary_activity && data.primary_activity.id) {
+                                    selectEl.dispatchEvent(new CustomEvent('set-value', {
+                                        detail: {
+                                            id: data.primary_activity.id,
+                                            label: `${data.primary_activity.code} - ${data.primary_activity.name}`
+                                        }
+                                    }));
+                                }
+
+                                toast('Datos del SII obtenidos con éxito.', 'success');
+                            } else {
+                                toast(response.data?.message || 'No se pudieron obtener datos del SII.', 'error');
+                            }
+                        } catch (e) {
+                            toast(e.response?.data?.message || 'Error al conectar con la API de consulta de RUT.', 'error');
+                        } finally {
+                            this.consultingSii = false;
+                        }
+                    },
                     async updateEssentials() {
                         this.loadingEssentials = true;
                         try {
@@ -852,9 +893,17 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">RUT</label>
-                        <input type="text" x-model="essentials.rut" required
-                            x-on:input="essentials.rut = formatRut($event.target.value)"
-                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <div class="flex gap-2">
+                            <input type="text" x-model="essentials.rut" required
+                                x-on:input="essentials.rut = formatRut($event.target.value)"
+                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all flex-1">
+                            <button type="button" @click="consultSii" :disabled="loadingEssentials || consultingSii || !essentials.rut"
+                                class="bg-blue-100 text-blue-700 px-3 py-2 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 font-semibold text-xs flex items-center gap-1">
+                                <i class="fas fa-search" x-show="!consultingSii"></i>
+                                <i class="fas fa-spinner fa-spin" x-show="consultingSii"></i>
+                                <span>Consultar SII</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="pt-4 flex gap-3">

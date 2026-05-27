@@ -50,8 +50,28 @@ class PayrollCalculationService
         $uf  = LegalParameter::where('key', 'uf_value')->first() ?? (object)['value' => 37000];
         $utm = LegalParameter::where('key', 'utm_value')->first() ?? (object)['value' => 65182];
 
+        // Calcular días trabajados en base a las ausencias registradas en el período.
+        // El estándar mensual en Chile para contratos con sueldo mensual es de 30 días.
+        // Se descuentan las inasistencias injustificadas, licencias médicas, y permisos sin goce.
+        $discountableAbsencesCount = \Modules\Employees\Models\AttendanceRecord::where('employee_id', $employee->id)
+            ->whereBetween('date', [$period->start_date, $period->end_date])
+            ->where(function ($query) {
+                $query->where('status', 'licencia')
+                    ->orWhere(function ($q) {
+                        $q->where('status', 'ausente')
+                            ->where(function ($q2) {
+                                $q2->where('is_justified', false)
+                                   ->orWhereIn('justification_type', ['unpaid_leave', 'work_accident', 'suspension', 'unjustified']);
+                            });
+                    });
+            })
+            ->count();
+
+        $workedDays = max(0, 30 - $discountableAbsencesCount);
+
         // 1. Sueldo Base
         $haberBase = (int) ($employee->salary ?? 0);
+        $proportionalSalary = (int) round(($haberBase / 30) * $workedDays);
 
         // 2. Horas Extras
         $overtimeAmount = 0;
@@ -86,22 +106,22 @@ class PayrollCalculationService
         $descuentosVarios    = $activeItems->filter(fn($ei) => $ei->item->type === 'descuento_varios');
         $creditos            = $activeItems->filter(fn($ei) => $ei->item->type === 'credito');
 
-        // Base para PERCENTAGE usa sueldo base antes de ítems
-        $baseParaPercentage = $haberBase;
+        // Base para PERCENTAGE usa sueldo base proporcional
+        $baseParaPercentage = $proportionalSalary;
 
-        $totalHaberesImponibles   = $haberesImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
-        $totalHaberesNoImponibles = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
-        $totalDescuentosVarios    = $descuentosVarios->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
-        $totalCreditos            = $creditos->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
+        $totalHaberesImponibles   = $haberesImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
+        $totalHaberesNoImponibles = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
+        $totalDescuentosVarios    = $descuentosVarios->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
+        $totalCreditos            = $creditos->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
 
         // Colación y movilización histórica para la tabla payrolls (compatibilidad)
-        $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
-        $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
+        $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
+        $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
 
         // 5. Gratificación
-        $baseGratificacion = $haberBase + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
+        $baseGratificacion = $proportionalSalary + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
             + $bonosAmount + $aguinaldosAmount
-            + $haberesImponibles->filter(fn($ei) => $ei->item->is_gratification_base)->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage));
+            + $haberesImponibles->filter(fn($ei) => $ei->item->is_gratification_base)->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
 
         if ($company->gratification_system === 'art_50') {
             $immParam        = LegalParameter::where('key', 'monthly_minimum_wage')->value('value');
@@ -113,7 +133,7 @@ class PayrollCalculationService
         }
 
         // 6. Imponible total
-        $imponible = (int) ($haberBase + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
+        $imponible = (int) ($proportionalSalary + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
             + $bonosAmount + $aguinaldosAmount + $gratificationAmount + $totalHaberesImponibles);
 
         // 7. Total haberes (imponible + no imponible)
@@ -142,7 +162,7 @@ class PayrollCalculationService
                 'company_id' => $period->company_id,
                 'period_year'  => $period->year,
                 'period_month' => $period->month,
-                'worked_days'  => 30,
+                'worked_days'  => $workedDays,
 
                 'overtime_hours'          => $overtimeHours,
                 'overtime_amount'         => $overtimeAmount,

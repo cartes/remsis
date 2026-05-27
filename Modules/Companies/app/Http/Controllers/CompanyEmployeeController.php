@@ -477,4 +477,63 @@ class CompanyEmployeeController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Registra o edita una marca de asistencia/ausencia del colaborador.
+     */
+    public function storeAttendance(Request $request, Company $company, Employee $employee)
+    {
+        $this->authorizeCompanyAccess($company);
+
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'status' => 'required|in:asistio,ausente,atraso,licencia,vacaciones',
+            'is_justified' => 'nullable',
+            'justification_type' => 'nullable|string|max:100',
+            'justification_reason' => 'nullable|string|max:1000',
+        ]);
+
+        $isJustified = filter_var($request->input('is_justified', false), FILTER_VALIDATE_BOOLEAN);
+        $justificationType = $validated['justification_type'] ?? null;
+        $justificationReason = $validated['justification_reason'] ?? null;
+
+        // Limpiar justificaciones si el estado no es ausente o licencia
+        if (!in_array($validated['status'], ['ausente', 'licencia'])) {
+            $isJustified = false;
+            $justificationType = null;
+            $justificationReason = null;
+        }
+
+        \Modules\Employees\Models\AttendanceRecord::updateOrCreate(
+            [
+                'employee_id' => $employee->id,
+                'date' => $validated['date'],
+            ],
+            [
+                'status' => $validated['status'],
+                'is_justified' => $isJustified,
+                'justification_type' => $justificationType,
+                'justification_reason' => $justificationReason,
+            ]
+        );
+
+        return back()
+            ->with('success', 'Registro de asistencia/ausencia guardado correctamente.')
+            ->with('active_tab', 'asistencia');
+    }
+
+    /**
+     * Elimina una marca de asistencia/ausencia del colaborador.
+     */
+    public function destroyAttendance(Company $company, Employee $employee, \Modules\Employees\Models\AttendanceRecord $attendance)
+    {
+        $this->authorizeCompanyAccess($company);
+        abort_unless($attendance->employee_id === $employee->id, 404);
+
+        $attendance->delete();
+
+        return back()
+            ->with('success', 'Registro de asistencia/ausencia eliminado correctamente.')
+            ->with('active_tab', 'asistencia');
+    }
 }

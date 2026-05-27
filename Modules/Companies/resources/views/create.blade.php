@@ -17,10 +17,19 @@
                     </div>
                     <div>
                         <label class="block font-medium mb-1">RUT <span class="text-red-500">*</span></label>
-                        <input x-model="formEssential.rut"
-                            x-on:input="formEssential.rut = formatRut($event.target.value)"
-                            class="w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-300"
-                            :disabled="savingEssential || companyId">
+                        <div class="flex gap-2">
+                            <input x-model="formEssential.rut"
+                                x-on:input="formEssential.rut = formatRut($event.target.value)"
+                                class="w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-300"
+                                :disabled="savingEssential || companyId"
+                                placeholder="12.345.678-9">
+                            <button type="button" @click="consultSii" :disabled="savingEssential || consultingSii || companyId || !formEssential.rut"
+                                class="bg-blue-100 text-blue-700 px-3 py-2 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 font-semibold text-sm flex items-center gap-1">
+                                <i class="fas fa-search" x-show="!consultingSii"></i>
+                                <i class="fas fa-spinner fa-spin" x-show="consultingSii"></i>
+                                <span>Consultar SII</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -92,6 +101,16 @@
                         <div>
                             <label class="block font-medium mb-1">Teléfono</label>
                             <input x-model="formDetails.phone" class="w-full border rounded p-2">
+                        </div>
+                        <div class="md:col-span-2" id="economic-activity-select" @input="formDetails.economic_activity_id = $event.detail">
+                            <x-core::searchable-select 
+                                name="economic_activity_id" 
+                                label="Actividad Económica (SII)"
+                                placeholder="Buscar código o actividad..."
+                                value=""
+                                :endpoint="route('economic-activities.search')"
+                                initialLabel=""
+                            />
                         </div>
                         <div class="md:col-span-2">
                             <label class="block font-medium mb-1">Nombre interno (opcional)</label>
@@ -246,6 +265,7 @@
                     companyId: null,
                     savingEssential: false,
                     savingDetails: false,
+                    consultingSii: false,
 
                     // Catálogos
                     options: {
@@ -267,6 +287,7 @@
                         email: '',
                         phone: '',
                         name: '',
+                        economic_activity_id: null,
 
                         // Dirección
                         direccion: '',
@@ -290,6 +311,60 @@
 
                         // Metadatos
                         notes: '',
+                    },
+
+                    async consultSii() {
+                        const rut = this.formEssential.rut;
+                        if (!rut) {
+                            toast('Por favor ingresa un RUT.', 'error');
+                            return;
+                        }
+                        this.consultingSii = true;
+                        try {
+                            const url = "{{ route('sii.consultar-rut', '__RUT__') }}".replace('__RUT__', encodeURIComponent(rut));
+                            const response = await axios.get(url, { headers: { Accept: 'application/json' } });
+                            if (response.data?.status === 'success' && response.data?.data) {
+                                const data = response.data.data;
+                                this.formEssential.razon_social = data.razon_social || '';
+                                
+                                // Rellenar datos complementarios para el paso 2
+                                this.formDetails.giro = data.giro || '';
+                                this.formDetails.name = data.razon_social || '';
+                                this.formDetails.nombre_fantasia = data.razon_social || '';
+                                
+                                // Si se encontró actividad económica
+                                if (data.primary_activity && data.primary_activity.id) {
+                                    this.formDetails.economic_activity_id = data.primary_activity.id;
+                                    
+                                    // Notificar al componente searchable-select
+                                    const selectEl = document.getElementById('economic-activity-select')?.querySelector('[x-data]');
+                                    if (selectEl) {
+                                        selectEl.dispatchEvent(new CustomEvent('set-value', {
+                                            detail: {
+                                                id: data.primary_activity.id,
+                                                label: `${data.primary_activity.code} - ${data.primary_activity.name}`
+                                            }
+                                        }));
+                                    }
+                                } else {
+                                    this.formDetails.economic_activity_id = null;
+                                    const selectEl = document.getElementById('economic-activity-select')?.querySelector('[x-data]');
+                                    if (selectEl) {
+                                        selectEl.dispatchEvent(new CustomEvent('set-value', {
+                                            detail: { id: '', label: '' }
+                                        }));
+                                    }
+                                }
+                                
+                                toast('Datos obtenidos del SII con éxito.', 'success');
+                            } else {
+                                toast(response.data?.message || 'No se pudieron obtener datos del SII.', 'error');
+                            }
+                        } catch (e) {
+                            toast(e.response?.data?.message || 'Error al conectar con la API de consulta de RUT.', 'error');
+                        } finally {
+                            this.consultingSii = false;
+                        }
                     },
 
                     // Carga inicial

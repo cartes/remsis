@@ -18,7 +18,21 @@ class ProcessEmployeePayroll
         $period = PayrollPeriod::findOrFail($periodId);
 
         // 1. Días Trabajados (Estándar 30 días para cálculo mensual)
-        $workedDays = 30; // Podría ser dinámico basado en asistencia si se integra
+        $discountableAbsencesCount = \Modules\Employees\Models\AttendanceRecord::where('employee_id', $employee->id)
+            ->whereBetween('date', [$period->start_date, $period->end_date])
+            ->where(function ($query) {
+                $query->where('status', 'licencia')
+                    ->orWhere(function ($q) {
+                        $q->where('status', 'ausente')
+                            ->where(function ($q2) {
+                                $q2->where('is_justified', false)
+                                   ->orWhereIn('justification_type', ['unpaid_leave', 'work_accident', 'suspension', 'unjustified']);
+                            });
+                    });
+            })
+            ->count();
+
+        $workedDays = max(0, 30 - $discountableAbsencesCount);
 
         // 2. Cálculo de Haberes
         $baseSalary = (int) $employee->salary ?? 0;
@@ -34,6 +48,7 @@ class ProcessEmployeePayroll
         $taxableEarnings = $proportionalSalary + $gratification;
 
         // Haberes No Imponibles desde employee_items
+        $ufValue = LegalParameter::where('key', 'uf_value')->value('value') ?? 37000;
         $ufObj  = (object)['value' => $ufValue];
         $utmObj = (object)['value' => LegalParameter::where('key', 'utm_value')->value('value') ?? 65182];
 
@@ -42,9 +57,9 @@ class ProcessEmployeePayroll
         $descuentosVarios    = $activeItems->filter(fn($ei) => $ei->item->type === 'descuento_varios');
         $creditos            = $activeItems->filter(fn($ei) => $ei->item->type === 'credito');
 
-        $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
-        $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
-        $nonTaxableEarnings = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary));
+        $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary, $workedDays));
+        $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary, $workedDays));
+        $nonTaxableEarnings = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($ufObj, $utmObj, $proportionalSalary, $workedDays));
 
         $totalEarnings = $taxableEarnings + $nonTaxableEarnings;
 

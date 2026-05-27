@@ -27,6 +27,8 @@ class ProcessEmployeePayrollTest extends TestCase
     {
         parent::setUp();
 
+        app(\App\Support\Tenancy\TenantContext::class)->bypass();
+
         // Configuración de parámetros legales compartidos para las pruebas
         LegalParameter::updateOrCreate(['key' => 'monthly_minimum_wage'], ['value' => 500000]);
         LegalParameter::updateOrCreate(['key' => 'uf_value'], ['value' => 37000]);
@@ -162,5 +164,73 @@ class ProcessEmployeePayrollTest extends TestCase
         // Imponible = 4,000,000 + 197,917 = 4,197,917.
         // 4,197,917 * 0.006 = 25,187.502 -> 25,188
         $this->assertEquals('$25.188', $result['legal_deductions']['afc']);
+    }
+
+    /** @test */
+    public function it_calculates_payroll_with_absences_and_discounts_salary_proportionally()
+    {
+        $afp = Afp::create(['nombre' => 'MODELO', 'rate' => 10.0, 'commission' => 0.0]);
+
+        $employee = Employee::create([
+            'user_id' => $this->user->id,
+            'company_id' => $this->company->id,
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'salary' => 900000,
+            'afp_id' => $afp->id,
+            'contract_type' => 'indefinido',
+            'status' => 'active',
+            'is_in_payroll' => true,
+        ]);
+
+        $period = PayrollPeriod::create([
+            'company_id' => $this->company->id,
+            'year' => 2026,
+            'month' => 3,
+            'start_date' => '2026-03-01',
+            'end_date' => '2026-03-31',
+            'status' => 'open',
+        ]);
+
+        // Registrar una inasistencia injustificada y una licencia médica (total 2 días de ausencia descontable)
+        \Modules\Employees\Models\AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => '2026-03-05',
+            'status' => 'ausente',
+            'is_justified' => false,
+            'justification_type' => 'inasistencia_injustificada',
+        ]);
+
+        \Modules\Employees\Models\AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => '2026-03-10',
+            'status' => 'licencia',
+            'is_justified' => true,
+            'justification_type' => 'licencia_medica',
+        ]);
+
+        // Registrar un permiso con goce de sueldo (no debería descontar, total días descontables = 2)
+        \Modules\Employees\Models\AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => '2026-03-15',
+            'status' => 'ausente',
+            'is_justified' => true,
+            'justification_type' => 'permiso_con_goce',
+        ]);
+
+        $service = new ProcessEmployeePayroll;
+        $result = $service->execute($employee->id, $period->id)->toArray();
+
+        // 30 - 2 = 28 días trabajados.
+        $this->assertEquals(28, $result['summary']['worked_days']);
+
+        // Sueldo base proporcional: (900,000 / 30) * 28 = 840,000 CLP.
+        $this->assertEquals('$840.000', $result['summary']['proportional_salary']);
+
+        // Gratificación proporcional: 25% de 840,000 = 210,000 CLP, topado en (4.75 * 500,000) / 12 = 197,917 CLP.
+        $this->assertEquals('$197.917', $result['summary']['gratification']);
+
+        // Haberes Imponibles = 840,000 + 197,917 = 1,037,917 CLP.
+        $this->assertEquals('$1.037.917', $result['summary']['taxable_earnings']);
     }
 }
