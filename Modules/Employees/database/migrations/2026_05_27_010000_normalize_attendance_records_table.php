@@ -16,7 +16,7 @@ return new class extends Migration
         $duplicates = DB::table('attendance_records')
             ->select('employee_id', 'date', DB::raw('COUNT(*) as count'))
             ->groupBy('employee_id', 'date')
-            ->having('count', '>', 1)
+            ->havingRaw('COUNT(*) > 1')
             ->get();
 
         foreach ($duplicates as $duplicate) {
