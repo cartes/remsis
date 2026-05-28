@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "^12.0",
@@ -53,7 +53,7 @@
             "Modules\\Payroll\\Database\\Seeders\\": "Modules/Payroll/database/seeders/",
             "Modules\\Requests\\": "Modules/Requests/app/",
             "Modules\\Requests\\Database\\Factories\\": "Modules/Requests/database/factories/",
-            "Modules\\Requests\\Database\\Seeders\\": "Modules/Requests/database/seeders/",
+            "Modules\\Requests\\Database\\Seeders\\": "Modules/Requests/Database/seeders/",
             "Modules\\Users\\": "Modules/Users/app/",
             "Modules\\Users\\Database\\Factories\\": "Modules/Users/database/factories/",
             "Modules\\Users\\Database\\Seeders\\": "Modules/Users/database/seeders/"
@@ -104,6 +104,9 @@
         }
     },
     "config": {
+        "platform": {
+            "php": "8.4.0"
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
