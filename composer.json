@@ -13,8 +13,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "^12.0",
-        "spatie/laravel-permission": "^6.20",
-        "wikimedia/composer-merge-plugin": "^2.1"
+        "spatie/laravel-permission": "^6.20"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -30,12 +29,48 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "Modules\\AdminPanel\\": "Modules/AdminPanel/app/",
+            "Modules\\AdminPanel\\Database\\Factories\\": "Modules/AdminPanel/database/factories/",
+            "Modules\\AdminPanel\\Database\\Seeders\\": "Modules/AdminPanel/database/seeders/",
+            "Modules\\Attendance\\": "Modules/Attendance/app/",
+            "Modules\\Attendance\\Database\\Factories\\": "Modules/Attendance/database/factories/",
+            "Modules\\Attendance\\Database\\Seeders\\": "Modules/Attendance/database/seeders/",
+            "Modules\\Companies\\": "Modules/Companies/app/",
+            "Modules\\Companies\\Database\\Factories\\": "Modules/Companies/database/factories/",
+            "Modules\\Companies\\Database\\Seeders\\": "Modules/Companies/database/seeders/",
+            "Modules\\Core\\": "Modules/Core/app/",
+            "Modules\\Core\\Database\\Factories\\": "Modules/Core/database/factories/",
+            "Modules\\Core\\Database\\Seeders\\": "Modules/Core/database/seeders/",
+            "Modules\\Documents\\": "Modules/Documents/app/",
+            "Modules\\Documents\\Database\\Factories\\": "Modules/Documents/database/factories/",
+            "Modules\\Documents\\Database\\Seeders\\": "Modules/Documents/database/seeders/",
+            "Modules\\Employees\\": "Modules/Employees/app/",
+            "Modules\\Employees\\Database\\Factories\\": "Modules/Employees/database/factories/",
+            "Modules\\Employees\\Database\\Seeders\\": "Modules/Employees/database/seeders/",
+            "Modules\\Payroll\\": "Modules/Payroll/app/",
+            "Modules\\Payroll\\Database\\Factories\\": "Modules/Payroll/database/factories/",
+            "Modules\\Payroll\\Database\\Seeders\\": "Modules/Payroll/database/seeders/",
+            "Modules\\Requests\\": "Modules/Requests/app/",
+            "Modules\\Requests\\Database\\Factories\\": "Modules/Requests/database/factories/",
+            "Modules\\Requests\\Database\\Seeders\\": "Modules/Requests/database/seeders/",
+            "Modules\\Users\\": "Modules/Users/app/",
+            "Modules\\Users\\Database\\Factories\\": "Modules/Users/database/factories/",
+            "Modules\\Users\\Database\\Seeders\\": "Modules/Users/database/seeders/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "Modules\\AdminPanel\\Tests\\": "Modules/AdminPanel/tests/",
+            "Modules\\Attendance\\Tests\\": "Modules/Attendance/tests/",
+            "Modules\\Companies\\Tests\\": "Modules/Companies/tests/",
+            "Modules\\Core\\Tests\\": "Modules/Core/tests/",
+            "Modules\\Documents\\Tests\\": "Modules/Documents/tests/",
+            "Modules\\Employees\\Tests\\": "Modules/Employees/tests/",
+            "Modules\\Payroll\\Tests\\": "Modules/Payroll/tests/",
+            "Modules\\Requests\\Tests\\": "Modules/Requests/tests/",
+            "Modules\\Users\\Tests\\": "Modules/Users/tests/"
         }
     },
     "scripts": {
@@ -66,11 +101,6 @@
     "extra": {
         "laravel": {
             "dont-discover": []
-        },
-        "merge-plugin": {
-            "include": [
-                "Modules/*/composer.json"
-            ]
         }
     },
     "config": {
@@ -79,8 +109,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true,
-            "wikimedia/composer-merge-plugin": true
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "stable",
