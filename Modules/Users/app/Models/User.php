@@ -2,13 +2,15 @@
 
 namespace Modules\Users\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
-use Modules\Companies\Models\Company;
 // use Modules\Users\Database\Factories\UserFactory;
 
+use Modules\Companies\Models\Company;
+use Modules\Core\Models\Tenant;
 use Modules\Employees\Models\Employee;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -18,13 +20,14 @@ class User extends Authenticatable
 
     protected static function newFactory()
     {
-        return \Database\Factories\UserFactory::new();
+        return UserFactory::new();
     }
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'tenant_id',
         'name',
         'email',
         'password',
@@ -48,6 +51,11 @@ class User extends Authenticatable
     protected $guard_name = 'web';
 
     protected $with = ['employee.company', 'roles'];
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
 
     public function company()
     {

@@ -2,10 +2,19 @@
 
 namespace Modules\Companies\Models;
 
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Modules\AdminPanel\Models\Bank;
 use Modules\AdminPanel\Models\Ccaf;
+use Modules\AdminPanel\Models\Mutual;
+use Modules\AdminPanel\Models\TaxableItem;
+use Modules\Core\Models\EconomicActivity;
+use Modules\Core\Models\Tenant;
+use Modules\Employees\Models\AdministrativeDayRequest;
 use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\Payroll;
+use Modules\Payroll\Models\PayrollPeriod;
 use Modules\Users\Models\User;
 
 // use Modules\Companies\Database\Factories\CompanyFactory;
@@ -24,6 +33,7 @@ class Company extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'tenant_id',
         'name',
         'rut',
         'email',
@@ -70,6 +80,11 @@ class Company extends Model
         return 'slug';
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
     public function users()
     {
         return $this->hasManyThrough(User::class, Employee::class, 'company_id', 'id', 'id', 'user_id');
@@ -82,7 +97,7 @@ class Company extends Model
 
     public function bank()
     {
-        return $this->belongsTo(\Modules\AdminPanel\Models\Bank::class);
+        return $this->belongsTo(Bank::class);
     }
 
     public function ccaf()
@@ -92,7 +107,7 @@ class Company extends Model
 
     public function mutual()
     {
-        return $this->belongsTo(\Modules\AdminPanel\Models\Mutual::class, 'mutual_id');
+        return $this->belongsTo(Mutual::class, 'mutual_id');
     }
 
     public function employees()
@@ -107,12 +122,12 @@ class Company extends Model
 
     public function costCenters()
     {
-        return $this->hasMany(\Modules\Companies\Models\CostCenter::class);
+        return $this->hasMany(CostCenter::class);
     }
 
     public function payrollPeriods()
     {
-        return $this->hasMany(\Modules\Payroll\Models\PayrollPeriod::class);
+        return $this->hasMany(PayrollPeriod::class);
     }
 
     public function periods()
@@ -122,7 +137,7 @@ class Company extends Model
 
     public function economicActivity()
     {
-        return $this->belongsTo(\Modules\Core\Models\EconomicActivity::class);
+        return $this->belongsTo(EconomicActivity::class);
     }
 
     public function administrativeDayPolicy()
@@ -132,12 +147,12 @@ class Company extends Model
 
     public function dayRequests()
     {
-        return $this->hasMany(\Modules\Employees\Models\AdministrativeDayRequest::class);
+        return $this->hasMany(AdministrativeDayRequest::class);
     }
 
     public function taxableItems()
     {
-        return $this->belongsToMany(\Modules\AdminPanel\Models\TaxableItem::class, 'company_taxable_item', 'company_id', 'taxable_item_id')
+        return $this->belongsToMany(TaxableItem::class, 'company_taxable_item', 'company_id', 'taxable_item_id')
             ->withPivot('is_enabled')
             ->withTimestamps();
     }
@@ -145,18 +160,25 @@ class Company extends Model
     protected static function booted()
     {
         static::creating(function ($company) {
+            if (empty($company->tenant_id) && app()->bound(TenantContext::class)) {
+                $tenantId = app(TenantContext::class)->tenantId();
+                if ($tenantId !== null) {
+                    $company->tenant_id = $tenantId;
+                }
+            }
+
             if (empty($company->name) && ! empty($company->razon_social)) {
                 $company->name = $company->razon_social;
             }
 
             if (empty($company->slug)) {
-                $company->slug = \Illuminate\Support\Str::slug($company->name);
+                $company->slug = Str::slug($company->name);
             }
         });
 
         static::updating(function ($company) {
             if ($company->isDirty('name') && ! $company->isDirty('slug')) {
-                $company->slug = \Illuminate\Support\Str::slug($company->name);
+                $company->slug = Str::slug($company->name);
             }
         });
     }

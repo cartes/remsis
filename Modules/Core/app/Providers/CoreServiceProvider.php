@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Modules\Core\Console\Commands\SyncIndicadoresCommand;
+use Modules\Core\Console\Commands\SyncMonthlyIndicatorsCommand;
 use Modules\Core\Models\DailyUfValue;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
@@ -50,6 +51,7 @@ class CoreServiceProvider extends ServiceProvider
     {
         $this->commands([
             SyncIndicadoresCommand::class,
+            SyncMonthlyIndicatorsCommand::class,
         ]);
     }
 
@@ -63,6 +65,8 @@ class CoreServiceProvider extends ServiceProvider
 
             $schedule->command('remsis:sync-indicadores')->monthlyOn(8, '06:15')->withoutOverlapping();
             $schedule->command('remsis:sync-indicadores')->monthlyOn(9, '06:15')->withoutOverlapping();
+            $schedule->command('remsis:sync-monthly-indicators')->monthlyOn(1, '06:30')->withoutOverlapping();
+            $schedule->command('remsis:sync-monthly-indicators')->monthlyOn(10, '06:30')->withoutOverlapping();
         });
     }
 

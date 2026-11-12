@@ -1,9 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Concerns;
 
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
+use Modules\Companies\Models\Company;
+use Modules\Core\Models\Tenant;
 
 trait BelongsToTenant
 {
@@ -16,16 +22,19 @@ trait BelongsToTenant
                 return;
             }
 
-            if (! $tenantContext->hasTenant()) {
+            $tenantColumn = static::getTenantColumn();
+
+            if (! $tenantContext->hasTenant($tenantColumn)) {
                 // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
                 // prevenimos la consulta de todos los registros forzando un resultado vacío.
                 $builder->whereRaw('1 = 0');
+
                 return;
             }
 
             $builder->where(
-                $builder->qualifyColumn(static::getTenantColumn()),
-                $tenantContext->companyId()
+                $builder->qualifyColumn($tenantColumn),
+                $tenantContext->resolveIdForColumn($tenantColumn)
             );
         });
 
@@ -33,28 +42,50 @@ trait BelongsToTenant
             $tenantContext = app(TenantContext::class);
             $tenantColumn = static::getTenantColumn();
 
-            if ($tenantContext->isBypassed() || ! empty($model->{$tenantColumn})) {
+            if ($tenantContext->isBypassed()) {
                 return;
             }
 
-            if (! $tenantContext->hasTenant()) {
-                // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
-                // lanzamos una excepción para evitar la creación de registros huérfanos.
-                throw new \RuntimeException('No se puede crear el modelo sin un tenant activo.');
+            if (empty($model->{$tenantColumn})) {
+                if (! $tenantContext->hasTenant($tenantColumn)) {
+                    // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
+                    // lanzamos una excepción para evitar la creación de registros huérfanos.
+                    throw new \RuntimeException('No se puede crear el modelo sin un tenant activo.');
+                }
+
+                $model->{$tenantColumn} = $tenantContext->resolveIdForColumn($tenantColumn);
             }
 
-            $model->{$tenantColumn} = $tenantContext->companyId();
+            // Si el modelo soporta además tenant_id y está vacío, lo propagamos desde el contexto
+            if (
+                $tenantColumn !== 'tenant_id'
+                && empty($model->tenant_id)
+                && $tenantContext->tenantId() !== null
+                && Schema::hasColumn($model->getTable(), 'tenant_id')
+            ) {
+                $model->tenant_id = $tenantContext->tenantId();
+            }
         });
     }
 
-    public function scopeForTenant(Builder $query, int $companyId): Builder
+    public function scopeForTenant(Builder $query, int $tenantOrCompanyId): Builder
     {
         return $query->withoutGlobalScope('tenant')
-            ->where($query->qualifyColumn(static::getTenantColumn()), $companyId);
+            ->where($query->qualifyColumn(static::getTenantColumn()), $tenantOrCompanyId);
     }
 
     public static function getTenantColumn(): string
     {
-        return defined('static::TENANT_COLUMN') ? static::TENANT_COLUMN : 'company_id';
+        return defined('static::TENANT_COLUMN') ? (string) static::TENANT_COLUMN : 'company_id';
+    }
+
+    public function tenantOrganization(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    public function tenantCompany(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

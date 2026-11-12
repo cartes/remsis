@@ -13,6 +13,8 @@ class CoreDatabaseSeeder extends Seeder
     {
         $this->call([
             EconomicActivitySeeder::class,
+            LreConceptsSeeder::class,
+            MonthlyIndicatorSeeder::class,
         ]);
     }
 }
