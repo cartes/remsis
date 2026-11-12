@@ -53,6 +53,11 @@ class CompaniesController extends Controller
         if (! auth()->user()->hasRole('super-admin')) {
             abort(403);
         }
+
+        if ($request->filled('rut')) {
+            $request->merge(['rut' => Rut::normalize((string) $request->input('rut'))]);
+        }
+
         $validated = $request->validate(
             [
                 'razon_social' => ['required', 'string', 'max:255'],
@@ -286,11 +291,25 @@ class CompaniesController extends Controller
 
     public function editEssentials(Company $company)
     {
+        $user = auth()->user();
+        if (! $user->canAccessCompany($company)) {
+            abort(403);
+        }
+
         return view('companies::essentials_edit', compact('company'));
     }
 
     public function updateEssentials(Request $request, Company $company)
     {
+        $user = auth()->user();
+        if (! $user->canAccessCompany($company)) {
+            abort(403);
+        }
+
+        if ($request->filled('rut')) {
+            $request->merge(['rut' => Rut::normalize((string) $request->input('rut'))]);
+        }
+
         $data = $request->validate([
             'razon_social' => ['required', 'string', 'max:255'],
             'rut' => ['required', 'string', 'max:20', Rule::unique('companies', 'rut')->ignore($company->id), new Rut],
@@ -321,6 +340,10 @@ class CompaniesController extends Controller
 
     public function destroy($id)
     {
+        if (! auth()->user()->hasRole('super-admin')) {
+            abort(403);
+        }
+
         $company = Company::findOrFail($id);
         $company->delete();
 
@@ -365,8 +388,16 @@ class CompaniesController extends Controller
 
     public function dashboard(Company $company)
     {
+        $user = auth()->user();
+        if (! $user->canAccessCompany($company)) {
+            abort(403);
+        }
+
         // Aseguramos que la empresa esté seleccionada en la sesión al entrar a su dashboard
-        session(['selected_company_id' => $company->id]);
+        session([
+            'selected_company_id' => $company->id,
+            'selected_tenant_id' => $company->tenant_id,
+        ]);
 
         $totalEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)->count();
         $activeEmployees = \Modules\Employees\Models\Employee::where('company_id', $company->id)

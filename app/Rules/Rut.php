@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Rules;
 
 use Closure;
@@ -8,12 +10,47 @@ use Illuminate\Contracts\Validation\ValidationRule;
 class Rut implements ValidationRule
 {
     /**
+     * Normaliza un RUT chileno al formato canónico sin puntos y con guion (ej: 76123456-K).
+     */
+    public static function normalize(?string $rut): ?string
+    {
+        if ($rut === null || trim($rut) === '') {
+            return null;
+        }
+
+        $cleaned = preg_replace('/[^0-9kK]/', '', $rut) ?? '';
+
+        if ($cleaned === '') {
+            return null;
+        }
+
+        if (strlen($cleaned) < 2) {
+            return strtoupper($cleaned);
+        }
+
+        $dv = strtoupper(substr($cleaned, -1));
+        $numero = ltrim(substr($cleaned, 0, -1), '0');
+
+        if ($numero === '') {
+            $numero = '0';
+        }
+
+        return "{$numero}-{$dv}";
+    }
+
+    /**
      * Run the validation rule.
      *
      * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if (! is_string($value) && $value !== null) {
+            $fail('El RUT ingresado no es válido.');
+
+            return;
+        }
+
         if (! $this->isValidRut($value)) {
             $fail('El RUT ingresado no es válido.');
         }
@@ -22,7 +59,7 @@ class Rut implements ValidationRule
     /**
      * Validates a Chilean RUT.
      */
-    protected function isValidRut(?string $rut): bool
+    public function isValidRut(?string $rut): bool
     {
         if (empty($rut)) {
             return true; // Use 'required' rule for presence check
@@ -48,7 +85,7 @@ class Rut implements ValidationRule
             if ($i == 8) {
                 $i = 2;
             }
-            $suma += $v * $i;
+            $suma += (int) $v * $i;
             $i++;
         }
 

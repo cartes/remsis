@@ -6,9 +6,9 @@ Remsis es un sistema SaaS Multi-Tenant y Multi-RUT de gestión de remuneraciones
 
 - **Framework:** Laravel 12, PHP 8.2+ (`strict_types=1`).
 - **Modularidad:** `nWidart/laravel-modules` (`Core`, `AdminPanel`, `Users`, `Companies`, `Employees`, `Payroll`, `Attendance`, `Requests`, `Documents`).
-- **Aislamiento:** Jerarquía de dos niveles:
-  - `Tenant` (`tenants`): Organización, grupo empresarial o estudio contable suscriptor.
-  - `Company` (`companies`): Razón social (RUT empleador) perteneciente a un `Tenant`.
+- **Aislamiento (ADR-001: 1 RUT = 1 Empresa = 1 Tenant):**
+  - `Tenant` (`tenants`) y `Company` (`companies`) mantienen una relación estricta **1:1** identificada por un único RUT chileno normalizado.
+  - Los contadores externos / proveedores de outsourcing administran múltiples tenants/empresas mediante membresías contextuales (`company_user`), sin compartir un mismo tenant entre varias empresas.
 
 ---
 
@@ -17,14 +17,14 @@ Remsis es un sistema SaaS Multi-Tenant y Multi-RUT de gestión de remuneraciones
 ### 2.1. Tabla `tenants` (`Modules/Core`)
 - `id`: bigint unsigned PK
 - `name`: string
-- `rut`: string(20), nullable, unique
+- `rut`: string(20), nullable, unique (normalizado `XXXXXXXX-Y`)
 - `slug`: string, unique
 - `status`: string(20) (`active`, `suspended`, `trial`)
 - `settings`: json, nullable
 - `timestamps()`, `softDeletes()`
 
 ### 2.2. Tabla `companies` (`Modules/Companies`)
-- `tenant_id`: foreignId -> `tenants.id` (nullable on transition, indexed)
+- `tenant_id`: foreignId -> `tenants.id` (relación 1:1 estricta con índice `unique`)
 - Atributos de razón social: `name`, `razon_social`, `rut`, `giro`, `economic_activity_id`, `ccaf_id`, `mutual_id`, `gratification_system`, `weekly_hours`, `allows_overtime`, `payment_frequency`.
 
 ### 2.3. Tabla `monthly_indicators` y Subtablas (`Modules/Core`)

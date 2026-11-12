@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Tenancy;
 
+use Illuminate\Support\Facades\Schema;
 use Modules\Companies\Models\Company;
 use Modules\Users\Models\User;
 
@@ -18,6 +19,21 @@ class TenantContext
     public function setTenantId(?int $tenantId): void
     {
         $this->tenantId = $tenantId;
+
+        if ($tenantId === null) {
+            $this->companyId = null;
+
+            return;
+        }
+
+        if (Schema::hasTable('companies') && Schema::hasColumn('companies', 'tenant_id')) {
+            $resolvedCompanyId = Company::query()
+                ->withoutGlobalScopes()
+                ->where('tenant_id', $tenantId)
+                ->value('id');
+
+            $this->companyId = $resolvedCompanyId !== null ? (int) $resolvedCompanyId : null;
+        }
     }
 
     public function tenantId(): ?int
@@ -26,7 +42,7 @@ class TenantContext
             return $this->tenantId;
         }
 
-        if ($this->companyId !== null) {
+        if ($this->companyId !== null && Schema::hasTable('companies') && Schema::hasColumn('companies', 'tenant_id')) {
             $resolvedTenantId = Company::query()
                 ->withoutGlobalScopes()
                 ->whereKey($this->companyId)
@@ -41,11 +57,39 @@ class TenantContext
     public function setCompanyId(?int $companyId): void
     {
         $this->companyId = $companyId;
+
+        if ($companyId === null) {
+            $this->tenantId = null;
+
+            return;
+        }
+
+        if (Schema::hasTable('companies') && Schema::hasColumn('companies', 'tenant_id')) {
+            $resolvedTenantId = Company::query()
+                ->withoutGlobalScopes()
+                ->whereKey($companyId)
+                ->value('tenant_id');
+
+            $this->tenantId = $resolvedTenantId !== null ? (int) $resolvedTenantId : null;
+        }
     }
 
     public function companyId(): ?int
     {
-        return $this->companyId;
+        if ($this->companyId !== null) {
+            return $this->companyId;
+        }
+
+        if ($this->tenantId !== null && Schema::hasTable('companies') && Schema::hasColumn('companies', 'tenant_id')) {
+            $resolvedCompanyId = Company::query()
+                ->withoutGlobalScopes()
+                ->where('tenant_id', $this->tenantId)
+                ->value('id');
+
+            return $resolvedCompanyId !== null ? (int) $resolvedCompanyId : null;
+        }
+
+        return null;
     }
 
     public function hasTenant(?string $column = null): bool
@@ -55,10 +99,10 @@ class TenantContext
         }
 
         if ($column === 'company_id') {
-            return $this->companyId !== null;
+            return $this->companyId() !== null;
         }
 
-        return $this->companyId !== null || $this->tenantId !== null;
+        return $this->companyId() !== null || $this->tenantId() !== null;
     }
 
     public function resolveIdForColumn(string $column): ?int
@@ -92,17 +136,51 @@ class TenantContext
             return;
         }
 
-        if (! empty($user->tenant_id)) {
-            $this->setTenantId((int) $user->tenant_id);
-        }
+        $accessibleCompanyIds = $user->getAllCompanies()
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
 
         $selectedCompanyId = session('selected_company_id');
 
-        if ($selectedCompanyId) {
-            $this->setCompanyId((int) $selectedCompanyId);
-        } else {
-            $fallbackCompanyId = $user->company_id ?? $user->employee?->company_id;
-            $this->setCompanyId($fallbackCompanyId !== null ? (int) $fallbackCompanyId : null);
+        if ($selectedCompanyId !== null) {
+            $selectedCompanyId = (int) $selectedCompanyId;
+
+            if (! empty($accessibleCompanyIds)) {
+                if (in_array($selectedCompanyId, $accessibleCompanyIds, true)) {
+                    $this->setCompanyId($selectedCompanyId);
+
+                    return;
+                }
+
+                // Si el usuario tiene membresías definidas y la empresa en sesión no está autorizada,
+                // limpiamos la selección inválida de la sesión.
+                session()->forget(['selected_company_id', 'selected_tenant_id']);
+
+                if (count($accessibleCompanyIds) === 1) {
+                    $this->setCompanyId($accessibleCompanyIds[0]);
+                }
+
+                return;
+            }
+
+            $this->setCompanyId($selectedCompanyId);
+
+            return;
+        }
+
+        $fallbackCompanyId = $user->company_id
+            ?? $user->employee?->company_id
+            ?? (count($accessibleCompanyIds) === 1 ? $accessibleCompanyIds[0] : null);
+
+        if ($fallbackCompanyId !== null) {
+            $this->setCompanyId((int) $fallbackCompanyId);
+
+            return;
+        }
+
+        if (! empty($user->tenant_id)) {
+            $this->setTenantId((int) $user->tenant_id);
         }
     }
 

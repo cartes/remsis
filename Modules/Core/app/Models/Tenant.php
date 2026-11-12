@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Modules\Core\Models;
 
+use App\Rules\Rut;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Modules\Companies\Models\Company;
 use Modules\Users\Models\User;
 
 /**
- * Representa un Tenant (organización, holding o estudio contable) dentro del SaaS.
- * Un Tenant puede administrar múltiples razones sociales (Company / Multi-RUT).
+ * Representa un Tenant dentro del SaaS bajo la invariante ADR-001:
+ * 1 RUT chileno = 1 Empresa (Company) = 1 Tenant.
  */
 class Tenant extends Model
 {
@@ -42,20 +44,55 @@ class Tenant extends Model
     protected static function booted(): void
     {
         static::creating(function (self $tenant): void {
+            if (! empty($tenant->rut)) {
+                $tenant->rut = Rut::normalize($tenant->rut);
+            }
+
             if (empty($tenant->slug) && ! empty($tenant->name)) {
-                $tenant->slug = Str::slug($tenant->name);
+                $tenant->slug = static::generateUniqueSlug($tenant->name);
             }
         });
 
         static::updating(function (self $tenant): void {
+            if ($tenant->isDirty('rut')) {
+                $tenant->rut = Rut::normalize($tenant->rut);
+            }
+
             if ($tenant->isDirty('name') && ! $tenant->isDirty('slug')) {
-                $tenant->slug = Str::slug($tenant->name);
+                $tenant->slug = static::generateUniqueSlug($tenant->name, (int) $tenant->id);
             }
         });
     }
 
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $baseSlug = Str::slug($name) ?: 'tenant';
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (
+            static::withTrashed()
+                ->where('slug', $slug)
+                ->when($ignoreId !== null, fn ($q) => $q->whereKeyNot($ignoreId))
+                ->exists()
+        ) {
+            $slug = "{$baseSlug}-{$counter}";
+            $counter++;
+        }
+
+        return $slug;
+    }
+
     /**
-     * Razones sociales (RUTs) pertenecientes a este tenant.
+     * Empresa (razón social / RUT) vinculada en relación 1:1 con este tenant.
+     */
+    public function company(): HasOne
+    {
+        return $this->hasOne(Company::class, 'tenant_id');
+    }
+
+    /**
+     * Compatibilidad con consultas de colección; bajo ADR-001 un Tenant posee a lo sumo 1 Company.
      */
     public function companies(): HasMany
     {
@@ -63,7 +100,7 @@ class Tenant extends Model
     }
 
     /**
-     * Usuarios asociados directamente a la cuenta del tenant.
+     * Usuarios asociados a este tenant.
      */
     public function users(): HasMany
     {

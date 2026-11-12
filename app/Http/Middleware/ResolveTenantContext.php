@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Support\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
+use Modules\Companies\Models\Company;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResolveTenantContext
@@ -12,26 +13,41 @@ class ResolveTenantContext
     public function handle(Request $request, Closure $next): Response
     {
         $tenantContext = app(TenantContext::class);
+        $user = $request->user();
 
-        // Prioridad 1: Parámetro de ruta {company} (útil para URLs anidadas)
+        if ($user && $user->hasRole('super-admin')) {
+            $tenantContext->bypass();
+        }
+
+        // Prioridad 1: Parámetro de ruta {company} validado contra las membresías del usuario
         $companyParam = $request->route('company');
         if ($companyParam) {
-            if ($companyParam instanceof \Modules\Companies\Models\Company) {
-                $tenantContext->setCompanyId($companyParam->id);
+            $company = null;
+
+            if ($companyParam instanceof Company) {
+                $company = $companyParam;
             } elseif (is_string($companyParam) || is_numeric($companyParam)) {
-                // Si aún no se ha resuelto por Route Model Binding (por el orden del middleware)
-                $company = \Modules\Companies\Models\Company::where('slug', $companyParam)
-                    ->orWhere('id', (int) $companyParam)
+                $company = Company::query()
+                    ->withoutGlobalScopes()
+                    ->where('slug', (string) $companyParam)
+                    ->when(is_numeric($companyParam), fn ($q) => $q->orWhere('id', (int) $companyParam))
                     ->first();
-                if ($company) {
+            }
+
+            if ($company) {
+                $canUseRouteCompany = ! $user
+                    || $user->canAccessCompany($company)
+                    || $user->getAllCompanies()->isEmpty();
+
+                if ($canUseRouteCompany) {
                     $tenantContext->setCompanyId($company->id);
                 }
             }
         }
 
-        // Prioridad 2: Sesión o Empresa del usuario autenticado (si no se detectó por URL)
-        if (! $tenantContext->hasTenant()) {
-            $tenantContext->initializeForUser($request->user());
+        // Prioridad 2: Sesión o Empresa autorizada del usuario autenticado
+        if (! $tenantContext->hasTenant() && ! $tenantContext->isBypassed()) {
+            $tenantContext->initializeForUser($user);
         }
 
         try {

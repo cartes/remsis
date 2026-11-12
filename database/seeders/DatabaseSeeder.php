@@ -40,12 +40,12 @@ class DatabaseSeeder extends Seeder
             CodigoSiiSeeder::class,
         ]);
 
-        // 3. Tenant y Empresa Demo inicial
+        // 3. Tenant y Empresa Demo inicial (ADR-001: 1 RUT = 1 Empresa = 1 Tenant)
         $tenant = Tenant::firstOrCreate(
-            ['slug' => 'grupo-remsis-demo'],
+            ['rut' => '76543210-9'],
             [
-                'name' => 'Grupo Empresarial Remsis Demo',
-                'rut' => '76123456-7',
+                'name' => 'Constructora & Servicios Andina SpA',
+                'slug' => 'andina-spa',
                 'status' => Tenant::STATUS_ACTIVE,
             ]
         );
@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
             ['rut' => '76543210-9'],
             [
                 'tenant_id' => $tenant->id,
-                'name' => ' Constructora & Servicios Andina SpA',
+                'name' => 'Constructora & Servicios Andina SpA',
                 'razon_social' => 'Constructora & Servicios Andina SpA',
                 'nombre_fantasia' => 'Andina SpA',
                 'giro' => 'Ingeniería, Construcción y Servicios Empresariales',
