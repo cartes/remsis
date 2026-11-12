@@ -119,3 +119,4 @@ class CompanyPolicy
             && $user->hasCompanyPermission($company, 'documents.manage');
     }
 }
+
