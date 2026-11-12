@@ -35,11 +35,13 @@ class ResolveTenantContext
             }
 
             if ($company) {
-                $canUseRouteCompany = ! $user
-                    || $user->canAccessCompany($company)
-                    || $user->getAllCompanies()->isEmpty();
+                if ($user) {
+                    if (! $user->hasRole('super-admin') && ! $user->canAccessCompany($company)) {
+                        abort(403, 'No tienes autorización para acceder a esta empresa.');
+                    }
 
-                if ($canUseRouteCompany) {
+                    $tenantContext->setCompanyId($company->id);
+                } else {
                     $tenantContext->setCompanyId($company->id);
                 }
             }
