@@ -6,6 +6,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\AdministrativeDayRequest;
@@ -25,16 +26,9 @@ class CompanyRequestController extends Controller
      */
     public function approve(Request $request, Company $company, AdministrativeDayRequest $dayRequest)
     {
+        Gate::authorize('manageRequests', $company);
+
         $user = auth()->user();
-
-        // Authorize access
-        if (!$user->canAccessCompany($company)) {
-            abort(403);
-        }
-
-        if ($user->hasRole('employee')) {
-            abort(403, 'No autorizado.');
-        }
 
         // Verify request belongs to the company
         if ($dayRequest->company_id !== $company->id) {
@@ -54,16 +48,9 @@ class CompanyRequestController extends Controller
      */
     public function reject(Request $request, Company $company, AdministrativeDayRequest $dayRequest)
     {
+        Gate::authorize('manageRequests', $company);
+
         $user = auth()->user();
-
-        // Authorize access
-        if (!$user->canAccessCompany($company)) {
-            abort(403);
-        }
-
-        if ($user->hasRole('employee')) {
-            abort(403, 'No autorizado.');
-        }
 
         // Verify request belongs to the company
         if ($dayRequest->company_id !== $company->id) {

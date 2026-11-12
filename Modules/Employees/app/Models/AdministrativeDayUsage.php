@@ -14,6 +14,7 @@ class AdministrativeDayUsage extends Model
     protected $table = 'administrative_day_usages';
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'employee_id',
         'attendance_record_id',

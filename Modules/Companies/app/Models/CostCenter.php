@@ -11,6 +11,7 @@ class CostCenter extends Model
     use BelongsToTenant;
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'code',
         'name',

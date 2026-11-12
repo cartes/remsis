@@ -18,6 +18,7 @@ class AdministrativeDayRequest extends Model
     protected $table = 'administrative_day_requests';
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'employee_id',
         'requested_date',

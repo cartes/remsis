@@ -137,6 +137,7 @@ class TenantContext
         }
 
         $accessibleCompanyIds = $user->getAllCompanies()
+            ->filter(fn (Company $company): bool => $user->canAccessCompany($company))
             ->pluck('id')
             ->map(fn ($id): int => (int) $id)
             ->all();
@@ -146,40 +147,42 @@ class TenantContext
         if ($selectedCompanyId !== null) {
             $selectedCompanyId = (int) $selectedCompanyId;
 
-            if (! empty($accessibleCompanyIds)) {
-                if (in_array($selectedCompanyId, $accessibleCompanyIds, true)) {
-                    $this->setCompanyId($selectedCompanyId);
-
-                    return;
-                }
-
-                // Si el usuario tiene membresías definidas y la empresa en sesión no está autorizada,
-                // limpiamos la selección inválida de la sesión.
-                session()->forget(['selected_company_id', 'selected_tenant_id']);
-
-                if (count($accessibleCompanyIds) === 1) {
-                    $this->setCompanyId($accessibleCompanyIds[0]);
-                }
+            if (in_array($selectedCompanyId, $accessibleCompanyIds, true)) {
+                $this->setCompanyId($selectedCompanyId);
 
                 return;
             }
 
-            $this->setCompanyId($selectedCompanyId);
+            // Si la empresa en sesión no está autorizada para este usuario (tenga o no membresías),
+            // limpiamos la selección inválida de la sesión y nunca la aceptamos.
+            session()->forget(['selected_company_id', 'selected_tenant_id']);
+
+            if (count($accessibleCompanyIds) === 1) {
+                $this->setCompanyId($accessibleCompanyIds[0]);
+            }
+
+            return;
+        }
+
+        if (count($accessibleCompanyIds) === 1) {
+            $this->setCompanyId($accessibleCompanyIds[0]);
 
             return;
         }
 
         $fallbackCompanyId = $user->company_id
-            ?? $user->employee?->company_id
-            ?? (count($accessibleCompanyIds) === 1 ? $accessibleCompanyIds[0] : null);
+            ?? $user->employee?->company_id;
 
         if ($fallbackCompanyId !== null) {
-            $this->setCompanyId((int) $fallbackCompanyId);
+            $fallbackId = (int) $fallbackCompanyId;
+            if (in_array($fallbackId, $accessibleCompanyIds, true)) {
+                $this->setCompanyId($fallbackId);
 
-            return;
+                return;
+            }
         }
 
-        if (! empty($user->tenant_id)) {
+        if (! empty($user->tenant_id) && $user->canAccessTenant((int) $user->tenant_id)) {
             $this->setTenantId((int) $user->tenant_id);
         }
     }

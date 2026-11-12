@@ -5,6 +5,7 @@ namespace Modules\Payroll\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Modules\Companies\Models\Company;
 use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
@@ -17,7 +18,7 @@ class PayrollPeriodController extends Controller
      */
     public function index(Request $request, Company $company)
     {
-        abort_unless($request->user()->hasCompanyPermission($company, 'payroll.view'), 403);
+        Gate::authorize('viewPayroll', $company);
 
         $selectedYear = $request->get('year', now()->year);
 
@@ -44,7 +45,7 @@ class PayrollPeriodController extends Controller
      */
     public function create(Company $company)
     {
-        abort_unless(auth()->user()->hasCompanyPermission($company, 'payroll.calculate'), 403);
+        Gate::authorize('calculatePayroll', $company);
 
         // Calculate default values
         $now = now();
@@ -73,7 +74,7 @@ class PayrollPeriodController extends Controller
      */
     public function store(Request $request, Company $company)
     {
-        abort_unless($request->user()->hasCompanyPermission($company, 'payroll.calculate'), 403);
+        Gate::authorize('calculatePayroll', $company);
 
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2050',
@@ -123,7 +124,7 @@ class PayrollPeriodController extends Controller
      */
     public function wizard(Request $request, Company $company, PayrollPeriod $period)
     {
-        abort_unless($request->user()->hasCompanyPermission($company, 'payroll.view'), 403);
+        Gate::authorize('viewPayroll', $company);
 
         // Get lines with employee data
         $lines = Payroll::with(['employee.costCenter', 'details'])
@@ -151,7 +152,7 @@ class PayrollPeriodController extends Controller
      */
     public function calculate(Request $request, Company $company, PayrollPeriod $period, PayrollCalculationService $service)
     {
-        abort_unless($request->user()->hasCompanyPermission($company, 'payroll.calculate'), 403);
+        Gate::authorize('calculatePayroll', $company);
 
         try {
             $count = $service->calculatePeriod($period);
@@ -169,8 +170,8 @@ class PayrollPeriodController extends Controller
      */
     public function updateStatus(Request $request, Company $company, PayrollPeriod $period)
     {
+        Gate::authorize('approvePayroll', $company);
         $user = auth()->user();
-        abort_unless($user->hasCompanyPermission($company, 'payroll.approve'), 403);
 
         $validated = $request->validate([
             'status' => 'required|in:draft,open,closed,paid,calculated', // Added calculated
@@ -230,7 +231,7 @@ class PayrollPeriodController extends Controller
      */
     public function updateLine(Request $request, Company $company, PayrollPeriod $period, Payroll $payroll, PayrollCalculationService $service)
     {
-        abort_unless($request->user()->hasCompanyPermission($company, 'payroll.calculate'), 403);
+        Gate::authorize('calculatePayroll', $company);
 
         $line = $payroll;
 

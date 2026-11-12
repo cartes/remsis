@@ -106,6 +106,15 @@ class UserController extends Controller
             abort(403);
         }
 
+        if (! $auth->hasRole('super-admin')) {
+            $canManageAny = $auth->getAllCompanies()
+                ->contains(fn (Company $c): bool => $auth->hasCompanyPermission($c, 'users.manage'));
+
+            if (! $canManageAny) {
+                abort(403);
+            }
+        }
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],

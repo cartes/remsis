@@ -14,6 +14,7 @@ class FreelancerReceipt extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'tenant_id',
         'freelancer_id',
         'company_id',
         'receipt_number',

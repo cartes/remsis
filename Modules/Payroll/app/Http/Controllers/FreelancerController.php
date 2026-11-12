@@ -4,6 +4,7 @@ namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Modules\AdminPanel\Models\Bank;
 use Modules\Companies\Models\Company;
 use Modules\Payroll\Models\Freelancer;
@@ -15,6 +16,8 @@ class FreelancerController extends Controller
      */
     public function index(Company $company)
     {
+        Gate::authorize('viewPayroll', $company);
+
         $freelancers = Freelancer::where('company_id', $company->id)
             ->orderBy('first_name')
             ->orderBy('last_name')
@@ -30,6 +33,7 @@ class FreelancerController extends Controller
      */
     public function store(Request $request, Company $company)
     {
+        Gate::authorize('calculatePayroll', $company);
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -58,6 +62,8 @@ class FreelancerController extends Controller
      */
     public function search(Request $request, Company $company)
     {
+        Gate::authorize('viewPayroll', $company);
+
         $query = $request->get('query');
         if (strlen($query) < 3) {
             return response()->json([]);
@@ -82,6 +88,8 @@ class FreelancerController extends Controller
      */
     public function show(Company $company, Freelancer $freelancer)
     {
+        Gate::authorize('viewPayroll', $company);
+
         if ($freelancer->company_id !== $company->id) {
             abort(403);
         }
@@ -99,6 +107,8 @@ class FreelancerController extends Controller
      */
     public function update(Request $request, Company $company, Freelancer $freelancer)
     {
+        Gate::authorize('calculatePayroll', $company);
+
         if ($freelancer->company_id !== $company->id) {
             abort(403);
         }
@@ -133,6 +143,8 @@ class FreelancerController extends Controller
      */
     public function destroy(Company $company, Freelancer $freelancer)
     {
+        Gate::authorize('calculatePayroll', $company);
+
         if ($freelancer->company_id !== $company->id) {
             abort(403);
         }

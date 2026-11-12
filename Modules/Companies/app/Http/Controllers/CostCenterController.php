@@ -4,6 +4,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Modules\Companies\Models\Company;
 use Modules\Companies\Models\CostCenter;
 
@@ -14,10 +15,7 @@ class CostCenterController extends Controller
      */
     public function index(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
 
         $costCenters = $company->costCenters()->orderBy('code')->get();
 
@@ -29,10 +27,7 @@ class CostCenterController extends Controller
      */
     public function store(Request $request, Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('update', $company);
 
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50'],
@@ -71,10 +66,7 @@ class CostCenterController extends Controller
      */
     public function update(Request $request, Company $company, CostCenter $costCenter)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('update', $company);
 
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50'],
@@ -110,10 +102,7 @@ class CostCenterController extends Controller
      */
     public function destroy(Company $company, CostCenter $costCenter)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('update', $company);
 
         $costCenter->delete();
 

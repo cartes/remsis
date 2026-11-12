@@ -6,6 +6,7 @@ use App\Rules\Rut;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class CompanyEmployeeController extends Controller
      */
     public function store(Request $request, Company $company)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $validated = $request->validate([
             // Cuenta de acceso
@@ -106,7 +107,7 @@ class CompanyEmployeeController extends Controller
      */
     public function destroy(Company $company, User $user)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         // En este sistema, "Nómina" gestiona al usuario como empleado.
         // Desvincular implica borrar el registro en 'employees'.
@@ -130,7 +131,7 @@ class CompanyEmployeeController extends Controller
      */
     public function getPayroll(Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'viewPayroll');
 
         $employee->load(['user.roles']);
 
@@ -145,7 +146,7 @@ class CompanyEmployeeController extends Controller
      */
     public function updatePayroll(Request $request, Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'calculatePayroll');
 
         // Limpiar strings vacíos para que las reglas 'nullable' funcionen
         $input = $request->all();
@@ -265,7 +266,7 @@ class CompanyEmployeeController extends Controller
      */
     public function search(Request $request, Company $company)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'view');
 
         $term = $request->query('query');
 
@@ -286,15 +287,11 @@ class CompanyEmployeeController extends Controller
     }
 
     /**
-     * Verifica que el usuario autenticado tenga acceso a la empresa.
+     * Verifica que el usuario autenticado tenga el permiso correspondiente en la empresa.
      */
-    private function authorizeCompanyAccess(Company $company): void
+    private function authorizeCompanyAccess(Company $company, string $ability = 'view'): void
     {
-        $user = auth()->user();
-
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize($ability, $company);
     }
 
     // -------------------------------------------------------------------------
@@ -306,7 +303,7 @@ class CompanyEmployeeController extends Controller
      */
     public function edit(Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'view');
 
         if (! $employee->activeContract()->exists()) {
             $employee->syncActiveContract();
@@ -346,7 +343,7 @@ class CompanyEmployeeController extends Controller
      */
     public function update(Request $request, Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $section = $request->input('section', 'personal');
 
@@ -408,7 +405,7 @@ class CompanyEmployeeController extends Controller
      */
     public function downloadPayroll(Company $company, Employee $employee, \Modules\Payroll\Models\Payroll $payroll)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'viewPayroll');
 
         abort_unless($payroll->employee_id === $employee->id, 404);
 
@@ -425,7 +422,7 @@ class CompanyEmployeeController extends Controller
      */
     public function storeItem(Request $request, Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $validated = $request->validate([
             'item_id'            => 'required|exists:items,id',
@@ -461,7 +458,7 @@ class CompanyEmployeeController extends Controller
      */
     public function updateItem(Request $request, Company $company, Employee $employee, EmployeeItem $employeeItem)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $validated = $request->validate([
             'amount'             => 'sometimes|numeric|min:0',
@@ -482,7 +479,7 @@ class CompanyEmployeeController extends Controller
      */
     public function destroyItem(Company $company, Employee $employee, EmployeeItem $employeeItem)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $employeeItem->delete();
 
@@ -494,7 +491,7 @@ class CompanyEmployeeController extends Controller
      */
     public function storeAttendance(Request $request, Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
 
         $validated = $request->validate([
             'date' => 'required|date',
@@ -547,7 +544,7 @@ class CompanyEmployeeController extends Controller
      */
     public function destroyAttendance(Company $company, Employee $employee, \Modules\Employees\Models\AttendanceRecord $attendance)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageEmployees');
         abort_unless($attendance->employee_id === $employee->id, 404);
 
         $date = $attendance->date;

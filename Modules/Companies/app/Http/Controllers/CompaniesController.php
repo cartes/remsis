@@ -5,6 +5,7 @@ namespace Modules\Companies\Http\Controllers;
 use App\Rules\Rut;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
 
@@ -94,10 +95,7 @@ class CompaniesController extends Controller
 
     public function edit(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
         session(['selected_company_id' => $company->id]);
         $company->load(['economicActivity', 'administrativeDayPolicy']);
 
@@ -144,10 +142,7 @@ class CompaniesController extends Controller
 
     public function employees(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
         session(['selected_company_id' => $company->id]);
 
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
@@ -173,10 +168,7 @@ class CompaniesController extends Controller
 
     public function update(Request $request, Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('update', $company);
 
         if ($request->has('work_schedule') && is_string($request->work_schedule)) {
             $request->merge(['work_schedule' => json_decode($request->work_schedule, true)]);
@@ -300,20 +292,14 @@ class CompaniesController extends Controller
 
     public function editEssentials(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
 
         return view('companies::essentials_edit', compact('company'));
     }
 
     public function updateEssentials(Request $request, Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('update', $company);
 
         if ($request->filled('rut')) {
             $request->merge(['rut' => Rut::normalize((string) $request->input('rut'))]);
@@ -349,11 +335,9 @@ class CompaniesController extends Controller
 
     public function destroy($id)
     {
-        if (! auth()->user()->hasRole('super-admin')) {
-            abort(403);
-        }
-
         $company = Company::findOrFail($id);
+        Gate::authorize('delete', $company);
+
         $company->delete();
 
         return redirect()->route('companies.index')
@@ -397,10 +381,7 @@ class CompaniesController extends Controller
 
     public function dashboard(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
 
         // Aseguramos que la empresa esté seleccionada en la sesión al entrar a su dashboard
         session([
@@ -429,10 +410,7 @@ class CompaniesController extends Controller
 
     public function transactions(Company $company)
     {
-        $user = auth()->user();
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
 
         return view('companies::transactions', compact('company'));
     }
