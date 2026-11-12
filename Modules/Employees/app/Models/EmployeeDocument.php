@@ -2,16 +2,22 @@
 
 namespace Modules\Employees\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Modules\Companies\Models\Company;
+use Modules\Core\Models\Tenant;
 
 class EmployeeDocument extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
+        'company_id',
         'employee_id',
         'title',
         'document_type',
@@ -27,18 +33,18 @@ class EmployeeDocument extends Model
     // ── Labels ────────────────────────────────────────────────────────────
 
     public const TYPE_LABELS = [
-        'contrato'    => 'Contrato',
-        'anexo'       => 'Anexo',
+        'contrato' => 'Contrato',
+        'anexo' => 'Anexo',
         'comprobante' => 'Comprobante',
-        'legal'       => 'Documento Legal',
-        'otro'        => 'Otro',
+        'legal' => 'Documento Legal',
+        'otro' => 'Otro',
     ];
 
     public const SIGNATURE_LABELS = [
-        'sin_firma'               => 'Sin firma',
-        'pendiente_colaborador'   => 'Pendiente Colaborador',
-        'pendiente_empresa'       => 'Pendiente Empresa',
-        'firmado_completamente'   => 'Firmado',
+        'sin_firma' => 'Sin firma',
+        'pendiente_colaborador' => 'Pendiente Colaborador',
+        'pendiente_empresa' => 'Pendiente Empresa',
+        'firmado_completamente' => 'Firmado',
     ];
 
     // ── Accessors ─────────────────────────────────────────────────────────
@@ -63,5 +69,15 @@ class EmployeeDocument extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }

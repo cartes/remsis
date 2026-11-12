@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 use Modules\Companies\Models\Company;
 use Modules\Core\Models\Tenant;
+use Modules\Employees\Models\Employee;
 
 trait BelongsToTenant
 {
@@ -48,12 +49,29 @@ trait BelongsToTenant
 
             if (empty($model->{$tenantColumn})) {
                 if (! $tenantContext->hasTenant($tenantColumn)) {
-                    // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
-                    // lanzamos una excepción para evitar la creación de registros huérfanos.
-                    throw new \RuntimeException('No se puede crear el modelo sin un tenant activo.');
-                }
+                    // Si el modelo tiene relación con un empleado (ej: AttendanceRecord, EmployeeDocument, EmployeeLog, EmployeeItem)
+                    // inferimos company_id y tenant_id desde el colaborador antes de fallar.
+                    if (! empty($model->employee_id)) {
+                        $emp = Employee::withoutGlobalScopes()->find($model->employee_id);
+                        if ($emp) {
+                            $model->{$tenantColumn} = $tenantColumn === 'tenant_id' ? $emp->tenant_id : $emp->company_id;
+                            if (empty($model->tenant_id) && ! empty($emp->tenant_id) && Schema::hasColumn($model->getTable(), 'tenant_id')) {
+                                $model->tenant_id = $emp->tenant_id;
+                            }
+                            if (empty($model->company_id) && ! empty($emp->company_id) && Schema::hasColumn($model->getTable(), 'company_id')) {
+                                $model->company_id = $emp->company_id;
+                            }
+                        }
+                    }
 
-                $model->{$tenantColumn} = $tenantContext->resolveIdForColumn($tenantColumn);
+                    if (empty($model->{$tenantColumn})) {
+                        // Modo estricto: Si no hay tenant y no se ha omitido el contexto,
+                        // lanzamos una excepción para evitar la creación de registros huérfanos.
+                        throw new \RuntimeException('No se puede crear el modelo sin un tenant activo.');
+                    }
+                } else {
+                    $model->{$tenantColumn} = $tenantContext->resolveIdForColumn($tenantColumn);
+                }
             }
 
             // Si el modelo soporta además tenant_id y está vacío, lo propagamos desde el contexto
@@ -64,6 +82,16 @@ trait BelongsToTenant
                 && Schema::hasColumn($model->getTable(), 'tenant_id')
             ) {
                 $model->tenant_id = $tenantContext->tenantId();
+            }
+
+            // Si el modelo soporta además company_id y está vacío, lo propagamos desde el contexto
+            if (
+                $tenantColumn !== 'company_id'
+                && empty($model->company_id)
+                && $tenantContext->companyId() !== null
+                && Schema::hasColumn($model->getTable(), 'company_id')
+            ) {
+                $model->company_id = $tenantContext->companyId();
             }
         });
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Payroll\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,9 +13,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 use Modules\Companies\Models\Company;
 use Modules\Core\Models\LreConcept;
+use Modules\Core\Models\Tenant;
 
 class Item extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
     use SoftDeletes;
 
@@ -126,6 +129,11 @@ class Item extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
     /**
      * Concepto normativo del Libro de Remuneraciones Electrónico (LRE DT).
      */
@@ -162,7 +170,7 @@ class Item extends Model
 
     public function scopeForCompany($query, int $companyId)
     {
-        return $query->where('company_id', $companyId);
+        return $query->withoutGlobalScope('tenant')->where('company_id', $companyId);
     }
 
     public function getTypeLabelAttribute(): string
