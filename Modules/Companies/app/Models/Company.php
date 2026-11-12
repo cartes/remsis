@@ -93,7 +93,9 @@ class Company extends Model
 
     public function administrators()
     {
-        return $this->belongsToMany(User::class, 'company_user')->withTimestamps();
+        return $this->belongsToMany(User::class, 'company_user')
+            ->withPivot(['role', 'permissions', 'is_external', 'delegated_by'])
+            ->withTimestamps();
     }
 
     public function bank()

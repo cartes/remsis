@@ -14,16 +14,22 @@ class CompaniesController extends Controller
     {
         $user = auth()->user();
 
-        // Si no es super-admin, filtramos las empresas a las que tiene acceso.
+        if (! $user->hasRole('super-admin')) {
+            $accessibleIds = $user->getAllCompanies()
+                ->filter(fn (Company $c): bool => $user->canAccessCompany($c))
+                ->pluck('id')
+                ->all();
+
+            if (empty($accessibleIds) && $user->hasPersonalPortalAccess()) {
+                return redirect()->route('employee.profile.show');
+            }
+        }
+
+        // Si no es super-admin, filtramos las empresas a las que tiene acceso administrativo.
         $query = Company::orderBy('razon_social')->orderBy('name');
 
         if (! $user->hasRole('super-admin')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('id', $user->company_id)
-                    ->orWhereHas('administrators', function ($sq) use ($user) {
-                        $sq->where('users.id', $user->id);
-                    });
-            });
+            $query->whereIn('id', $accessibleIds ?? []);
         }
 
         $companies = $query->get();
@@ -31,7 +37,10 @@ class CompaniesController extends Controller
         // REGLA: Si no es super-admin y solo tiene una empresa, redirigir al dashboard directamente.
         if (! $user->hasRole('super-admin') && $companies->count() === 1) {
             $company = $companies->first();
-            session(['selected_company_id' => $company->id]);
+            session([
+                'selected_company_id' => $company->id,
+                'selected_tenant_id' => $company->tenant_id,
+            ]);
 
             return redirect()->route('companies.dashboard', $company);
         }

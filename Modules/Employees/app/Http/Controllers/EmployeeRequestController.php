@@ -29,6 +29,10 @@ class EmployeeRequestController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+        if (! $user || ! $user->hasPersonalPortalAccess()) {
+            abort(403, 'No autorizado.');
+        }
+
         $employee = $user->employee;
 
         if (!$employee) {

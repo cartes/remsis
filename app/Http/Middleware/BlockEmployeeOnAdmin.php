@@ -15,7 +15,15 @@ class BlockEmployeeOnAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('admin/*') && auth()->check() && auth()->user()->hasRole('employee')) {
+        $user = auth()->user();
+
+        if (
+            $request->is('admin/*')
+            && $user
+            && $user->hasRole('employee')
+            && ! $user->hasAnyRole(\Modules\Users\Models\User::ADMIN_ROLES)
+            && ! $user->hasRole('super-admin')
+        ) {
             return redirect()->route('employee.profile.show');
         }
 

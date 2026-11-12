@@ -19,11 +19,22 @@ class UserController extends Controller
     {
         $auth = $request->user();
         $isSuperAdmin = $auth->hasRole('super-admin');
-        $companyFilter = $isSuperAdmin ? $request->company_id : $auth->company_id;
+        $authorizedCompanyIds = $isSuperAdmin
+            ? []
+            : $auth->getAllCompanies()
+                ->filter(fn (Company $c): bool => $auth->canAccessCompany($c))
+                ->pluck('id')
+                ->map(fn ($id): int => (int) $id)
+                ->all();
+
+        $companyFilter = $request->company_id ? (int) $request->company_id : null;
+        if (! $isSuperAdmin && $companyFilter !== null && ! in_array($companyFilter, $authorizedCompanyIds, true)) {
+            abort(403);
+        }
 
         $query = User::query()
             ->whereHas('roles', function ($q) use ($isSuperAdmin) {
-                $roles = ['admin', 'contador', 'recursos-humanos'];
+                $roles = ['admin', 'contador', 'recursos-humanos', 'multi-company'];
 
                 if ($isSuperAdmin) {
                     $roles[] = 'super-admin';
@@ -31,14 +42,23 @@ class UserController extends Controller
 
                 $q->whereIn('name', $roles);
             })
-            ->when(! $isSuperAdmin && ! $auth->company_id, fn ($q) => $q->whereRaw('1 = 0'))
+            ->when(! $isSuperAdmin && empty($authorizedCompanyIds), fn ($q) => $q->whereRaw('1 = 0'))
+            ->when(! $isSuperAdmin && ! empty($authorizedCompanyIds), function ($q) use ($authorizedCompanyIds) {
+                $q->where(function ($sub) use ($authorizedCompanyIds) {
+                    $sub->whereIn('company_id', $authorizedCompanyIds)
+                        ->orWhereHas('employee', fn ($eq) => $eq->whereIn('company_id', $authorizedCompanyIds))
+                        ->orWhereHas('companies', fn ($cq) => $cq->whereIn('companies.id', $authorizedCompanyIds));
+                });
+            })
             ->when($companyFilter, function ($q) use ($companyFilter) {
-                $q->whereHas('employee', function ($eq) use ($companyFilter) {
-                    $eq->where('company_id', $companyFilter);
+                $q->where(function ($sub) use ($companyFilter) {
+                    $sub->where('company_id', $companyFilter)
+                        ->orWhereHas('employee', fn ($eq) => $eq->where('company_id', $companyFilter))
+                        ->orWhereHas('companies', fn ($cq) => $cq->where('companies.id', $companyFilter));
                 });
             })
             ->with(['roles:id,name', 'employee.company:id,name', 'companies:id,razon_social'])
-            ->select('id', 'name', 'email', 'status');
+            ->select('id', 'name', 'email', 'status', 'company_id', 'tenant_id');
 
         $users = $query->orderByDesc('id')->get();
 
@@ -53,7 +73,7 @@ class UserController extends Controller
 
         // Cargamos empresas para el filtro y para vincular
         $companies = Company::query()
-            ->when(! $isSuperAdmin, fn ($q) => $q->whereKey($auth->company_id))
+            ->when(! $isSuperAdmin, fn ($q) => $q->whereIn('id', $authorizedCompanyIds))
             ->orderBy('razon_social')
             ->get(['id', 'razon_social as name']);
         $companyId = $companyFilter;
@@ -166,8 +186,16 @@ class UserController extends Controller
             }
         }
 
-        if ($auth->hasRole('super-admin') && isset($validated['company_ids'])) {
-            $user->companies()->sync($validated['company_ids']);
+        if (isset($validated['company_ids'])) {
+            foreach ($validated['company_ids'] as $cid) {
+                $this->authorizeCompanyAssignment($auth, (int) $cid);
+            }
+
+            if ($auth->hasRole('super-admin')) {
+                $user->companies()->sync($validated['company_ids']);
+            } else {
+                $user->companies()->syncWithoutDetaching($validated['company_ids']);
+            }
         }
 
         return response()->json([
@@ -211,37 +239,59 @@ class UserController extends Controller
     }
 
     /**
-     * Attach a company to a user.
+     * Attach a company to a user (supports internal employees and external/outsourcing delegation).
      */
     public function attachCompany(Request $request, User $user)
     {
         $auth = $request->user();
         $this->authorizeManagedUser($auth, $user);
 
-        // Opcional: restringe a roles que pueden tener empresa
-        if (! $user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos'])) {
+        if (! $user->hasAnyRole(['admin', 'employee', 'contador', 'recursos-humanos', 'multi-company'])) {
             return response()->json(['message' => 'Este usuario no admite vínculo a empresa.'], 403);
         }
 
         $validated = $request->validate([
             'company_id' => ['required', 'integer', 'exists:companies,id'],
+            'role' => ['nullable', 'string', 'in:admin,contador,recursos-humanos'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
+            'is_external' => ['nullable', 'boolean'],
         ]);
 
-        $this->authorizeCompanyAssignment($auth, (int) $validated['company_id']);
+        $companyId = (int) $validated['company_id'];
+        $this->authorizeCompanyAssignment($auth, $companyId);
 
-        // 🔒 Upsert por user_id: si existe, actualiza; si no, crea
-        $employee = Employee::updateOrCreate(
-            ['user_id' => $user->id],              // unique key
-            ['company_id' => (int) $validated['company_id']]
-        );
+        $company = Company::query()->withoutGlobalScopes()->findOrFail($companyId);
+        $isExternal = $request->has('is_external')
+            ? $request->boolean('is_external')
+            : ($user->hasRole('multi-company') || ($user->hasRole('contador') && ! $user->employee()->exists()));
 
-        $employee->load('company:id,name');
+        $user->companies()->syncWithoutDetaching([
+            $company->id => [
+                'role' => $validated['role'] ?? $user->roleInCompany($company),
+                'permissions' => isset($validated['permissions'])
+                    ? json_encode(array_values($validated['permissions']))
+                    : null,
+                'is_external' => $isExternal,
+                'delegated_by' => $auth->id,
+            ],
+        ]);
+
+        // Solo creamos/actualizamos Employee si no es una delegación externa de outsourcing
+        // y el usuario no tiene ya un vínculo laboral en otra empresa distinta.
+        $existingEmployee = $user->employee()->withoutGlobalScopes()->first();
+        if (! $isExternal && (! $existingEmployee || (int) $existingEmployee->company_id === $company->id)) {
+            Employee::updateOrCreate(
+                ['user_id' => $user->id],
+                ['company_id' => $company->id]
+            );
+        }
 
         return response()->json([
             'ok' => true,
             'company' => [
-                'id' => $employee->company->id,
-                'name' => $employee->company->name,
+                'id' => $company->id,
+                'name' => $company->name,
             ],
         ]);
     }
@@ -256,9 +306,23 @@ class UserController extends Controller
             abort(403);
         }
 
-        $targetCompanyId = $target->employee?->company_id ?? $target->company_id;
+        $authCompanyIds = $auth->getAllCompanies()
+            ->filter(fn (Company $c): bool => $auth->hasCompanyPermission($c, 'users.manage'))
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
 
-        if ((int) $targetCompanyId !== (int) $auth->company_id) {
+        if (empty($authCompanyIds)) {
+            abort(403);
+        }
+
+        $targetCompanyIds = $target->getAllCompanies()
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        // Si el usuario destino ya pertenece a una o más empresas, el actor debe administrar al menos una de ellas
+        if (! empty($targetCompanyIds) && empty(array_intersect($authCompanyIds, $targetCompanyIds))) {
             abort(403);
         }
     }
@@ -269,7 +333,7 @@ class UserController extends Controller
             return;
         }
 
-        if ((int) $companyId !== (int) $auth->company_id) {
+        if (! $auth->hasCompanyPermission($companyId, 'users.manage')) {
             abort(403);
         }
     }

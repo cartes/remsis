@@ -20,7 +20,12 @@ class CompaniesApiController extends Controller
             ->orderBy('name');
 
         if (! $auth->hasRole('super-admin')) {
-            $query->whereKey($auth->company_id);
+            $accessibleIds = $auth->getAllCompanies()
+                ->filter(fn (Company $c): bool => $auth->canAccessCompany($c))
+                ->pluck('id')
+                ->all();
+
+            $query->whereIn('id', $accessibleIds);
         }
 
         if ($q !== '') {

@@ -17,14 +17,19 @@ class AdminPanelController extends Controller
     {
         $user = Auth::user();
         $isSuperAdmin = $user->hasRole('super-admin');
-        $companyId = $user->company_id;
+        $accessibleCompanyIds = $isSuperAdmin
+            ? []
+            : $user->getAllCompanies()
+                ->filter(fn (Company $c): bool => $user->canAccessCompany($c))
+                ->pluck('id')
+                ->all();
 
         $activeCompanies = $isSuperAdmin
             ? Company::count()
-            : ($companyId ? Company::whereKey($companyId)->count() : 0);
+            : (! empty($accessibleCompanyIds) ? Company::whereIn('id', $accessibleCompanyIds)->count() : 0);
 
         $activeEmployees = Employee::query()
-            ->when(! $isSuperAdmin, fn ($query) => $query->where('company_id', $companyId))
+            ->when(! $isSuperAdmin, fn ($query) => $query->whereIn('company_id', $accessibleCompanyIds))
             ->where('status', 'active')
             ->count();
 

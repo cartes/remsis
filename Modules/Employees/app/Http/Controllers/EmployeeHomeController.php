@@ -35,7 +35,12 @@ class EmployeeHomeController extends Controller
     {
         $user = auth()->user();
 
+        if (! $user || ! $user->hasPersonalPortalAccess()) {
+            abort(403, 'No tienes un vínculo laboral activo para acceder al portal personal.');
+        }
+
         $employee = $user->employee()
+            ->withoutGlobalScopes()
             ->with(['company', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter'])
             ->first();
 
