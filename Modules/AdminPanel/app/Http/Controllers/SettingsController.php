@@ -5,6 +5,7 @@ namespace Modules\AdminPanel\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Bank;
 use Modules\AdminPanel\Models\Ccaf;
@@ -13,6 +14,8 @@ use Modules\AdminPanel\Models\Isapre;
 use Modules\AdminPanel\Models\LegalParameter;
 use Modules\AdminPanel\Models\Mutual;
 use Modules\Core\Models\DailyUfValue;
+use Modules\Core\Models\LreConcept;
+use Modules\Core\Models\MonthlyIndicator;
 use Modules\Core\Models\MonthlyIpcValue;
 
 class SettingsController extends Controller
@@ -35,6 +38,17 @@ class SettingsController extends Controller
     {
         $today = CarbonImmutable::now('America/Santiago')->startOfDay();
 
+        $monthlyIndicator = Schema::hasTable('monthly_indicators')
+            ? MonthlyIndicator::query()
+                ->with(['afpRateRecords', 'iutBracketRecords', 'familyAllowanceBracketRecords'])
+                ->orderByDesc('period')
+                ->first()
+            : null;
+
+        $lreConcepts = Schema::hasTable('lre_concepts_dictionary')
+            ? LreConcept::query()->active()->orderBy('code')->get()
+            : collect();
+
         return view('adminpanel::settings.legal', [
             'legalParameters' => LegalParameter::all(),
             'latestSyncedIpc' => MonthlyIpcValue::query()->latest('reference_period')->first(),
@@ -42,6 +56,8 @@ class SettingsController extends Controller
                 ->whereDate('date', '<=', $today->toDateString())
                 ->orderByDesc('date')
                 ->first(),
+            'monthlyIndicator' => $monthlyIndicator,
+            'lreConcepts' => $lreConcepts,
         ]);
     }
 

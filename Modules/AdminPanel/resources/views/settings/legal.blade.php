@@ -214,6 +214,112 @@
                     </button>
                 </div>
             </form>
+
+            {{-- Fotografía Previsional Mensual (monthly_indicators) y Diccionario LRE DT --}}
+            @if (isset($monthlyIndicator) && $monthlyIndicator)
+                <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm xl:col-span-6">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-base">Tasas AFP y Topes Mensuales ({{ $monthlyIndicator->period }})</h3>
+                                <p class="text-xs text-gray-500">Tope AFP: {{ $monthlyIndicator->cap_afp_uf }} UF (${{ number_format($monthlyIndicator->getAfpCapClp(), 0, ',', '.') }}) · Tope AFC: {{ $monthlyIndicator->cap_afc_uf }} UF (${{ number_format($monthlyIndicator->getAfcCapClp(), 0, ',', '.') }})</p>
+                            </div>
+                            <span class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">{{ strtoupper($monthlyIndicator->source) }}</span>
+                        </div>
+                        <div class="p-4 overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-left text-slate-500 uppercase">
+                                        <th class="py-2 px-3">AFP</th>
+                                        <th class="py-2 px-3 text-right">Obligatoria</th>
+                                        <th class="py-2 px-3 text-right">Comisión</th>
+                                        <th class="py-2 px-3 text-right">Total Dep.</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($monthlyIndicator->afpRateRecords as $afpRate)
+                                        <tr>
+                                            <td class="py-2 px-3 font-semibold text-slate-800">{{ $afpRate->afp_name }}</td>
+                                            <td class="py-2 px-3 text-right font-mono">{{ number_format($afpRate->mandatory_rate, 2, ',', '.') }}%</td>
+                                            <td class="py-2 px-3 text-right font-mono">{{ number_format($afpRate->commission_rate, 2, ',', '.') }}%</td>
+                                            <td class="py-2 px-3 text-right font-mono font-bold text-slate-900">{{ number_format($afpRate->total_rate, 2, ',', '.') }}%</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm xl:col-span-6">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-base">Tramos Asignación Familiar e IUT ({{ $monthlyIndicator->period }})</h3>
+                            <p class="text-xs text-gray-500">UTM: ${{ number_format($monthlyIndicator->utm_value, 0, ',', '.') }} · IMM: ${{ number_format($monthlyIndicator->imm_value, 0, ',', '.') }} · Jornada Legal: {{ $monthlyIndicator->legal_weekly_hours }}h</p>
+                        </div>
+                        <div class="p-4 space-y-4">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-left text-slate-500 uppercase">
+                                        <th class="py-1.5 px-2">Tramo</th>
+                                        <th class="py-1.5 px-2">Renta Desde</th>
+                                        <th class="py-1.5 px-2">Renta Hasta</th>
+                                        <th class="py-1.5 px-2 text-right">Monto / Carga</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($monthlyIndicator->familyAllowanceBracketRecords as $fam)
+                                        <tr>
+                                            <td class="py-1.5 px-2 font-bold text-slate-900">Tramo {{ $fam->bracket_letter }}</td>
+                                            <td class="py-1.5 px-2 font-mono">${{ number_format($fam->income_from, 0, ',', '.') }}</td>
+                                            <td class="py-1.5 px-2 font-mono">{{ $fam->income_to ? '$' . number_format($fam->income_to, 0, ',', '.') : 'Sin tope' }}</td>
+                                            <td class="py-1.5 px-2 text-right font-mono font-bold text-emerald-700">${{ number_format($fam->amount_per_dependent, 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if (isset($lreConcepts) && $lreConcepts->isNotEmpty())
+                <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-base">Diccionario Oficial LRE (Dirección del Trabajo)</h3>
+                            <p class="text-xs text-gray-500">Catálogo global de conceptos para Libro de Remuneraciones Electrónico (Art. 41, 42 y 58 CT)</p>
+                        </div>
+                        <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">{{ $lreConcepts->count() }} códigos DT activos</span>
+                    </div>
+                    <div class="p-4 overflow-x-auto max-h-80">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-left text-slate-500 uppercase">
+                                    <th class="py-2 px-3">Código DT</th>
+                                    <th class="py-2 px-3">Concepto</th>
+                                    <th class="py-2 px-3">Clasificación</th>
+                                    <th class="py-2 px-3">Base Legal</th>
+                                    <th class="py-2 px-3 text-center">Imponible</th>
+                                    <th class="py-2 px-3 text-center">Tributable</th>
+                                    <th class="py-2 px-3 text-center">Base Grat.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach ($lreConcepts as $lre)
+                                    <tr>
+                                        <td class="py-2 px-3 font-mono font-bold text-indigo-700">{{ $lre->code }}</td>
+                                        <td class="py-2 px-3 font-semibold text-slate-800">{{ $lre->name }}</td>
+                                        <td class="py-2 px-3 text-slate-600">{{ $lre->classification }}</td>
+                                        <td class="py-2 px-3 text-slate-500">{{ $lre->legal_article }}</td>
+                                        <td class="py-2 px-3 text-center">{!! $lre->is_taxable ? '<span class="text-emerald-600 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>' !!}</td>
+                                        <td class="py-2 px-3 text-center">{!! $lre->is_tributable ? '<span class="text-emerald-600 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>' !!}</td>
+                                        <td class="py-2 px-3 text-center">{!! $lre->is_gratification_base ? '<span class="text-blue-600 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>' !!}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
         </div>
     @endsection
 </x-adminpanel::layouts.master>

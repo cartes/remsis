@@ -163,10 +163,22 @@
                                     {{ $employee->hire_date ? $employee->hire_date->format('d/m/Y') : '—' }}</dd>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-50">
-                                <dt class="text-xs font-semibold text-slate-400">Contrato</dt>
-                                <dd class="text-sm text-slate-800">
+                                <dt class="text-xs font-semibold text-slate-400">Contrato Vigente</dt>
+                                <dd class="text-sm text-slate-800 flex items-center gap-2">
                                     @php $contratos = ['indefinido'=>'Indefinido','plazo_fijo'=>'Plazo Fijo','por_obra'=>'Por Obra','honorarios'=>'Honorarios']; @endphp
-                                    {{ $contratos[$employee->contract_type] ?? '—' }}
+                                    <span>{{ $contratos[$employee->activeContract?->contract_type ?? $employee->contract_type] ?? '—' }}</span>
+                                    @if ($employee->activeContract?->contract_number)
+                                        <span class="font-mono text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200">
+                                            {{ $employee->activeContract->contract_number }}
+                                        </span>
+                                    @endif
+                                </dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                                <dt class="text-xs font-semibold text-slate-400">Jornada Semanal</dt>
+                                <dd class="text-sm text-slate-800">
+                                    {{ $employee->activeContract?->weekly_hours ?? ($company->weekly_hours ?? 42) }} hrs/sem
+                                    <span class="text-xs text-slate-400">(Ley 40 Horas)</span>
                                 </dd>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-50">

@@ -11,6 +11,7 @@ class EmployeeItem extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'employee_id',
         'item_id',
         'amount',

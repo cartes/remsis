@@ -32,6 +32,8 @@ class EmployeeObserver
 
     public function created(Employee $employee): void
     {
+        $employee->syncActiveContract();
+
         EmployeeLog::create([
             'employee_id' => $employee->id,
             'user_id'     => auth()->id(),
@@ -44,6 +46,7 @@ class EmployeeObserver
 
     public function updated(Employee $employee): void
     {
+        $employee->syncActiveContract();
         $changes = collect($employee->getChanges())
             ->except($this->ignoredFields)
             ->toArray();

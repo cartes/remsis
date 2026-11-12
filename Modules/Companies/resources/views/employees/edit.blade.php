@@ -25,6 +25,8 @@
                     'item_id' => $ei->item_id,
                     'item_name' => $ei->item->name ?? '—',
                     'item_type' => $ei->item->type ?? '',
+                    'lre_code' => $ei->item?->lreConcept?->code,
+                    'lre_article' => $ei->item?->lreConcept?->legal_article,
                     'amount' => $ei->amount,
                     'unit' => $ei->unit,
                     'periodicity' => $ei->periodicity,
@@ -40,6 +42,8 @@
                     'id' => $i->id,
                     'name' => $i->name,
                     'type' => $i->type,
+                    'lre_code' => $i->lreConcept?->code,
+                    'lre_article' => $i->lreConcept?->legal_article,
                 ],
             ),
         ) }},
@@ -81,7 +85,7 @@
                 const data = await res.json();
                 if (data.success) {
                     const cat = this.catalogItems.find(i => i.id == this.newItem.item_id);
-                    this.items.push({ ...data.item, item_name: cat?.name, item_type: cat?.type });
+                    this.items.push({ ...data.item, item_name: cat?.name, item_type: cat?.type, lre_code: cat?.lre_code, lre_article: cat?.lre_article });
                     this.newItem = { item_id: '', amount: '', unit: 'CLP', periodicity: 'fixed', total_installments: '', notes: '' };
                     this.showAddItem = false;
                     this.showNotification('Ítem agregado correctamente.');

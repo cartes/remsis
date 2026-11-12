@@ -308,8 +308,12 @@ class CompanyEmployeeController extends Controller
     {
         $this->authorizeCompanyAccess($company);
 
+        if (! $employee->activeContract()->exists()) {
+            $employee->syncActiveContract();
+        }
+
         $employee->load([
-            'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'employeeItems.item',
+            'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'activeContract', 'contracts', 'employeeItems.item.lreConcept',
             'payrolls'    => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
             'documents'   => fn ($q) => $q->latest(),
             'logs'        => fn ($q) => $q->latest(),
@@ -322,7 +326,7 @@ class CompanyEmployeeController extends Controller
         $ccafs       = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get();
         $bancos      = \Modules\AdminPanel\Models\Bank::orderBy('name')->get();
         $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
-        $catalogItems = Item::forCompany($company->id)->orderBy('name')->get();
+        $catalogItems = Item::forCompany($company->id)->with('lreConcept')->orderBy('name')->get();
         $fieldLabels = EmployeeLog::$fieldLabels;
 
         $administrativeDayBalance = null;

@@ -11,7 +11,9 @@
 
         // ── Datos del formulario ───────────────────────────────
         editingId: null,
+        seedingLre: false,
         form: {
+            lre_concept_id: '',
             name: '',
             code: '',
             type: '',
@@ -25,9 +27,24 @@
         },
         errors: {},
 
+        lreCatalog: {{ Illuminate\Support\Js::from(($lreConcepts ?? collect())->map(fn($c) => [
+            'id' => $c->id,
+            'code' => $c->code,
+            'name' => $c->name,
+            'classification' => $c->classification,
+            'legal_article' => $c->legal_article,
+            'is_taxable' => $c->is_taxable,
+            'is_gratification_base' => $c->is_gratification_base,
+            'is_overtime_base' => $c->is_overtime_base,
+        ])) }},
+
         // ── Catálogo local (reactivo) ──────────────────────────
         items: {{ Illuminate\Support\Js::from($items->map(fn($i) => [
             'id'                   => $i->id,
+            'lre_concept_id'       => $i->lre_concept_id,
+            'lre_code'             => $i->lreConcept?->code,
+            'lre_name'             => $i->lreConcept?->name,
+            'lre_article'          => $i->lreConcept?->legal_article,
             'name'                 => $i->name,
             'code'                 => $i->code,
             'type'                 => $i->type,
@@ -60,6 +77,7 @@
             this.editingId = null;
             this.errors = {};
             this.form = {
+                lre_concept_id: '',
                 name: '', code: '', type: '',
                 calculation_type: 'fijo',
                 assignment_type: 'distinto_por_persona',
@@ -74,6 +92,7 @@
             this.editingId = item.id;
             this.errors = {};
             this.form = {
+                lre_concept_id:        item.lre_concept_id ?? '',
                 name:                  item.name,
                 code:                  item.code ?? '',
                 type:                  item.type,
@@ -86,6 +105,52 @@
                 is_overtime_base:      item.is_overtime_base,
             };
             this.isOpen = true;
+        },
+
+        onSelectLreConcept() {
+            const selected = this.lreCatalog.find(c => String(c.id) === String(this.form.lre_concept_id));
+            if (!selected) return;
+
+            if (!this.form.name) {
+                this.form.name = selected.name;
+            }
+            const typeMap = {
+                haber_imponible: 'haber_imponible',
+                haber_no_imponible: 'haber_no_imponible',
+                descuento_legal: 'descuento_legal',
+                descuento_judicial: 'descuento_varios',
+                descuento_voluntario: 'descuento_varios',
+            };
+            if (typeMap[selected.classification]) {
+                this.form.type = typeMap[selected.classification];
+            }
+            this.form.is_taxable = !!selected.is_taxable;
+            this.form.is_gratification_base = !!selected.is_gratification_base;
+            this.form.is_overtime_base = !!selected.is_overtime_base;
+        },
+
+        async seedLreTemplate() {
+            this.seedingLre = true;
+            try {
+                const res = await fetch('{{ route('companies.items.seed_lre', $company) }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json();
+                if (res.ok && data.items) {
+                    this.items = data.items.map(i => this.buildRow(i));
+                    this.showNotification(data.message ?? 'Plantilla LRE DT cargada.');
+                } else {
+                    this.showNotification('No se pudo importar la plantilla LRE.', 'error');
+                }
+            } catch (e) {
+                this.showNotification('Error al importar plantilla LRE.', 'error');
+            } finally {
+                this.seedingLre = false;
+            }
         },
 
         // ── Guardar (crear o editar) ───────────────────────────
@@ -170,7 +235,16 @@
             const typeLabels   = { haber_imponible: 'Haber Imponible', haber_no_imponible: 'Haber No Imponible', descuento_legal: 'Descuento Legal', descuento_varios: 'Descuento Varios', credito: 'Crédito' };
             const calcLabels   = { fijo: 'Fijo', proporcional_ausencia: 'Proporcional a días', liquido: 'Líquido' };
             const assignLabels = { igual_para_todos: 'Igual para todos', distinto_por_persona: 'Por persona' };
-            return { ...i, type_label: typeLabels[i.type] ?? i.type, calc_label: calcLabels[i.calculation_type] ?? i.calculation_type, assign_label: assignLabels[i.assignment_type] ?? i.assignment_type };
+            const lre = i.lre_concept ?? null;
+            return {
+                ...i,
+                lre_code: lre ? lre.code : (i.lre_code ?? null),
+                lre_name: lre ? lre.name : (i.lre_name ?? null),
+                lre_article: lre ? lre.legal_article : (i.lre_article ?? null),
+                type_label: typeLabels[i.type] ?? i.type,
+                calc_label: calcLabels[i.calculation_type] ?? i.calculation_type,
+                assign_label: assignLabels[i.assignment_type] ?? i.assignment_type
+            };
         },
 
         showNotification(msg, type = 'success') {
@@ -221,11 +295,18 @@
                 Define los haberes, descuentos y créditos que se podrán asignar a los colaboradores.
             </p>
         </div>
-        <button @click="openCreate()" type="button"
-            class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm flex-shrink-0">
-            <i class="fas fa-plus text-xs"></i>
-            Nuevo Concepto
-        </button>
+        <div class="flex items-center gap-2.5 flex-shrink-0">
+            <button @click="seedLreTemplate()" type="button" :disabled="seedingLre"
+                class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:border-slate-900 hover:text-slate-900 transition-all shadow-sm">
+                <i class="fas fa-book-Atlas text-blue-600 text-xs" :class="seedingLre ? 'fa-spinner fa-spin' : 'fa-scale-balanced'"></i>
+                <span x-text="seedingLre ? 'Importando LRE…' : 'Cargar Plantilla LRE DT'"></span>
+            </button>
+            <button @click="openCreate()" type="button"
+                class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
+                <i class="fas fa-plus text-xs"></i>
+                Nuevo Concepto
+            </button>
+        </div>
     </div>
 
     {{-- ── Filtros ──────────────────────────────────────────────── --}}
@@ -268,12 +349,19 @@
                         <template x-for="item in filteredItems" :key="item.id">
                             <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group">
 
-                                {{-- Nombre / Código --}}
+                                {{-- Nombre / Código / LRE --}}
                                 <td class="px-5 py-4">
                                     <p class="font-bold text-slate-900" x-text="item.name"></p>
-                                    <template x-if="item.code">
-                                        <span class="font-mono text-[11px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5 inline-block" x-text="item.code"></span>
-                                    </template>
+                                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                        <template x-if="item.code">
+                                            <span class="font-mono text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded inline-block" x-text="item.code"></span>
+                                        </template>
+                                        <template x-if="item.lre_code">
+                                            <span class="font-mono text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded inline-block"
+                                                :title="(item.lre_name || '') + (item.lre_article ? ' (' + item.lre_article + ')' : '')"
+                                                x-text="'LRE ' + item.lre_code + (item.lre_article ? ' · ' + item.lre_article : '')"></span>
+                                        </template>
+                                    </div>
                                 </td>
 
                                 {{-- Tipo badge --}}
@@ -417,6 +505,24 @@
 
             {{-- Body --}}
             <div class="px-6 py-5 space-y-5">
+
+                {{-- Vínculo con Diccionario LRE (Dirección del Trabajo) --}}
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                    <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-1.5">
+                        <i class="fas fa-scale-balanced text-indigo-600 mr-1"></i>
+                        Código Oficial LRE (Dirección del Trabajo)
+                    </label>
+                    <select x-model="form.lre_concept_id" @change="onSelectLreConcept()"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
+                        <option value="">Seleccionar código normativo LRE DT (opcional)…</option>
+                        <template x-for="lre in lreCatalog" :key="lre.id">
+                            <option :value="lre.id" x-text="lre.code + ' — ' + lre.name + (lre.legal_article ? ' (' + lre.legal_article + ')' : '')"></option>
+                        </template>
+                    </select>
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Al vincular un concepto LRE DT se configuran automáticamente sus banderas legales (Art. 41, 42 y 58 CT).
+                    </p>
+                </div>
 
                 {{-- Nombre y Código --}}
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -68,6 +68,8 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
         ->name('companies.items.index');
     Route::post('companies/{company}/items-catalog', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'store'])
         ->name('companies.items.store');
+    Route::post('companies/{company}/items-catalog/seed-lre', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'seedLreTemplate'])
+        ->name('companies.items.seed_lre');
     Route::patch('companies/{company}/items-catalog/{item}', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'update'])
         ->name('companies.items.update');
     Route::delete('companies/{company}/items-catalog/{item}', [Modules\Companies\Http\Controllers\CompanyItemsController::class, 'destroy'])

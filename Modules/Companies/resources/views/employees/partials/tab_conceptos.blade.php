@@ -33,7 +33,7 @@
                             class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/10">
                             <option value="">Seleccionar concepto</option>
                             <template x-for="cat in filteredCatalog(itemTab)" :key="cat.id">
-                                <option :value="cat.id" x-text="cat.name"></option>
+                                <option :value="cat.id" x-text="cat.name + (cat.lre_code ? ' [LRE ' + cat.lre_code + ']' : '')"></option>
                             </template>
                         </select>
                         <p x-show="filteredCatalog(itemTab).length === 0" class="text-xs text-slate-400 mt-1">
@@ -128,7 +128,12 @@
                                     <template x-for="ei in filteredItems('{{ $tabKey }}')"
                                         :key="ei.id">
                                         <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-5 py-3.5 font-medium text-slate-800" x-text="ei.item_name">
+                                            <td class="px-5 py-3.5 font-medium text-slate-800">
+                                                <span x-text="ei.item_name"></span>
+                                                <template x-if="ei.lre_code">
+                                                    <span class="ml-1.5 font-mono text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded"
+                                                        x-text="'LRE ' + ei.lre_code"></span>
+                                                </template>
                                             </td>
                                             <td class="px-5 py-3.5 text-right font-semibold text-slate-900"
                                                 x-text="ei.unit === 'CLP' ? formatMoney(ei.amount) : ei.amount + ' ' + ei.unit">

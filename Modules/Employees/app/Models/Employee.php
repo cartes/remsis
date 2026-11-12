@@ -25,6 +25,7 @@ class Employee extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'company_id',
         'bank_id',
@@ -156,6 +157,77 @@ class Employee extends Model
     public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(AttendanceRecord::class, 'employee_id');
+    }
+
+    /**
+     * Historial de contratos laborales del colaborador.
+     */
+    public function contracts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EmploymentContract::class, 'employee_id');
+    }
+
+    /**
+     * Contrato laboral vigente del colaborador.
+     */
+    public function activeContract(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(EmploymentContract::class, 'employee_id')
+            ->where('status', EmploymentContract::STATUS_ACTIVE)
+            ->latestOfMany('start_date');
+    }
+
+    /**
+     * Sincroniza o crea el contrato activo del colaborador con sus datos laborales actuales.
+     */
+    public function syncActiveContract(): ?EmploymentContract
+    {
+        if (empty($this->company_id) || ! \Illuminate\Support\Facades\Schema::hasTable('employment_contracts')) {
+            return null;
+        }
+
+        $company = $this->relationLoaded('company')
+            ? $this->company
+            : Company::query()->withoutGlobalScopes()->find($this->company_id);
+
+        $weeklyHours = (int) ($this->part_time_hours ?: ($company?->weekly_hours ?: 42));
+        if ($weeklyHours <= 0) {
+            $weeklyHours = 42;
+        }
+
+        $contract = EmploymentContract::query()
+            ->withoutGlobalScopes()
+            ->where('employee_id', $this->id)
+            ->where('company_id', $this->company_id)
+            ->orderByDesc('id')
+            ->first();
+
+        $attributes = [
+            'tenant_id' => $this->tenant_id ?? $company?->tenant_id,
+            'company_id' => $this->company_id,
+            'employee_id' => $this->id,
+            'cost_center_id' => $this->cost_center_id,
+            'contract_number' => $contract?->contract_number ?: sprintf('CTR-%d-%04d', $this->company_id, $this->id),
+            'contract_type' => $this->contract_type ?: EmploymentContract::TYPE_INDEFINITE,
+            'position' => $this->position,
+            'start_date' => $this->hire_date ? $this->hire_date->format('Y-m-d') : ($contract?->start_date?->format('Y-m-d') ?: now()->toDateString()),
+            'base_salary' => round((float) ($this->salary ?? 0), 0),
+            'salary_type' => $this->salary_type ?: 'mensual',
+            'gratification_type' => $company?->gratification_system ?: 'art_50',
+            'weekly_hours' => $weeklyHours,
+            'work_schedule_type' => $this->work_schedule_type ?: EmploymentContract::SCHEDULE_FULL_TIME,
+            'status' => ($this->status ?? 'active') === 'active'
+                ? EmploymentContract::STATUS_ACTIVE
+                : EmploymentContract::STATUS_TERMINATED,
+        ];
+
+        if ($contract) {
+            $contract->fill($attributes)->save();
+
+            return $contract;
+        }
+
+        return EmploymentContract::query()->withoutGlobalScopes()->create($attributes);
     }
 
     protected $appends = ['full_name', 'completion_percentage'];
