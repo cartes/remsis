@@ -4,6 +4,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Modules\Companies\Models\Company;
@@ -18,10 +19,7 @@ class CompanyUserController extends Controller
      */
     public function index(Company $company, Request $request)
     {
-        $auth = $request->user();
-        if (! $auth->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize('view', $company);
 
         $users = User::query()
             ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'super-admin'))
@@ -50,10 +48,8 @@ class CompanyUserController extends Controller
      */
     public function store(Request $request, Company $company)
     {
+        Gate::authorize('manageUsers', $company);
         $auth = $request->user();
-        if (! $auth->hasCompanyPermission($company, 'users.manage')) {
-            abort(403);
-        }
 
         // Normalizar booleanos desde strings (FormData)
         if ($request->has('is_in_payroll')) {
@@ -140,10 +136,8 @@ class CompanyUserController extends Controller
      */
     public function update(Request $request, Company $company, User $user)
     {
+        Gate::authorize('manageUsers', $company);
         $auth = $request->user();
-        if (! $auth->hasCompanyPermission($company, 'users.manage')) {
-            abort(403);
-        }
 
         if ($user->hasRole('super-admin') || ! $user->belongsToCompany($company)) {
             abort(403);
@@ -225,10 +219,8 @@ class CompanyUserController extends Controller
      */
     public function destroy(Company $company, User $user, Request $request)
     {
+        Gate::authorize('manageUsers', $company);
         $auth = $request->user();
-        if (! $auth->hasCompanyPermission($company, 'users.manage')) {
-            abort(403);
-        }
 
         if ($user->hasRole('super-admin') || ! $user->belongsToCompany($company)) {
             abort(403);

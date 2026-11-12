@@ -4,6 +4,7 @@ namespace Modules\Employees\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Modules\AdminPanel\Models\Afp;
 use Modules\AdminPanel\Models\Isapre;
@@ -38,6 +39,10 @@ class EmployeesController extends Controller
             'logs.user',
         ])->findOrFail($id);
 
+        if ($employee->company) {
+            Gate::authorize('view', $employee->company);
+        }
+
         $afps        = Afp::orderBy('nombre')->get();
         $isapres     = Isapre::orderBy('nombre')->get();
         $costCenters = CostCenter::where('company_id', $employee->company_id)->active()->orderBy('name')->get();
@@ -49,6 +54,11 @@ class EmployeesController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+
+        if ($employee->company) {
+            Gate::authorize('manageEmployees', $employee->company);
+        }
+
         $section  = $request->input('section', 'personales');
 
         match ($section) {

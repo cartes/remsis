@@ -15,6 +15,7 @@ class Freelancer extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'first_name',
         'last_name',

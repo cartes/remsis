@@ -6,6 +6,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Modules\Companies\Models\Company;
 use Modules\Core\Database\Seeders\LreConceptsSeeder;
@@ -42,7 +43,7 @@ class CompanyItemsController extends Controller
 
     public function store(Request $request, Company $company)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'update');
 
         $validated = $request->validate([
             'lre_concept_id' => 'nullable|exists:lre_concepts_dictionary,id',
@@ -73,7 +74,7 @@ class CompanyItemsController extends Controller
 
     public function update(Request $request, Company $company, Item $item)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'update');
         abort_if($item->company_id !== $company->id, 403);
 
         $validated = $request->validate([
@@ -104,7 +105,7 @@ class CompanyItemsController extends Controller
      */
     public function seedLreTemplate(Company $company)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'update');
 
         if (Schema::hasTable('lre_concepts_dictionary') && LreConcept::query()->count() === 0) {
             app(LreConceptsSeeder::class)->run();
@@ -228,7 +229,7 @@ class CompanyItemsController extends Controller
 
     public function destroy(Company $company, Item $item)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'update');
         abort_if($item->company_id !== $company->id, 403);
 
         if ($item->employeeItems()->where('is_active', true)->exists()) {
@@ -243,12 +244,8 @@ class CompanyItemsController extends Controller
         return response()->json(['success' => true]);
     }
 
-    private function authorizeCompanyAccess(Company $company): void
+    private function authorizeCompanyAccess(Company $company, string $ability = 'view'): void
     {
-        $user = auth()->user();
-
-        if (! $user->canAccessCompany($company)) {
-            abort(403);
-        }
+        Gate::authorize($ability, $company);
     }
 }

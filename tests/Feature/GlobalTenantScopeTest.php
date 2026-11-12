@@ -58,6 +58,7 @@ class GlobalTenantScopeTest extends TestCase
         // 3. Create a user and select Company 1 in session
         $user = User::factory()->create();
         $user->assignRole('admin');
+        $user->companies()->attach([$company1->id, $company2->id]);
 
         // This is where the magic should happen: TenantContext reads from session
         session(['selected_company_id' => $company1->id]);
@@ -85,6 +86,7 @@ class GlobalTenantScopeTest extends TestCase
         $company = Company::create(['razon_social' => 'Auto Tenant Corp', 'rut' => '3-3', 'name' => 'Auto Tenant Corp']);
         $user = User::factory()->create();
         $user->assignRole('admin');
+        $user->companies()->attach($company->id);
         app(TenantContext::class)->bypass(false);
 
         session(['selected_company_id' => $company->id]);
@@ -132,6 +134,7 @@ class GlobalTenantScopeTest extends TestCase
 
         $user = User::factory()->create();
         $user->assignRole('admin');
+        $user->companies()->attach([$company1->id, $company2->id]);
 
         session(['selected_company_id' => $company1->id]);
         $this->actingAs($user);

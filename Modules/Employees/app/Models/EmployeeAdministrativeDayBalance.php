@@ -15,6 +15,7 @@ class EmployeeAdministrativeDayBalance extends Model
     protected $table = 'employee_administrative_day_balances';
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'employee_id',
         'policy_id',

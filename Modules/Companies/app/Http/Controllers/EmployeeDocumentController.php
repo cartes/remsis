@@ -4,6 +4,7 @@ namespace Modules\Companies\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
@@ -16,7 +17,7 @@ class EmployeeDocumentController extends Controller
      */
     public function store(Request $request, Company $company, Employee $employee)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageDocuments');
 
         $validated = $request->validate([
             'title'         => 'required|string|max:255',
@@ -51,7 +52,7 @@ class EmployeeDocumentController extends Controller
      */
     public function download(Company $company, Employee $employee, EmployeeDocument $document)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'view');
 
         abort_if($document->employee_id !== $employee->id, 403);
 
@@ -70,7 +71,7 @@ class EmployeeDocumentController extends Controller
      */
     public function destroy(Company $company, Employee $employee, EmployeeDocument $document)
     {
-        $this->authorizeCompanyAccess($company);
+        $this->authorizeCompanyAccess($company, 'manageDocuments');
 
         abort_if($document->employee_id !== $employee->id, 403);
 
@@ -84,14 +85,8 @@ class EmployeeDocumentController extends Controller
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function authorizeCompanyAccess(Company $company): void
+    private function authorizeCompanyAccess(Company $company, string $ability = 'view'): void
     {
-        $user = auth()->user();
-
-        if ($user->hasRole('super-admin')) {
-            return;
-        }
-
-        abort_unless($user->canAccessCompany($company), 403);
+        Gate::authorize($ability, $company);
     }
 }

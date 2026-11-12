@@ -14,6 +14,7 @@ class PayrollPeriod extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'tenant_id',
         'company_id',
         'name',
         'year',

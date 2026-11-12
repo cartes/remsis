@@ -4,6 +4,7 @@ namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Modules\Companies\Models\Company;
 use Modules\Payroll\Models\Freelancer;
 use Modules\Payroll\Models\FreelancerReceipt;
@@ -31,6 +32,8 @@ class FreelancerReceiptController extends Controller
      */
     public function store(Request $request, Company $company, Freelancer $freelancer)
     {
+        Gate::authorize('calculatePayroll', $company);
+
         if ($freelancer->company_id !== $company->id) {
             abort(403);
         }
@@ -78,6 +81,8 @@ class FreelancerReceiptController extends Controller
      */
     public function update(Request $request, Company $company, Freelancer $freelancer, FreelancerReceipt $receipt)
     {
+        Gate::authorize('calculatePayroll', $company);
+
         if ($freelancer->company_id !== $company->id || $receipt->freelancer_id !== $freelancer->id) {
             abort(403);
         }
@@ -106,6 +111,8 @@ class FreelancerReceiptController extends Controller
      */
     public function destroy(Company $company, Freelancer $freelancer, FreelancerReceipt $receipt)
     {
+        Gate::authorize('calculatePayroll', $company);
+
         if ($freelancer->company_id !== $company->id || $receipt->freelancer_id !== $freelancer->id) {
             abort(403);
         }

@@ -35,20 +35,20 @@ class ResolveTenantContext
             }
 
             if ($company) {
-                if ($user) {
-                    if (! $user->hasRole('super-admin') && ! $user->canAccessCompany($company)) {
-                        abort(403, 'No tienes autorización para acceder a esta empresa.');
-                    }
-
-                    $tenantContext->setCompanyId($company->id);
-                } else {
-                    $tenantContext->setCompanyId($company->id);
+                if (! $user) {
+                    abort(401, 'No autenticado.');
                 }
+
+                if (! $user->hasRole('super-admin') && ! $user->canAccessCompany($company)) {
+                    abort(403, 'No tienes autorización para acceder a esta empresa.');
+                }
+
+                $tenantContext->setCompanyId($company->id);
             }
         }
 
         // Prioridad 2: Sesión o Empresa autorizada del usuario autenticado
-        if (! $tenantContext->hasTenant() && ! $tenantContext->isBypassed()) {
+        if ($user && ! $tenantContext->hasTenant() && ! $tenantContext->isBypassed()) {
             $tenantContext->initializeForUser($user);
         }
 

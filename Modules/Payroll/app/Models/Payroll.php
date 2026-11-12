@@ -24,6 +24,7 @@ class Payroll extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'employee_id',
         'company_id',
