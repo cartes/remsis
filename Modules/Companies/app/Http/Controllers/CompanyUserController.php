@@ -19,7 +19,7 @@ class CompanyUserController extends Controller
     public function index(Company $company, Request $request)
     {
         $auth = $request->user();
-        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -98,7 +98,7 @@ class CompanyUserController extends Controller
     public function update(Request $request, Company $company, User $user)
     {
         $auth = $request->user();
-        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -153,7 +153,7 @@ class CompanyUserController extends Controller
     public function destroy(Company $company, User $user, Request $request)
     {
         $auth = $request->user();
-        if (! $auth->hasRole('super-admin') && $auth->company_id !== $company->id) {
+        if (! $auth->canAccessCompany($company)) {
             abort(403);
         }
 

@@ -92,6 +92,6 @@ class EmployeeDocumentController extends Controller
             return;
         }
 
-        abort_if((int) $user->company_id !== $company->id, 403);
+        abort_unless($user->canAccessCompany($company), 403);
     }
 }

@@ -84,6 +84,26 @@ class User extends Authenticatable
         return $companies;
     }
 
+    /**
+     * Determina si el usuario tiene acceso administrativo u operativo a una empresa (Company).
+     */
+    public function canAccessCompany(Company $company): bool
+    {
+        if ($this->hasRole('super-admin')) {
+            return true;
+        }
+
+        if ($this->company_id !== null && (int) $this->company_id === (int) $company->id) {
+            return true;
+        }
+
+        if ($this->employee && (int) $this->employee->company_id === (int) $company->id) {
+            return true;
+        }
+
+        return $this->companies()->where('companies.id', $company->id)->exists();
+    }
+
     public function getProfilePhotoUrlAttribute(): ?string
     {
         if (empty($this->profile_photo)) {

@@ -15,7 +15,7 @@ class CostCenterController extends Controller
     public function index(Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -30,7 +30,7 @@ class CostCenterController extends Controller
     public function store(Request $request, Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -72,7 +72,7 @@ class CostCenterController extends Controller
     public function update(Request $request, Company $company, CostCenter $costCenter)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -111,7 +111,7 @@ class CostCenterController extends Controller
     public function destroy(Company $company, CostCenter $costCenter)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 

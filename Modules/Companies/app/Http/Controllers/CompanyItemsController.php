@@ -247,7 +247,7 @@ class CompanyItemsController extends Controller
     {
         $user = auth()->user();
 
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id && ! $user->companies()->whereKey($company->id)->exists()) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
     }

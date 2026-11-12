@@ -81,9 +81,10 @@ class CompaniesController extends Controller
     public function edit(Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
+        session(['selected_company_id' => $company->id]);
         $company->load(['economicActivity', 'administrativeDayPolicy']);
 
         $isPolicyLocked = false;
@@ -130,9 +131,10 @@ class CompaniesController extends Controller
     public function employees(Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
+        session(['selected_company_id' => $company->id]);
 
         $ccafs = \Modules\AdminPanel\Models\Ccaf::orderBy('nombre')->get(['id', 'nombre']);
         $bancos = \Modules\AdminPanel\Models\Bank::orderBy('name')->get(['id', 'name as nombre']);
@@ -158,7 +160,7 @@ class CompaniesController extends Controller
     public function update(Request $request, Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -388,7 +390,7 @@ class CompaniesController extends Controller
     public function transactions(Company $company)
     {
         $user = auth()->user();
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
 

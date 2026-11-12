@@ -292,7 +292,7 @@ class CompanyEmployeeController extends Controller
     {
         $user = auth()->user();
 
-        if (! $user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (! $user->canAccessCompany($company)) {
             abort(403);
         }
     }

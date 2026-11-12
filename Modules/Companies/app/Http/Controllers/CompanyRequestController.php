@@ -28,7 +28,7 @@ class CompanyRequestController extends Controller
         $user = auth()->user();
 
         // Authorize access
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (!$user->canAccessCompany($company)) {
             abort(403);
         }
 
@@ -57,7 +57,7 @@ class CompanyRequestController extends Controller
         $user = auth()->user();
 
         // Authorize access
-        if (!$user->hasRole('super-admin') && $user->company_id !== $company->id) {
+        if (!$user->canAccessCompany($company)) {
             abort(403);
         }
 
