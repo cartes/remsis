@@ -126,7 +126,7 @@ class CompaniesController extends Controller
 
         $taxableItems = collect();
         $enabledTaxableItemIds = [];
-        if ($user->hasAnyRole(['super-admin', 'admin', 'contador'])) {
+        if (auth()->user()->hasAnyRole(['super-admin', 'admin', 'contador'])) {
             $taxableItems = \Modules\AdminPanel\Models\TaxableItem::where('is_active', true)->get();
             $enabledTaxableItemIds = $company->taxableItems()->wherePivot('is_enabled', true)->pluck('taxable_items_catalog.id')->toArray();
         }

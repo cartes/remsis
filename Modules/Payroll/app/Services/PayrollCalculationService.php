@@ -44,73 +44,23 @@ class PayrollCalculationService
      */
     public function calculateEmployee(Employee $employee, PayrollPeriod $period): Payroll
     {
-        $company = $period->company;
-
         // Parámetros legales para resolver UF/UTM
         $uf  = LegalParameter::where('key', 'uf_value')->first() ?? (object)['value' => 37000];
         $utm = LegalParameter::where('key', 'utm_value')->first() ?? (object)['value' => 65182];
 
-        // Calcular días trabajados en base a las ausencias registradas en el período.
-        // El estándar mensual en Chile para contratos con sueldo mensual es de 30 días.
-        // Se descuentan las inasistencias injustificadas, licencias médicas, y permisos sin goce.
-        $discountableAbsencesCount = \Modules\Employees\Models\AttendanceRecord::where('employee_id', $employee->id)
-            ->whereBetween('date', [$period->start_date, $period->end_date])
-            ->where(function ($query) {
-                $query->where('status', 'licencia')
-                    ->orWhere(function ($q) {
-                        $q->where('status', 'ausente')
-                            ->where(function ($q2) {
-                                $q2->where('is_justified', false)
-                                   ->orWhereIn('justification_type', [
-                                       'permiso_sin_goce',
-                                       'unpaid_leave',
-                                       'accidente_trabajo',
-                                       'work_accident',
-                                       'suspension_disciplinaria',
-                                       'suspension',
-                                       'inasistencia_injustificada',
-                                       'unjustified'
-                                   ]);
-                            });
-                    });
-            })
-            ->count();
-
-        $workedDays = max(0, 30 - $discountableAbsencesCount);
-
-        // 1. Sueldo Base
-        $haberBase = (int) ($employee->salary ?? 0);
-        $proportionalSalary = (int) round(($haberBase / 30) * $workedDays);
-
-        // 2. Horas Extras
-        $overtimeAmount = 0;
-        $overtimeHours  = 0;
-
         $existingLine = Payroll::where('employee_id', $employee->id)
-            ->where('payroll_period_id', $period->id)
-            ->first();
+            ->where('payroll_period_id', $period->id)->first();
+        $employee->loadMissing('employeeItems.item');
+        $earnings = new MonthlyPayrollEarnings($employee, $period, $existingLine, $uf, $utm);
+        $workedDays = $earnings->workedDays;
+        $proportionalSalary = $earnings->salary;
 
-        if ($company->allows_overtime && $existingLine) {
-            $overtimeHours = $existingLine->overtime_hours;
-            $factor        = $company->weekly_hours == 44 ? 0.0079545 : 0.0077777;
-            $overtimeAmount = (int) round($haberBase * $factor * $overtimeHours);
-        }
-
-        // 3. Montos manuales existentes
-        $comisionesAmount    = $existingLine ? (int) $existingLine->comisiones_amount    : 0;
-        $semanaCorridaAmount = $existingLine ? (int) $existingLine->semana_corrida_amount : 0;
-        $bonosAmount         = $existingLine ? (int) $existingLine->bonos_imponibles_amount : 0;
-        $aguinaldosAmount    = $existingLine ? (int) $existingLine->aguinaldos_amount    : 0;
-        $gratificationAmount = $existingLine ? (int) $existingLine->gratification_amount : 0;
         $anticiposAmount     = $existingLine ? (int) $existingLine->anticipos_amount     : 0;
         $otrosDescuentos     = $existingLine ? (int) $existingLine->otros_descuentos     : 0;
 
         // 4. Ítems relacionales activos del colaborador
-        $activeItems = $employee->relationLoaded('employeeItems')
-            ? $employee->employeeItems->where('is_active', true)->filter(fn($ei) => $ei->item !== null)
-            : $employee->employeeItems()->with('item')->where('is_active', true)->get();
+        $activeItems = $employee->employeeItems->where('is_active', true)->filter(fn($ei) => $ei->item !== null);
 
-        $haberesImponibles   = $activeItems->filter(fn($ei) => $ei->item->type === 'haber_imponible');
         $haberesNoImponibles = $activeItems->filter(fn($ei) => $ei->item->type === 'haber_no_imponible');
         $descuentosVarios    = $activeItems->filter(fn($ei) => $ei->item->type === 'descuento_varios');
         $creditos            = $activeItems->filter(fn($ei) => $ei->item->type === 'credito');
@@ -118,7 +68,6 @@ class PayrollCalculationService
         // Base para PERCENTAGE usa sueldo base proporcional
         $baseParaPercentage = $proportionalSalary;
 
-        $totalHaberesImponibles   = $haberesImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
         $totalHaberesNoImponibles = $haberesNoImponibles->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
         $totalDescuentosVarios    = $descuentosVarios->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
         $totalCreditos            = $creditos->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
@@ -127,23 +76,7 @@ class PayrollCalculationService
         $mealAllowance     = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'COLACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
         $mobilityAllowance = (int) $haberesNoImponibles->filter(fn($ei) => $ei->item->code === 'MOVILIZACION')->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
 
-        // 5. Gratificación
-        $baseGratificacion = $proportionalSalary + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
-            + $bonosAmount + $aguinaldosAmount
-            + $haberesImponibles->filter(fn($ei) => $ei->item->is_gratification_base)->sum(fn($ei) => $ei->resolvedAmountCLP($uf, $utm, $baseParaPercentage, $workedDays));
-
-        if ($company->gratification_system === 'art_50') {
-            $immParam        = LegalParameter::where('key', 'monthly_minimum_wage')->value('value');
-            $imm             = (is_numeric($immParam) && $immParam > 0) ? $immParam : 500000;
-            $topeMensual     = (4.75 * $imm) / 12;
-            $gratificationAmount = (int) round(min($baseGratificacion * 0.25, $topeMensual));
-        } elseif ($company->gratification_system === 'sin_gratificacion') {
-            $gratificationAmount = 0;
-        }
-
-        // 6. Imponible total
-        $imponible = (int) ($proportionalSalary + $overtimeAmount + $comisionesAmount + $semanaCorridaAmount
-            + $bonosAmount + $aguinaldosAmount + $gratificationAmount + $totalHaberesImponibles);
+        $imponible = $earnings->taxable;
 
         // 7. Total haberes (imponible + no imponible)
         $nonTaxableEarnings = $totalHaberesNoImponibles;
@@ -173,15 +106,15 @@ class PayrollCalculationService
                 'period_month' => $period->month,
                 'worked_days'  => $workedDays,
 
-                'overtime_hours'          => $overtimeHours,
-                'overtime_amount'         => $overtimeAmount,
-                'comisiones_amount'       => $comisionesAmount,
-                'semana_corrida_amount'   => $semanaCorridaAmount,
-                'bonos_imponibles_amount' => $bonosAmount,
-                'aguinaldos_amount'       => $aguinaldosAmount,
+                'overtime_hours'          => $earnings->overtimeHours,
+                'overtime_amount'         => $earnings->overtimeAmount,
+                'comisiones_amount'       => (int) $existingLine?->comisiones_amount,
+                'semana_corrida_amount'   => (int) $existingLine?->semana_corrida_amount,
+                'bonos_imponibles_amount' => (int) $existingLine?->bonos_imponibles_amount,
+                'aguinaldos_amount'       => (int) $existingLine?->aguinaldos_amount,
 
-                'base_salary'          => $haberBase,
-                'gratification_amount' => $gratificationAmount,
+                'base_salary'          => (int) $employee->salary,
+                'gratification_amount' => $earnings->gratification,
                 'gross_salary'         => $imponible,
                 'meal_allowance'       => $mealAllowance,
                 'mobility_allowance'   => $mobilityAllowance,

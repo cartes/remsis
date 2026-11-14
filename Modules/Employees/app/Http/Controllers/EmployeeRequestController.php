@@ -66,7 +66,7 @@ class EmployeeRequestController extends Controller
 
         // Check if there is already an attendance record for this date
         $attendanceExists = AttendanceRecord::where('employee_id', $employee->id)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->first();
 
         if ($attendanceExists) {

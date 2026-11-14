@@ -226,7 +226,7 @@
         <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
 
             {{-- Tab Navigation (Folder Style) --}}
-            <div class="flex overflow-x-auto border-b border-gray-200 pl-2 bg-gray-100/70">
+            <div class="flex flex-wrap border-b border-gray-200 pl-2 bg-gray-100/70">
                 @if ($initialSection === 'company-data')
                     <button @click="activeTab = 'ident'"
                         :class="{

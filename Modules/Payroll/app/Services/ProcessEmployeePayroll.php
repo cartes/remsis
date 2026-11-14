@@ -17,49 +17,18 @@ class ProcessEmployeePayroll
         $employee = Employee::with(['afp', 'isapre', 'employeeItems.item'])->findOrFail($employeeId);
         $period = PayrollPeriod::findOrFail($periodId);
 
-        // 1. Días Trabajados (Estándar 30 días para cálculo mensual)
-        $discountableAbsencesCount = \Modules\Employees\Models\AttendanceRecord::where('employee_id', $employee->id)
-            ->whereBetween('date', [$period->start_date, $period->end_date])
-            ->where(function ($query) {
-                $query->where('status', 'licencia')
-                    ->orWhere(function ($q) {
-                        $q->where('status', 'ausente')
-                            ->where(function ($q2) {
-                                $q2->where('is_justified', false)
-                                   ->orWhereIn('justification_type', [
-                                       'permiso_sin_goce',
-                                       'unpaid_leave',
-                                       'accidente_trabajo',
-                                       'work_accident',
-                                       'suspension_disciplinaria',
-                                       'suspension',
-                                       'inasistencia_injustificada',
-                                       'unjustified'
-                                   ]);
-                            });
-                    });
-            })
-            ->count();
-
-        $workedDays = max(0, 30 - $discountableAbsencesCount);
-
-        // 2. Cálculo de Haberes
-        $baseSalary = (int) $employee->salary ?? 0;
-        $proportionalSalary = (int) round(($baseSalary / 30) * $workedDays);
-
-        // Gratificación Legal (Art. 50 del Código del Trabajo)
-        // 25% del ingreso imponible con un tope de 4.75 ingresos mínimos mensuales (IMM) anuales
-        $imm = LegalParameter::where('key', 'monthly_minimum_wage')->value('value') ?? 500000;
-        $gratificationCap = (int) round((4.75 * $imm) / 12);
-        $calculatedGratification = (int) round($proportionalSalary * 0.25);
-        $gratification = min($calculatedGratification, $gratificationCap);
-
-        $taxableEarnings = $proportionalSalary + $gratification;
-
         // Haberes No Imponibles desde employee_items
         $ufValue = LegalParameter::where('key', 'uf_value')->value('value') ?? 37000;
         $ufObj  = (object)['value' => $ufValue];
         $utmObj = (object)['value' => LegalParameter::where('key', 'utm_value')->value('value') ?? 65182];
+
+        $line = Payroll::where('employee_id', $employeeId)->where('payroll_period_id', $periodId)->first();
+        $earnings = new MonthlyPayrollEarnings($employee, $period, $line, $ufObj, $utmObj);
+        $baseSalary = (int) $employee->salary;
+        $workedDays = $earnings->workedDays;
+        $proportionalSalary = $earnings->salary;
+        $gratification = $earnings->gratification;
+        $taxableEarnings = $earnings->taxable;
 
         $activeItems = $employee->employeeItems->where('is_active', true)->filter(fn($ei) => $ei->item !== null);
         $haberesNoImponibles = $activeItems->filter(fn($ei) => $ei->item->type === 'haber_no_imponible');
@@ -116,6 +85,10 @@ class ProcessEmployeePayroll
             ['concept' => 'Asignación Colación', 'amount' => $mealAllowance, 'type' => 'non_taxable'],
             ['concept' => 'Asignación Movilización', 'amount' => $mobilityAllowance, 'type' => 'non_taxable'],
         ];
+
+        if ($earnings->variables || $earnings->taxableItems) {
+            $earningsDetails[] = ['concept' => 'Haberes variables e ítems imponibles', 'amount' => $earnings->variables + $earnings->taxableItems, 'type' => 'taxable'];
+        }
 
         $deductionsDetails = [
             ['concept' => 'Previsión AFP', 'amount' => $afpAmount, 'type' => 'legal'],
@@ -213,7 +186,7 @@ class ProcessEmployeePayroll
             );
 
             // Eliminar detalles antiguos y re-ingresarlos
-            $payroll->details()->delete();
+            $payroll->details()->whereNotIn('concept', ['CO01', 'SC01', 'BI01', 'AG01'])->delete();
 
             foreach ($dto->earnings_details as $detail) {
                 PayrollDetail::create([

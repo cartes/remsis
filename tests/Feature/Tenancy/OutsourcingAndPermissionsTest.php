@@ -90,6 +90,11 @@ class OutsourcingAndPermissionsTest extends TestCase
         $this->actingAs($internalAccountant)
             ->get(route('companies.dashboard', $company))
             ->assertOk();
+
+        $this->actingAs($internalAccountant)
+            ->get(route('companies.edit', ['company' => $company, 'section' => 'company-data']))
+            ->assertOk()
+            ->assertViewIs('companies::edit');
     }
 
     public function test_external_accountant_can_manage_multiple_tenants_without_fake_employee_profile_or_access_to_foreign_companies(): void

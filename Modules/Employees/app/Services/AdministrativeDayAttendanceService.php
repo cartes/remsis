@@ -48,27 +48,19 @@ class AdministrativeDayAttendanceService
         }
 
         return DB::transaction(function () use ($employee, $date, $newStatus, $isJustified, $newJustificationType, $justificationReason) {
-            // Find existing record
-            $record = AttendanceRecord::where('employee_id', $employee->id)
-                ->where('date', $date)
-                ->first();
+            $record = $this->recordForDate($employee, $date);
+            $wasAdminDay = $record->justification_type === 'administrative_day';
+            $isAdminDay = $newJustificationType === 'administrative_day';
+            $record->fill([
+                'status' => $newStatus,
+                'is_justified' => $isJustified,
+                'justification_type' => $newJustificationType,
+                'justification_reason' => $justificationReason,
+            ]);
+            $record->save();
 
-            $oldJustificationType = $record ? $record->justification_type : null;
-
-            $wasAdminDay = ($oldJustificationType === 'administrative_day');
-            $isAdminDay = ($newJustificationType === 'administrative_day');
-
-            // Case 1: Was not administrative day, and is not administrative day
-            if (!$wasAdminDay && !$isAdminDay) {
-                return AttendanceRecord::updateOrCreate(
-                    ['employee_id' => $employee->id, 'date' => $date],
-                    [
-                        'status' => $newStatus,
-                        'is_justified' => $isJustified,
-                        'justification_type' => $newJustificationType,
-                        'justification_reason' => $justificationReason,
-                    ]
-                );
+            if (! $wasAdminDay && ! $isAdminDay) {
+                return $record;
             }
 
             // Get or create balance for the date
@@ -97,17 +89,6 @@ class AdministrativeDayAttendanceService
                         ],
                     ]);
                 }
-
-                // Create attendance record
-                $record = AttendanceRecord::updateOrCreate(
-                    ['employee_id' => $employee->id, 'date' => $date],
-                    [
-                        'status' => $newStatus,
-                        'is_justified' => $isJustified,
-                        'justification_type' => $newJustificationType,
-                        'justification_reason' => $justificationReason,
-                    ]
-                );
 
                 // Create usage
                 AdministrativeDayUsage::create([
@@ -143,25 +124,10 @@ class AdministrativeDayAttendanceService
                 $lockedBalance->available_units = min($lockedBalance->assigned_units, $lockedBalance->available_units + 1.0);
                 $lockedBalance->save();
 
-                // Update attendance record
-                $record->update([
-                    'status' => $newStatus,
-                    'is_justified' => $isJustified,
-                    'justification_type' => $newJustificationType,
-                    'justification_reason' => $justificationReason,
-                ]);
-
                 return $record;
             }
 
             // Case 4: Was administrative day, and remains administrative day (e.g. updating description or status notes)
-            $record->update([
-                'status' => $newStatus,
-                'is_justified' => $isJustified,
-                'justification_type' => $newJustificationType,
-                'justification_reason' => $justificationReason,
-            ]);
-
             // Update usage notes
             AdministrativeDayUsage::where('attendance_record_id', $record->id)->update([
                 'notes' => $justificationReason,
@@ -169,6 +135,16 @@ class AdministrativeDayAttendanceService
 
             return $record;
         });
+    }
+
+    private function recordForDate(Employee $employee, string $date): AttendanceRecord
+    {
+        // Serialize creation even when there is no attendance row to lock yet.
+        Employee::whereKey($employee->id)->lockForUpdate()->firstOrFail();
+
+        return AttendanceRecord::where('employee_id', $employee->id)
+            ->whereDate('date', $date)->lockForUpdate()->first()
+            ?? new AttendanceRecord(['employee_id' => $employee->id, 'date' => $date]);
     }
 
     /**
@@ -222,17 +198,6 @@ class AdministrativeDayAttendanceService
         $employee = $request->employee;
         $date = $request->requested_date->format('Y-m-d');
 
-        // Check if there is already an attendance record for this date
-        $exists = AttendanceRecord::where('employee_id', $employee->id)
-            ->where('date', $date)
-            ->first();
-
-        if ($exists && $exists->justification_type === 'administrative_day') {
-            throw ValidationException::withMessages([
-                'requested_date' => ['El colaborador ya tiene un día administrativo registrado en esta fecha.'],
-            ]);
-        }
-
         // Verify if payroll period is locked/closed
         $isPeriodLocked = \Modules\Payroll\Models\PayrollPeriod::where('company_id', $request->company_id)
             ->whereIn('status', [\Modules\Payroll\Models\PayrollPeriod::STATUS_CLOSED, \Modules\Payroll\Models\PayrollPeriod::STATUS_PAID])
@@ -246,7 +211,14 @@ class AdministrativeDayAttendanceService
             ]);
         }
 
-        DB::transaction(function () use ($request, $employee, $date, $exists, $resolver) {
+        DB::transaction(function () use ($request, $employee, $date, $resolver) {
+            $attendance = $this->recordForDate($employee, $date);
+            if ($attendance->justification_type === 'administrative_day') {
+                throw ValidationException::withMessages([
+                    'requested_date' => ['El colaborador ya tiene un día administrativo registrado en esta fecha.'],
+                ]);
+            }
+
             $balance = $this->balanceService->getOrCreateBalance($employee, $date);
 
             if (!$balance) {
@@ -267,15 +239,12 @@ class AdministrativeDayAttendanceService
             }
 
             // Update/create attendance record
-            $attendance = AttendanceRecord::updateOrCreate(
-                ['employee_id' => $employee->id, 'date' => $date],
-                [
-                    'status' => 'ausente',
-                    'is_justified' => true,
-                    'justification_type' => 'administrative_day',
-                    'justification_reason' => $request->notes,
-                ]
-            );
+            $attendance->fill([
+                'status' => 'ausente',
+                'is_justified' => true,
+                'justification_type' => 'administrative_day',
+                'justification_reason' => $request->notes,
+            ])->save();
 
             // Create usage linked to request
             AdministrativeDayUsage::create([
