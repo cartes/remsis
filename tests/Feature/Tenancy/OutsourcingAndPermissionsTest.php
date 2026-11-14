@@ -97,6 +97,26 @@ class OutsourcingAndPermissionsTest extends TestCase
             ->assertViewIs('companies::edit');
     }
 
+    public function test_remuneration_form_tabs_render_as_independent_panels(): void
+    {
+        $company = Company::create(['name' => 'Empresa SpA', 'razon_social' => 'Empresa SpA', 'rut' => '76111111-1']);
+        $user = User::factory()->create(['company_id' => $company->id]);
+        $user->assignRole('contador');
+
+        $response = $this->actingAs($user)
+            ->get(route('companies.edit', ['company' => $company, 'section' => 'remunerations']))
+            ->assertOk();
+
+        $document = new \DOMDocument;
+        $document->loadHTML($response->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+
+        foreach (['remu', 'banco', 'rep', 'meta'] as $tab) {
+            $panels = $xpath->query("//form/div[@x-show=\"activeTab === '$tab'\"]");
+            $this->assertSame(1, $panels->length, "La pestaña $tab debe ser un panel independiente del formulario.");
+        }
+    }
+
     public function test_external_accountant_can_manage_multiple_tenants_without_fake_employee_profile_or_access_to_foreign_companies(): void
     {
         $companyA = Company::create(['name' => 'Cliente A SpA', 'razon_social' => 'Cliente A SpA', 'rut' => '76111111-1']);

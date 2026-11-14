@@ -655,6 +655,7 @@
                                     <p>La suma del horario (<span x-text="calculateScheduleHours()"></span> hrs) no
                                         coincide
                                         con las horas semanales definidas.</p>
+                                </div>
                             </div>
                         </div>
 
