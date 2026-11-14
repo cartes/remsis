@@ -48,12 +48,12 @@ class AuthenticatedSessionController extends Controller
             if ($companies->count() > 1) {
                 $redirectUrl = route('companies.select');
             } else {
-                $company = $user->company ?? $user->employee?->company;
+                $company = $companies->first();
                 if ($company) {
                     session(['selected_company_id' => $company->id]);
                     $redirectUrl = route('companies.dashboard', $company);
                 } else {
-                    $redirectUrl = route('admin.dashboard'); // Fallback or handle error
+                    $redirectUrl = $user->hasRole('admin') ? route('admin.dashboard') : route('dashboard');
                 }
             }
         } elseif ($user->hasRole('employee')) {

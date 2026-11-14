@@ -41,6 +41,20 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('companies.dashboard', $company, false));
     }
 
+    public function test_accountant_with_direct_company_access_reaches_company_dashboard(): void
+    {
+        $company = \Modules\Companies\Models\Company::create(['razon_social' => 'Empresa SpA', 'rut' => '1-9', 'name' => 'Empresa']);
+        $user = User::factory()->create(['company_id' => $company->id]);
+        $user->assignRole(\Spatie\Permission\Models\Role::create(['name' => 'contador']));
+
+        $dashboard = route('companies.dashboard', $company);
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertRedirect($dashboard);
+        $this->get('/dashboard')->assertRedirect($dashboard);
+        $this->get($dashboard)->assertOk();
+        $this->get('/admin/dashboard')->assertForbidden();
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();

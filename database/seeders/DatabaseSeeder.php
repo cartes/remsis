@@ -128,6 +128,7 @@ class DatabaseSeeder extends Seeder
         // 6. Colaboradores y Contratos Demo
         $this->call([
             CompanyUserSeeder::class,
+            AndinaDemoAttendanceSeeder::class,
         ]);
 
         app(TenantContext::class)->bypass(false);

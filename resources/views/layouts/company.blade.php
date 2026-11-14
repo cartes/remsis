@@ -33,8 +33,19 @@
     </script>
     <style>
         /* Base styles before Alpine loads */
-        .sidebar-collapsed aside {
-            width: 80px !important;
+        .company-sidebar {
+            width: 14rem;
+        }
+
+        .sidebar-collapsed .company-sidebar {
+            width: 5rem;
+        }
+
+        .company-sidebar nav {
+            min-height: 0;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+            scrollbar-width: thin;
         }
 
         .sidebar-initializing aside {
@@ -83,8 +94,7 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
         :style="`left: 76px; top: ${tooltipTop}px`" x-text="hoveringLabel" x-cloak style="display: none;">
     </div>
     {{-- Sidebar Navigation --}}
-    <aside :class="sidebarCollapsed ? 'w-20' : 'w-68'"
-        class="w-68 bg-white border-r border-gray-200 flex-shrink-0 hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300">
+    <aside class="company-sidebar bg-white border-r border-gray-200 flex-shrink-0 hidden lg:flex flex-col h-screen sticky top-0 z-50 transition-all duration-300">
         {{-- Sidebar Header / Logo --}}
         <div class="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
             <div class="logo-wrapper flex items-center w-full transition-all duration-300"
@@ -109,7 +119,7 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
         </div>
 
         {{-- Sidebar Content --}}
-        <div class="flex-1 overflow-y-auto py-6 px-4 space-y-8 no-scrollbar">
+        <nav aria-label="Menú de empresa" class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
             {{-- App Section --}}
             <div>
                 <p x-show="!sidebarCollapsed"
@@ -355,10 +365,10 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                     </div>
                 </div>
             @endif
-        </div>
+        </nav>
 
         {{-- Sidebar Footer / User Info --}}
-        <div class="p-4 bg-slate-50 border-t border-gray-100 relative" x-data="{ showProfileForm: false, timeout: null }">
+        <div class="flex-shrink-0 p-4 bg-slate-50 border-t border-gray-100 relative" x-data="{ showProfileForm: false, timeout: null }">
             {{-- Profile Edit Tooltip --}}
             <div x-show="showProfileForm" x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
@@ -441,7 +451,7 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
     </aside>
 
     {{-- Main Content Wrapper --}}
-    <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+    <div class="min-w-0 flex-1 flex flex-col h-screen overflow-y-auto">
         {{-- Mobile Header --}}
         <header
             class="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-50">
@@ -638,16 +648,6 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
 
     @stack('scripts')
 
-    <style>
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
 </body>
 
 </html>

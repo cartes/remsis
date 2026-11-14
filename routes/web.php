@@ -35,7 +35,9 @@ Route::get('/dashboard', function () {
             return redirect()->route('companies.select');
         }
 
-        $company = $user->company ?? $user->employee?->company;
+        $company = $companies->count() === 1
+            ? $companies->first()
+            : $companies->firstWhere('id', session('selected_company_id'));
         if ($company) {
             return redirect()->route('companies.dashboard', $company);
         }

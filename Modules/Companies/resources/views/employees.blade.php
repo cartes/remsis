@@ -165,11 +165,14 @@
                                                 @foreach ($emp->user->roles as $role)
                                                     <span
                                                         class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[9px] font-bold uppercase border border-blue-100">
-                                                        {{ str_replace('-', ' ', $role->name) }}
+                                                        {{ $role->name === 'employee' ? 'Colaborador' : str_replace('-', ' ', $role->name) }}
                                                     </span>
                                                 @endforeach
                                             </div>
                                         </div>
+                                        @if ($emp->position)
+                                            <span class="text-xs text-gray-700">{{ $emp->position }}</span>
+                                        @endif
                                         <span class="text-[11px] text-gray-500 mt-0.5">{{ $emp->user->email }}</span>
                                     </div>
                                     </div>
