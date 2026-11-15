@@ -203,7 +203,7 @@
                 </div>
 
                 {{-- Action Bar --}}
-                <div class="mt-6 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <x-sticky-actions class="mt-6 flex-col rounded-xl border px-4 sm:flex-row sm:justify-between">
                     <div class="text-sm text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i> Estos valores afectan a todos los cálculos del sistema.
                     </div>
@@ -212,7 +212,7 @@
                         <i class="fas fa-save"></i>
                         Guardar Parámetros
                     </button>
-                </div>
+                </x-sticky-actions>
             </form>
 
             {{-- Fotografía Previsional Mensual (monthly_indicators) y Diccionario LRE DT --}}

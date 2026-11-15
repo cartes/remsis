@@ -144,7 +144,7 @@
         @endif
 
         {{-- ─────────────────── NAVEGACIÓN DE PESTAÑAS ─────────────────── --}}
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-clip">
 
             {{-- Tab bar --}}
             <div class="flex border-b border-slate-100 bg-slate-50/50">
@@ -447,7 +447,7 @@
 
                                 </div>{{-- /grid --}}
 
-                                <div class="mt-8 flex justify-end gap-3">
+                                <x-sticky-actions class="justify-end mt-8 -mx-6 -mb-6 px-6 rounded-b-2xl">
                                     <button type="button" @click="isEditModalOpen = false"
                                         class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
                                         Cancelar
@@ -457,7 +457,7 @@
                                         <i class="fas fa-floppy-disk text-xs"></i>
                                         Guardar Cambios
                                     </button>
-                                </div>
+                                </x-sticky-actions>
                             </form>
                         </div>
                     </div>
@@ -631,13 +631,13 @@
                         </p>
                     </div>
 
-                    <div class="mt-6 flex justify-end">
+                    <x-sticky-actions class="justify-end mt-6 -mx-6 -mb-6 px-6 sm:-mx-8 sm:-mb-8 sm:px-8 rounded-b-2xl">
                         <button type="submit"
                             class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
                             <i class="fas fa-floppy-disk text-xs"></i>
                             Guardar datos previsionales
                         </button>
-                    </div>
+                    </x-sticky-actions>
                 </form>
             </div>
 
@@ -791,13 +791,13 @@
                         </label>
                     </div>
 
-                    <div class="mt-6 flex justify-end">
+                    <x-sticky-actions class="justify-end mt-6 -mx-6 -mb-6 px-6 sm:-mx-8 sm:-mb-8 sm:px-8 rounded-b-2xl">
                         <button type="submit"
                             class="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 active:scale-95 transition-all shadow-sm">
                             <i class="fas fa-floppy-disk text-xs"></i>
                             Guardar datos laborales
                         </button>
-                    </div>
+                    </x-sticky-actions>
                 </form>
             </div>
 

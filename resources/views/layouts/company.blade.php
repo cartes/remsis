@@ -542,9 +542,13 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
         @endif
 
         {{-- Main Content Section --}}
-        <main class="flex-1 p-6 sm:p-8 bg-slate-50/50 overflow-y-auto">
-            <div class="max-w-7xl mx-auto">
-                {{ $slot }}
+        {{-- El padding va en un div interno (no en <main>) para que las barras
+             <x-sticky-actions> queden pegadas al borde inferior real. --}}
+        <main class="flex-1 bg-slate-50/50 overflow-y-auto">
+            <div class="p-6 sm:p-8">
+                <div class="max-w-7xl mx-auto">
+                    {{ $slot }}
+                </div>
             </div>
         </main>
     </div>

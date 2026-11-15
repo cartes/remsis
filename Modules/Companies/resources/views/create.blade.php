@@ -151,7 +151,7 @@
                         <div>
                             <label class="block font-medium mb-1">CCAF</label>
                             <select x-model="formDetails.ccaf_id" class="w-full border rounded p-2">
-                                <option value="">Selecciona una CCAF</option>
+                                <option value="">Sin Caja de Compensación</option>
                                 <template x-for="item in options.ccafs" :key="item.id">
                                     <option :value="item.id" x-text="item.nombre"></option>
                                 </template>
@@ -231,7 +231,7 @@
                     </div>
                 </section>
 
-                <div class="flex gap-2 pt-4">
+                <x-sticky-actions class="mt-4 -mx-6 -mb-6 px-6 rounded-b">
                     <button @click="saveDetails" :disabled="savingDetails"
                         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50">
                         <span x-show="!savingDetails">Guardar ficha</span>
@@ -241,7 +241,7 @@
                         class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
                         Volver
                     </a>
-                </div>
+                </x-sticky-actions>
             </div>
         </div>
     @endsection
@@ -298,7 +298,7 @@
                         tipo_contribuyente: '',
                         dia_pago: '',
                         dia_pago_dia: null,
-                        ccaf_id: null, // FK
+                        ccaf_id: '', // Sin Caja de Compensación
 
                         // Banco (FK)
                         bank_id: null,

@@ -223,7 +223,7 @@
         </div>
 
         {{-- Tabbed Form --}}
-        <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-clip">
 
             {{-- Tab Navigation (Folder Style) --}}
             <div class="flex flex-wrap border-b border-gray-200 pl-2 bg-gray-100/70">
@@ -485,9 +485,9 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">CCAF</label>
                                 <select name="ccaf_id"
                                     class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
-                                    <option value="">Seleccionar CCAF...</option>
+                                    <option value="" @selected(empty(old('ccaf_id', $company->ccaf_id)))>Sin Caja de Compensación</option>
                                     @foreach ($ccafs as $c)
-                                        <option value="{{ $c->id }}" @selected(old('ccaf_id', $company->ccaf_id) === $c->id)>
+                                        <option value="{{ $c->id }}" @selected((string) old('ccaf_id', $company->ccaf_id) === (string) $c->id)>
                                             {{ $c->nombre }}</option>
                                     @endforeach
                                 </select>
@@ -933,8 +933,8 @@
                     </div>
 
                     {{-- Action Buttons (Only for form tabs) --}}
-                    <div x-show="activeTab !== 'payroll' && activeTab !== 'cost-centers'"
-                        class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                    <x-sticky-actions x-show="activeTab !== 'payroll' && activeTab !== 'cost-centers'"
+                        class="justify-between mt-8 -mx-6 -mb-6 px-6 rounded-b-lg">
                         <a href="{{ route('companies.index') }}"
                             class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                             <i class="fas fa-arrow-left"></i>
@@ -945,7 +945,7 @@
                             <i class="fas fa-save"></i>
                             Guardar Cambios
                         </button>
-                    </div>
+                    </x-sticky-actions>
                 </form>
 
             </div>

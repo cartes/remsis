@@ -97,6 +97,30 @@ class OutsourcingAndPermissionsTest extends TestCase
             ->assertViewIs('companies::edit');
     }
 
+    public function test_company_can_save_without_a_compensation_fund(): void
+    {
+        $ccaf = \Modules\AdminPanel\Models\Ccaf::create(['nombre' => 'Caja de prueba']);
+        $company = Company::create(['name' => 'Empresa SpA', 'rut' => '76111111-1', 'ccaf_id' => $ccaf->id]);
+        $user = User::factory()->create(['company_id' => $company->id]);
+        $user->assignRole('admin');
+
+        $this->actingAs($user)
+            ->put(route('companies.update', $company), [
+                'ccaf_id' => '',
+                'payment_frequency' => 'mensual',
+                'gratification_system' => 'art_50',
+                'gratification_months' => 12,
+                'section' => 'remunerations',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertNull($company->fresh()->ccaf_id);
+        $this->get(route('companies.edit', ['company' => $company, 'section' => 'remunerations']))
+            ->assertOk()
+            ->assertSee('value="" selected>Sin Caja de Compensación</option>', false);
+    }
+
     public function test_remuneration_form_tabs_render_as_independent_panels(): void
     {
         $company = Company::create(['name' => 'Empresa SpA', 'razon_social' => 'Empresa SpA', 'rut' => '76111111-1']);

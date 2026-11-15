@@ -656,7 +656,7 @@
             </div>
 
             {{-- Footer --}}
-            <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/60 rounded-b-2xl">
+            <x-sticky-actions class="justify-between px-6 rounded-b-2xl">
                 <button @click="isOpen = false" type="button"
                     class="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
                     Cancelar
@@ -666,7 +666,7 @@
                     <i class="fas text-xs" :class="saving ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'"></i>
                     <span x-text="saving ? 'Guardando…' : (editingId ? 'Guardar cambios' : 'Crear concepto')"></span>
                 </button>
-            </div>
+            </x-sticky-actions>
 
         </div>{{-- /panel --}}
     </div>{{-- /modal --}}

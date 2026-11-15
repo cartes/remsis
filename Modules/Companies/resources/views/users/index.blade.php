@@ -138,7 +138,7 @@
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+                    class="inline-block align-bottom bg-white rounded-2xl text-left overflow-clip shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
                     <form :action="formAction" method="POST">
                         @csrf
                         <template x-if="isEditing">
@@ -218,7 +218,7 @@
                             </div>
                         </div>
                         <div
-                            class="bg-gray-50/50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-2xl border-t border-gray-100">
+                            class="sticky bottom-0 z-20 bg-gray-50/95 backdrop-blur-sm px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-2xl border-t border-gray-100">
                             <button type="submit"
                                 class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto transition-colors"
                                 :class="isEditing ? 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500' :

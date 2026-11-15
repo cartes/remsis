@@ -23,7 +23,7 @@
         </div>
 
         {{-- Form --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-clip">
             <form action="{{ route('companies.payroll-periods.store', ['company' => $company]) }}" method="POST"
                 class="p-6 space-y-6">
                 @csrf
@@ -169,7 +169,7 @@
                 @endif
 
                 {{-- Actions --}}
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <x-sticky-actions class="justify-end -mx-6 -mb-6 px-6 rounded-b-xl">
                     <a href="{{ route('companies.payroll-periods.index', ['company' => $company]) }}"
                         class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold">
                         Cancelar
@@ -179,7 +179,7 @@
                         <i class="fas fa-save"></i>
                         <span>Guardar como Borrador</span>
                     </button>
-                </div>
+                </x-sticky-actions>
             </form>
         </div>
     </div>

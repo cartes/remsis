@@ -409,7 +409,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-6 flex justify-end gap-3">
+                        <x-sticky-actions class="justify-end mt-6 -mx-6 -mb-6 px-6 rounded-b-2xl">
                             <button type="button" @click="isModalOpen = false"
                                 class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
                                 Cancelar
@@ -419,7 +419,7 @@
                                 <i class="fas fa-floppy-disk text-xs"></i>
                                 Guardar Registro
                             </button>
-                        </div>
+                        </x-sticky-actions>
                     </form>
                 </div>
             </div>

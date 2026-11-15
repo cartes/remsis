@@ -304,7 +304,7 @@
 
                     {{-- Contenedor de Formularios --}}
                     <div class="flex-1 min-w-0 flex flex-col bg-white overflow-hidden">
-                        <div class="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                        <div class="flex-1 overflow-y-auto px-10 pt-10 custom-scrollbar">
                             
                             {{-- SECCIÓN: PERSONAL --}}
                             <div x-show="modalTab === 'personal'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4">
@@ -369,14 +369,14 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="mt-8 flex justify-end">
+                                    <x-sticky-actions class="justify-end mt-8 -mx-10 px-10">
                                         <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
                                             Guardar Cambios
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </button>
-                                    </div>
+                                    </x-sticky-actions>
                                 </form>
                             </div>
 
@@ -445,14 +445,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-8 flex justify-end">
+                                    <x-sticky-actions class="justify-end mt-8 -mx-10 px-10">
                                         <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
                                             Guardar Cambios
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </button>
-                                    </div>
+                                    </x-sticky-actions>
                                 </form>
                             </div>
 
@@ -518,14 +518,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-8 flex justify-end">
+                                    <x-sticky-actions class="justify-end mt-8 -mx-10 px-10">
                                         <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
                                             Guardar Cambios
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </button>
-                                    </div>
+                                    </x-sticky-actions>
                                 </form>
                             </div>
 
@@ -594,14 +594,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-8 flex justify-end">
+                                    <x-sticky-actions class="justify-end mt-8 -mx-10 px-10">
                                         <button type="submit" class="bg-slate-900 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2">
                                             Guardar Cambios
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </button>
-                                    </div>
+                                    </x-sticky-actions>
                                 </form>
                             </div>
 

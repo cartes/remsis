@@ -268,7 +268,7 @@ class CompaniesController extends Controller
             app(\Modules\Employees\Services\AdministrativeDayProvisioner::class)->provisionCompany($company);
         }
 
-        if ($user->hasAnyRole(['super-admin', 'admin', 'contador']) && $request->has('taxable_items_config')) {
+        if (auth()->user()->hasAnyRole(['super-admin', 'admin', 'contador']) && $request->has('taxable_items_config')) {
             $taxableItemsInput = $request->input('taxable_items', []);
             $syncData = [];
             foreach ($taxableItemsInput as $id) {
