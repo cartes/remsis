@@ -15,6 +15,8 @@ class PayrollDetail extends Model
         'amount',
         'type',
         'description',
+        'employee_item_id',
+        'installment_number',
     ];
 
     // Relación inversa con Payroll

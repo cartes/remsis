@@ -5,9 +5,13 @@ namespace Modules\Payroll\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Modules\Companies\Models\Company;
+use Modules\Companies\Models\CostCenter;
+use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\Payroll;
+use Modules\Payroll\Models\PayrollDetail;
 use Modules\Payroll\Models\PayrollPeriod;
 use Modules\Payroll\Services\PayrollCalculationService;
 
@@ -139,7 +143,7 @@ class PayrollPeriodController extends Controller
         }
 
         // Load cost centers for filter
-        $costCenters = \Modules\Companies\Models\CostCenter::where('company_id', $company->id)->get();
+        $costCenters = CostCenter::where('company_id', $company->id)->get();
 
         // Load enabled taxable items
         $enabledTaxables = $company->taxableItems()->wherePivot('is_enabled', true)->get();
@@ -160,6 +164,8 @@ class PayrollPeriodController extends Controller
             return redirect()
                 ->route('companies.payroll-periods.wizard', ['company' => $company, 'period' => $period->id])
                 ->with('success', "Cálculo realizado exitosamente para $count empleados.");
+        } catch (PayrollException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error al calcular la nómina: '.$e->getMessage()]);
         }
@@ -174,42 +180,42 @@ class PayrollPeriodController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'status' => 'required|in:draft,open,closed,paid,calculated', // Added calculated
+            'status' => 'required|in:draft,open,closed,paid,calculated',
         ]);
 
         $newStatus = $validated['status'];
-        $currentStatus = $period->status;
 
-        // Define allowed transitions
-        // We can allow transitions from calculated to closed too
         $allowedTransitions = [
-            PayrollPeriod::STATUS_DRAFT => [PayrollPeriod::STATUS_OPEN, 'calculated'],
-            PayrollPeriod::STATUS_OPEN => [PayrollPeriod::STATUS_CLOSED, 'calculated'],
-            'calculated' => [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_OPEN],
+            PayrollPeriod::STATUS_DRAFT => [PayrollPeriod::STATUS_OPEN, PayrollPeriod::STATUS_CALCULATED],
+            PayrollPeriod::STATUS_OPEN => [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_CALCULATED],
+            PayrollPeriod::STATUS_CALCULATED => [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_OPEN],
             PayrollPeriod::STATUS_CLOSED => [PayrollPeriod::STATUS_PAID],
         ];
 
-        // ... rest of the method logic
-
-        // Check if transition is allowed
-        $isAllowed = isset($allowedTransitions[$currentStatus]) &&
-                     in_array($newStatus, $allowedTransitions[$currentStatus]);
-
-        // Super-admin can reopen periods
-        if (! $isAllowed && $user->hasRole('super-admin')) {
-            $isAllowed = true;
-        }
-
-        if (! $isAllowed) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Transición de estado no permitida.',
-            ], 422);
-        }
-
         try {
-            $period->status = $newStatus;
-            $period->save();
+            // La fila se bloquea para que el cierre y un cálculo simultáneo se ejecuten uno tras otro.
+            $isAllowed = DB::transaction(function () use ($period, $newStatus, $allowedTransitions, $user) {
+                $locked = PayrollPeriod::query()->whereKey($period->id)->lockForUpdate()->firstOrFail();
+
+                // Sólo el super-admin puede saltarse el flujo, por ejemplo para reabrir un período cerrado.
+                $isAllowed = in_array($newStatus, $allowedTransitions[$locked->status] ?? [], true)
+                    || $user->hasRole('super-admin');
+
+                if ($isAllowed) {
+                    $locked->status = $newStatus;
+                    $locked->save();
+                    $period->setRawAttributes($locked->getAttributes(), true);
+                }
+
+                return $isAllowed;
+            });
+
+            if (! $isAllowed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transición de estado no permitida.',
+                ], 422);
+            }
 
             return response()->json([
                 'success' => true,
@@ -247,67 +253,72 @@ class PayrollPeriodController extends Controller
         ]);
 
         try {
-            // Update line with manual inputs
-            if ($request->has('overtime_hours')) {
-                $line->overtime_hours = $request->overtime_hours;
-            }
-            if ($request->has('anticipos_amount')) {
-                $line->anticipos_amount = $request->anticipos_amount;
-            }
-            if ($request->has('otros_descuentos')) {
-                $line->otros_descuentos = $request->otros_descuentos;
-            }
-            if ($request->has('gratification_amount')) {
-                $line->gratification_amount = $request->gratification_amount;
-            }
+            DB::transaction(function () use ($request, $period, $line, $service) {
+                // El período se bloquea antes de escribir: una línea de un período cerrado no se edita.
+                $service->lockEditablePeriod($period);
 
-            // Sync Multi-Detail Variable Taxables
-            $taxableCodes = ['CO01', 'SC01', 'BI01', 'AG01'];
-            \Modules\Payroll\Models\PayrollDetail::where('payroll_id', $line->id)
-                ->whereIn('concept', $taxableCodes)
-                ->delete();
+                // Update line with manual inputs
+                if ($request->has('overtime_hours')) {
+                    $line->overtime_hours = $request->overtime_hours;
+                }
+                if ($request->has('anticipos_amount')) {
+                    $line->anticipos_amount = $request->anticipos_amount;
+                }
+                if ($request->has('otros_descuentos')) {
+                    $line->otros_descuentos = $request->otros_descuentos;
+                }
+                if ($request->has('gratification_amount')) {
+                    $line->gratification_amount = $request->gratification_amount;
+                }
 
-            $sumCO01 = 0;
-            $sumSC01 = 0;
-            $sumBI01 = 0;
-            $sumAG01 = 0;
+                // Sync Multi-Detail Variable Taxables
+                $taxableCodes = PayrollCalculationService::MANUAL_DETAIL_CONCEPTS;
+                PayrollDetail::where('payroll_id', $line->id)
+                    ->whereIn('concept', $taxableCodes)
+                    ->delete();
 
-            if ($request->has('details') && is_array($request->details)) {
-                foreach ($request->details as $detail) {
-                    if (in_array($detail['type'], $taxableCodes)) {
-                        \Modules\Payroll\Models\PayrollDetail::create([
-                            'payroll_id' => $line->id,
-                            'type' => 'earning',
-                            'concept' => $detail['type'],
-                            'description' => $detail['description'],
-                            'amount' => $detail['amount'],
-                        ]);
+                $sumCO01 = 0;
+                $sumSC01 = 0;
+                $sumBI01 = 0;
+                $sumAG01 = 0;
 
-                        if ($detail['type'] === 'CO01') {
-                            $sumCO01 += $detail['amount'];
-                        }
-                        if ($detail['type'] === 'SC01') {
-                            $sumSC01 += $detail['amount'];
-                        }
-                        if ($detail['type'] === 'BI01') {
-                            $sumBI01 += $detail['amount'];
-                        }
-                        if ($detail['type'] === 'AG01') {
-                            $sumAG01 += $detail['amount'];
+                if ($request->has('details') && is_array($request->details)) {
+                    foreach ($request->details as $detail) {
+                        if (in_array($detail['type'], $taxableCodes)) {
+                            PayrollDetail::create([
+                                'payroll_id' => $line->id,
+                                'type' => 'earning',
+                                'concept' => $detail['type'],
+                                'description' => $detail['description'],
+                                'amount' => $detail['amount'],
+                            ]);
+
+                            if ($detail['type'] === 'CO01') {
+                                $sumCO01 += $detail['amount'];
+                            }
+                            if ($detail['type'] === 'SC01') {
+                                $sumSC01 += $detail['amount'];
+                            }
+                            if ($detail['type'] === 'BI01') {
+                                $sumBI01 += $detail['amount'];
+                            }
+                            if ($detail['type'] === 'AG01') {
+                                $sumAG01 += $detail['amount'];
+                            }
                         }
                     }
                 }
-            }
 
-            $line->comisiones_amount = $sumCO01;
-            $line->semana_corrida_amount = $sumSC01;
-            $line->bonos_imponibles_amount = $sumBI01;
-            $line->aguinaldos_amount = $sumAG01;
+                $line->comisiones_amount = $sumCO01;
+                $line->semana_corrida_amount = $sumSC01;
+                $line->bonos_imponibles_amount = $sumBI01;
+                $line->aguinaldos_amount = $sumAG01;
 
-            $line->save();
+                $line->save();
 
-            // Recalculate this employee's line to update totals
-            $service->calculateEmployee($line->employee, $period);
+                // Recalculate this employee's line to update totals
+                $service->calculateEmployee($line->employee, $period);
+            });
 
             // Re-load the updated line with details for the frontend
             $updatedLine = Payroll::with(['employee.costCenter', 'details'])->findOrFail($line->id);
@@ -318,6 +329,11 @@ class PayrollPeriodController extends Controller
                 'payroll' => $updatedLine,
             ]);
 
+        } catch (PayrollException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

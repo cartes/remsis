@@ -25,3 +25,14 @@ Con APP_ENV=testing, DB_CONNECTION=sqlite y DB_DATABASE=:memory:, ejecutar desde
     vendor/bin/phpunit --do-not-cache-result Modules/Payroll/tests Modules/Companies/tests
 
 La suite configurada pasó 107 pruebas y 449 aserciones. La ejecución adicional incluyó 15 pruebas y 51 aserciones: 13 pasaron y dos de EmployeeSearchTest terminaron con error al preparar Company::factory(). El resultado de la búsqueda queda sin verificar por esos casos. PHPUnit informó 13 deprecaciones en esa ejecución. Entorno observado: PHPUnit 11.5.55 y PHP 8.5.4; composer.json declara PHP ^8.5.12. Falta repetir en una versión compatible antes de tomar los resultados como referencia de entrega.
+
+## Actualización del 15 de noviembre de 2026
+
+Los dos riesgos reproducidos quedaron corregidos y cubiertos por [PayrollEngineTest](../tests/Feature/Payroll/PayrollEngineTest.php):
+
+- **Recálculo repetible.** El descuento manual (`otros_descuentos`) se guarda separado de los descuentos por ítems y créditos (`descuentos_items_amount`, `creditos_amount`). Cada cuota cobrada queda vinculada a la liquidación en `payroll_details`, de modo que recalcular reutiliza la misma cuota.
+- **Período protegido.** Calcular o editar una línea de un período cerrado o pagado se rechaza desde el servidor sin modificar estado, importes ni cuotas. El cálculo, la edición y el cambio de estado bloquean la fila del período para ejecutarse uno tras otro.
+- **Parámetros.** El cálculo exige el indicador mensual del período y se niega a calcular si falta; ya no hay valores de respaldo para UF, UTM o IMM. El impuesto único se calcula por tramos.
+- **Dotación.** Se selecciona por vínculo vigente en el mes (ingreso y término), con días proporcionales.
+
+La suite configurada pasa 122 pruebas y 629 aserciones.

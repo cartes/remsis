@@ -5,7 +5,6 @@ namespace Modules\Payroll\Tests\Unit\Services;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Modules\AdminPanel\Models\Afp;
-use Modules\AdminPanel\Models\LegalParameter;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
 use Modules\Payroll\Models\EmployeeItem;
@@ -17,6 +16,7 @@ use Tests\TestCase;
 
 class ProcessEmployeePayrollTest extends TestCase
 {
+    use \Tests\Support\CreatesMonthlyIndicator;
     use RefreshDatabase;
 
     protected Company $company;
@@ -29,10 +29,8 @@ class ProcessEmployeePayrollTest extends TestCase
 
         app(\App\Support\Tenancy\TenantContext::class)->bypass();
 
-        // Configuración de parámetros legales compartidos para las pruebas
-        LegalParameter::updateOrCreate(['key' => 'monthly_minimum_wage'], ['value' => 500000]);
-        LegalParameter::updateOrCreate(['key' => 'uf_value'], ['value' => 37000]);
-        LegalParameter::updateOrCreate(['key' => 'utm_value'], ['value' => 65000]);
+        // Indicadores del período: UF 40.000, UTM 70.000, IMM 500.000, topes 90 UF y 135 UF
+        $this->createMonthlyIndicator(2026, 3);
 
         // Creación de datos base para restricciones de llaves foráneas
         $this->company = Company::create([
@@ -122,16 +120,16 @@ class ProcessEmployeePayrollTest extends TestCase
 
         // IUSC (Impuesto Único):
         // Base: 1,197,917 - 126,740 - 83,854 - 7,188 = 980,135
-        // UTM: Marzo 2026 (65,000 presumido). 980,135 / 65,000 = 15.07 UTM
+        // UTM de prueba 70,000. 980,135 / 70,000 = 14.00 UTM
         // Tramo 2 (13.5 - 30): Factor 0.04, Descuento 0.54 UTM
-        // (980,135 * 0.04) - (0.54 * 65,000) = 39,205 - 35,100 = 4,105
-        $this->assertEquals('$4.105', $result['legal_deductions']['iusc']);
+        // (980,135 * 0.04) - (0.54 * 70,000) = 39,205 - 37,800 = 1,405
+        $this->assertEquals('$1.405', $result['legal_deductions']['iusc']);
     }
 
     /** @test */
     public function it_respects_afp_and_afc_caps()
     {
-        // UF = 37,000. Tope AFP = 80.2 UF = 2,967,400. Tope AFC = 120.3 UF = 4,451,100.
+        // UF = 40,000. Tope AFP = 90 UF = 3,600,000. Tope AFC = 135 UF = 5,400,000.
         // Imponible = 4,000,000.
 
         $this->company->update(['allows_overtime' => true]); // Corrección contextual si es necesaria
@@ -157,10 +155,13 @@ class ProcessEmployeePayrollTest extends TestCase
         $service = new ProcessEmployeePayroll;
         $result = $service->execute($employee->id, $period->id)->toArray();
 
-        // La AFP debería topar en 2,967,400 * 0.1127 = 334,426
-        $this->assertEquals('$334.426', $result['legal_deductions']['afp']);
+        // La AFP debería topar en 3,600,000 * 0.1127 = 405,720
+        $this->assertEquals('$405.720', $result['legal_deductions']['afp']);
 
-        // La AFC no debería topar (4.19M < 4.45M).
+        // La salud usa el mismo tope: 3,600,000 * 0.07 = 252,000
+        $this->assertEquals('$252.000', $result['legal_deductions']['health']);
+
+        // La AFC no debería topar (4.19M < 5.4M).
         // Imponible = 4,000,000 + 197,917 = 4,197,917.
         // 4,197,917 * 0.006 = 25,187.502 -> 25,188
         $this->assertEquals('$25.188', $result['legal_deductions']['afc']);

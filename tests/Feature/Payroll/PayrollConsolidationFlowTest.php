@@ -12,10 +12,13 @@ use Tests\TestCase;
 
 class PayrollConsolidationFlowTest extends TestCase
 {
+    use \Tests\Support\CreatesMonthlyIndicator;
     use RefreshDatabase;
 
     public function test_calculate_and_update_line_flow_uses_canonical_payroll_model(): void
     {
+        $this->createMonthlyIndicator(2026, 3);
+
         $company = Company::create([
             'name' => 'Empresa Flow',
             'razon_social' => 'Empresa Flow SpA',

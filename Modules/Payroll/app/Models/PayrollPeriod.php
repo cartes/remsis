@@ -41,6 +41,8 @@ class PayrollPeriod extends Model
 
     const STATUS_OPEN = 'open';
 
+    const STATUS_CALCULATED = 'calculated';
+
     const STATUS_CLOSED = 'closed';
 
     const STATUS_PAID = 'paid';
@@ -110,9 +112,12 @@ class PayrollPeriod extends Model
     /**
      * Business Logic Methods
      */
+    /**
+     * Un período admite cálculos y ediciones mientras no esté cerrado ni pagado.
+     */
     public function canModify(): bool
     {
-        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_OPEN]);
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_OPEN, self::STATUS_CALCULATED], true);
     }
 
     public function canClose(): bool
@@ -139,6 +144,7 @@ class PayrollPeriod extends Model
         return match ($this->status) {
             self::STATUS_DRAFT => 'bg-gray-100 text-gray-700 border-gray-200',
             self::STATUS_OPEN => 'bg-blue-100 text-blue-700 border-blue-200',
+            self::STATUS_CALCULATED => 'bg-indigo-100 text-indigo-700 border-indigo-200',
             self::STATUS_CLOSED => 'bg-yellow-100 text-yellow-700 border-yellow-200',
             self::STATUS_PAID => 'bg-green-100 text-green-700 border-green-200',
             default => 'bg-gray-100 text-gray-700 border-gray-200',
@@ -150,6 +156,7 @@ class PayrollPeriod extends Model
         return match ($this->status) {
             self::STATUS_DRAFT => 'Borrador',
             self::STATUS_OPEN => 'Abierto',
+            self::STATUS_CALCULATED => 'Calculado',
             self::STATUS_CLOSED => 'Cerrado',
             self::STATUS_PAID => 'Pagado',
             default => ucfirst($this->status),

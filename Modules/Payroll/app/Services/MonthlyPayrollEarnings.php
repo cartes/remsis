@@ -2,16 +2,34 @@
 
 namespace Modules\Payroll\Services;
 
-use Modules\AdminPanel\Models\LegalParameter;
+use Carbon\CarbonInterface;
 use Modules\Companies\Models\Company;
 use Modules\Core\Models\MonthlyIndicator;
 use Modules\Employees\Models\AttendanceRecord;
 use Modules\Employees\Models\Employee;
+use Modules\Employees\Models\EmploymentContract;
+use Modules\Payroll\Models\EmployeeItem;
 use Modules\Payroll\Models\Payroll;
 use Modules\Payroll\Models\PayrollPeriod;
 
+/**
+ * Haberes imponibles del mes de un colaborador: días pagados, sueldo proporcional,
+ * horas extra, variables, ítems imponibles y gratificación.
+ */
 final class MonthlyPayrollEarnings
 {
+    /** Causales de ausencia que no se pagan. */
+    private const UNPAID_JUSTIFICATIONS = [
+        'permiso_sin_goce',
+        'unpaid_leave',
+        'accidente_trabajo',
+        'work_accident',
+        'suspension_disciplinaria',
+        'suspension',
+        'inasistencia_injustificada',
+        'unjustified',
+    ];
+
     public readonly int $workedDays;
 
     public readonly int $salary;
@@ -28,84 +46,131 @@ final class MonthlyPayrollEarnings
 
     public readonly int $taxableItems;
 
-    public function __construct(Employee $employee, PayrollPeriod $period, ?Payroll $line, object $uf, object $utm)
+    /** @var list<array{assignment: EmployeeItem, amount: int}> */
+    public readonly array $taxableItemLines;
+
+    /** Objetos con ->value para resolver ítems expresados en UF o UTM. */
+    public readonly object $uf;
+
+    public readonly object $utm;
+
+    public function __construct(Employee $employee, PayrollPeriod $period, ?Payroll $line, MonthlyIndicator $indicator)
     {
         $company = $period->company;
-        $this->workedDays = $this->paidDays($employee, $period);
+        $contract = $this->latestContract($employee);
+
+        $this->uf = (object) ['value' => (float) $indicator->uf_value];
+        $this->utm = (object) ['value' => (float) $indicator->utm_value];
+
+        $this->workedDays = $this->paidDays($employee, $period, $contract);
         $this->salary = (int) round($employee->salary * $this->workedDays / 30);
+
         $this->overtimeHours = $company->allows_overtime ? (float) ($line?->overtime_hours ?? 0) : 0;
-        $factor = $company->weekly_hours == 44 ? 0.0079545 : 0.0077777;
-        $this->overtimeAmount = (int) round($employee->salary * $factor * $this->overtimeHours);
+        $this->overtimeAmount = (int) round(
+            $employee->salary * $this->overtimeFactor($employee, $company, $contract, $indicator) * $this->overtimeHours
+        );
         $this->variables = $this->overtimeAmount + (int) $line?->comisiones_amount
             + (int) $line?->semana_corrida_amount + (int) $line?->bonos_imponibles_amount + (int) $line?->aguinaldos_amount;
 
         $totalItems = 0;
+        $lines = [];
         $base = $this->salary + $this->variables;
         foreach ($employee->employeeItems as $assignment) {
             if (! $assignment->is_active || $assignment->item?->type !== 'haber_imponible') {
                 continue;
             }
-            $amount = $assignment->resolvedAmountCLP($uf, $utm, $this->salary, $this->workedDays);
+            $amount = $assignment->resolvedAmountCLP($this->uf, $this->utm, $this->salary, $this->workedDays);
             $totalItems += $amount;
+            $lines[] = ['assignment' => $assignment, 'amount' => $amount];
             if ($assignment->item->is_gratification_base) {
                 $base += $amount;
             }
         }
 
         $this->taxableItems = $totalItems;
+        $this->taxableItemLines = $lines;
         $this->gratification = match ($company->gratification_system) {
-            Company::GRATIFICATION_SYSTEM_ART_50 => $this->article50($period, $base),
+            Company::GRATIFICATION_SYSTEM_ART_50 => (int) round(min($base * 0.25, $indicator->getGratificationCapClp())),
             Company::GRATIFICATION_SYSTEM_NONE => 0,
             default => (int) $line?->gratification_amount,
         };
         $this->taxable = $this->salary + $this->variables + $this->taxableItems + $this->gratification;
     }
 
-    private function paidDays(Employee $employee, PayrollPeriod $period): int
+    private function latestContract(Employee $employee): ?EmploymentContract
     {
-        $discountableAbsencesCount = AttendanceRecord::where('employee_id', $employee->id)
-            ->where('date', '>=', $period->start_date->toDateString())
-            ->where('date', '<', $period->end_date->copy()->addDay()->toDateString())
+        return EmploymentContract::query()
+            ->where('employee_id', $employee->id)
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Factor de la hora extraordinaria con recargo del 50% (Art. 32 CT) sobre el sueldo mensual:
+     * (7 / 30 / jornada semanal) * 1,5. Con 44 h es 0,0079545; con 42 h, 0,0083333.
+     */
+    private function overtimeFactor(Employee $employee, Company $company, ?EmploymentContract $contract, MonthlyIndicator $indicator): float
+    {
+        if ($contract?->work_schedule_type === EmploymentContract::SCHEDULE_ART_22) {
+            return 0.0;
+        }
+
+        $weeklyHours = (float) ($employee->work_schedule_type === EmploymentContract::SCHEDULE_PART_TIME && $employee->part_time_hours > 0
+            ? $employee->part_time_hours
+            : ($company->weekly_hours ?: $indicator->legal_weekly_hours));
+
+        return $weeklyHours > 0 ? (7 / 30 / $weeklyHours) * 1.5 : 0.0;
+    }
+
+    /**
+     * Días pagados sobre base de 30: descuenta los días sin vínculo laboral
+     * (ingreso o término dentro del período) y las ausencias no remuneradas.
+     */
+    private function paidDays(Employee $employee, PayrollPeriod $period, ?EmploymentContract $contract): int
+    {
+        $start = $period->start_date->copy()->startOfDay();
+        $end = $period->end_date->copy()->startOfDay();
+
+        $from = $employee->hire_date && $employee->hire_date->gt($start) ? $employee->hire_date->copy()->startOfDay() : $start;
+        $termination = $contract?->termination_date;
+        $to = $termination && $termination->lt($end) ? $termination->copy()->startOfDay() : $end;
+
+        if ($from->gt($to)) {
+            return 0;
+        }
+
+        $employedDays = match (true) {
+            $from->eq($start) && $to->eq($end) => 30,
+            $to->eq($end) => max(1, 30 - $this->daysBetween($start, $from)),
+            default => min(30, $this->daysBetween($from, $to) + 1),
+        };
+
+        $absences = AttendanceRecord::where('employee_id', $employee->id)
+            ->where('date', '>=', $from->toDateString())
+            ->where('date', '<', $to->copy()->addDay()->toDateString())
             ->where(function ($query) {
                 $query->where('status', 'licencia')
                     ->orWhere(function ($q) {
                         $q->where('status', 'ausente')
                             ->where(function ($q2) {
                                 $q2->where('is_justified', false)
-                                    ->orWhereIn('justification_type', [
-                                        'permiso_sin_goce',
-                                        'unpaid_leave',
-                                        'accidente_trabajo',
-                                        'work_accident',
-                                        'suspension_disciplinaria',
-                                        'suspension',
-                                        'inasistencia_injustificada',
-                                        'unjustified',
-                                    ]);
+                                    ->orWhereIn('justification_type', self::UNPAID_JUSTIFICATIONS);
                             });
                     });
             })
             ->count();
 
-        // A complete calendar month on leave earns no salary, including short Februaries.
-        if ($period->start_date->day === 1 && $period->end_date->isSameMonth($period->start_date)
-            && $period->end_date->isLastOfMonth() && $discountableAbsencesCount >= $period->end_date->day) {
+        // Ausente todos los días calendario con vínculo vigente: no hay días pagados,
+        // aunque el mes tenga 28 o 31 días.
+        if ($absences >= $this->daysBetween($from, $to) + 1) {
             return 0;
         }
 
-        return max(0, 30 - $discountableAbsencesCount);
+        return max(0, $employedDays - $absences);
     }
 
-    private function article50(PayrollPeriod $period, int $base): int
+    private function daysBetween(CarbonInterface $from, CarbonInterface $to): int
     {
-        $indicator = MonthlyIndicator::where('year', $period->year)->where('month', $period->month)->first();
-        if ($indicator?->imm_value > 0) {
-            $cap = $indicator->getGratificationCapClp();
-        } else {
-            $imm = LegalParameter::where('key', 'monthly_minimum_wage')->value('value');
-            $cap = 4.75 * ($imm > 0 ? $imm : 500000) / 12;
-        }
-
-        return (int) round(min($base * 0.25, $cap));
+        return (int) round($from->diffInDays($to));
     }
 }

@@ -14,6 +14,7 @@ use Tests\TestCase;
 
 class MonthlyPayrollEarningsTest extends TestCase
 {
+    use \Tests\Support\CreatesMonthlyIndicator;
     use RefreshDatabase;
 
     private User $actor;
@@ -27,6 +28,7 @@ class MonthlyPayrollEarningsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->createMonthlyIndicator(2026, 2);
         $company = Company::create([
             'name' => 'Empresa Flow',
             'razon_social' => 'Empresa Flow SpA',

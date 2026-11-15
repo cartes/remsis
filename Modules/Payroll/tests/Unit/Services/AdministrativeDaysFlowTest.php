@@ -24,6 +24,7 @@ use Tests\TestCase;
 
 class AdministrativeDaysFlowTest extends TestCase
 {
+    use \Tests\Support\CreatesMonthlyIndicator;
     use RefreshDatabase;
 
     protected Company $company;
@@ -273,6 +274,7 @@ class AdministrativeDaysFlowTest extends TestCase
             'status' => 'open',
         ]);
 
+        $this->createMonthlyIndicator(2026, 5);
         $payrollService = new ProcessEmployeePayroll;
 
         // 2. Act

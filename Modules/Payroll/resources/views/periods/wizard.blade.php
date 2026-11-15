@@ -544,6 +544,26 @@
                                                                     <span class="text-red-500"
                                                                         x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.cesantia_amount))"></span>
                                                                 </div>
+                                                                <div class="flex justify-between text-xs" x-show="Number(selectedLine.impuesto_unico_amount) > 0">
+                                                                    <span class="text-gray-500">Impuesto Único</span>
+                                                                    <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.impuesto_unico_amount))"></span>
+                                                                </div>
+                                                                <div class="flex justify-between text-xs" x-show="Number(selectedLine.apv_amount) > 0">
+                                                                    <span class="text-gray-500">APV</span>
+                                                                    <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.apv_amount))"></span>
+                                                                </div>
+                                                                <div class="flex justify-between text-xs" x-show="Number(selectedLine.descuentos_items_amount) > 0">
+                                                                    <span class="text-gray-500">Descuentos por conceptos</span>
+                                                                    <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.descuentos_items_amount))"></span>
+                                                                </div>
+                                                                <div class="flex justify-between text-xs" x-show="Number(selectedLine.creditos_amount) > 0">
+                                                                    <span class="text-gray-500">Créditos (cuota del mes)</span>
+                                                                    <span class="text-red-500"
+                                                                        x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.creditos_amount))"></span>
+                                                                </div>
                                                             </div>
 
                                                             <!-- Final Payment Summary -->
