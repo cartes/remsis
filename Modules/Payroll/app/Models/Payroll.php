@@ -36,6 +36,7 @@ class Payroll extends Model
         'period_year',
         'period_month',
         'worked_days',
+        'medical_leave_days',
         'overtime_hours',
         'overtime_amount',
         'comisiones_amount',

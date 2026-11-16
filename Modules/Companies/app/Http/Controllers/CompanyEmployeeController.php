@@ -328,9 +328,14 @@ class CompanyEmployeeController extends Controller
             'contracts' => fn ($q) => $q->orderByDesc('valid_from')->orderByDesc('id'),
             'vacationRequests' => fn ($q) => $q->orderByDesc('start_date'),
             'vacationRequests.resolver',
+            'medicalLeaves' => fn ($q) => $q->orderByDesc('start_date'),
+            'medicalLeaves.previous',
         ]);
 
         $vacationBalance = app(\Modules\Employees\Services\VacationService::class)->balance($employee);
+
+        $medicalLeaveSummary = app(\Modules\Employees\Services\MedicalLeaveService::class)
+            ->yearSummary($employee->medicalLeaves, now()->year);
 
         $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();
         $isapres     = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get();
@@ -348,7 +353,7 @@ class CompanyEmployeeController extends Controller
         }
 
         return view('companies::employees.edit', compact(
-            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels', 'administrativeDayBalance', 'vacationBalance'
+            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels', 'administrativeDayBalance', 'vacationBalance', 'medicalLeaveSummary'
         ));
     }
 

@@ -8,6 +8,7 @@ use Modules\Core\Models\MonthlyIndicator;
 use Modules\Core\Services\MonthlyIndicatorSyncService;
 use Modules\Employees\Models\Employee;
 use Modules\Employees\Models\EmploymentContract;
+use Modules\Employees\Services\MedicalLeaveService;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\EmployeeItem;
 use Modules\Payroll\Models\Item;
@@ -205,6 +206,15 @@ class PayrollCalculationService
         };
         $afcEmployer = (int) round($afcBase * $afcEmployerRate / 100);
 
+        // ── Licencias médicas ──
+        // Por los días de licencia la entidad pagadora del subsidio entera la AFP, la salud y la
+        // cesantía del trabajador; el empleador sigue pagando el SIS y su parte del seguro de cesantía.
+        $leaveCoverage = app(MedicalLeaveService::class)
+            ->employerCoverage($employee, $period->start_date, $period->end_date, $pensionCap, $afcCap);
+        $afcEmployer += (int) round($leaveCoverage['afc_base'] * $afcEmployerRate / 100);
+        $sisEmployer = (int) round($pensionBase * (float) $indicator->sis_rate / 100)
+            + (int) round($leaveCoverage['pension_base'] * (float) $indicator->sis_rate / 100);
+
         // ── APV e impuesto único ──
         $apvAmount = (int) round(min((float) $employee->apv_amount, self::APV_MONTHLY_CAP_UF * (float) $indicator->uf_value));
 
@@ -247,6 +257,7 @@ class PayrollCalculationService
                 'period_year' => $period->year,
                 'period_month' => $period->month,
                 'worked_days' => $earnings->workedDays,
+                'medical_leave_days' => $leaveCoverage['days'],
 
                 'overtime_hours' => $earnings->overtimeHours,
                 'overtime_amount' => $earnings->overtimeAmount,
@@ -284,7 +295,7 @@ class PayrollCalculationService
                 'total_deductions' => $totalDeductions,
                 'net_salary' => $totalEarnings - $totalDeductions,
 
-                'employer_sis_amount' => (int) round($pensionBase * (float) $indicator->sis_rate / 100),
+                'employer_sis_amount' => $sisEmployer,
                 'employer_afc_amount' => $afcEmployer,
                 // Ley 21.735: aporte del empleador a la cuenta individual y al seguro social previsional.
                 'employer_afp_amount' => (int) round($pensionBase * (float) $indicator->employer_afp_rate / 100),
@@ -387,7 +398,7 @@ class PayrollCalculationService
      * Tasa total de la AFP (10% + comisión). Prefiere la tasa registrada en el indicador
      * del período, que conserva el valor histórico; si no está, usa el catálogo de AFP.
      */
-    private function afpRate(Employee $employee, MonthlyIndicator $indicator): float
+    public function afpRate(Employee $employee, MonthlyIndicator $indicator): float
     {
         $afp = $employee->afp;
         if (! $afp) {

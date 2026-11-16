@@ -67,7 +67,7 @@
         <tr>
             <td><span class="label">Fecha de ingreso</span>{{ $employee->hire_date?->format('d/m/Y') ?? '—' }}</td>
             <td><span class="label">Tipo de contrato</span>{{ $contractLabel }}</td>
-            <td><span class="label">Días trabajados</span>{{ $payroll->worked_days ?? '—' }}</td>
+            <td><span class="label">Días trabajados</span>{{ $payroll->worked_days ?? '—' }}@if ((int) $payroll->medical_leave_days > 0) · {{ (int) $payroll->medical_leave_days }} de licencia médica @endif</td>
             <td><span class="label">Horas extraordinarias</span>{{ rtrim(rtrim(number_format((float) $payroll->overtime_hours, 2, ',', '.'), '0'), ',') ?: '0' }}</td>
         </tr>
         <tr>

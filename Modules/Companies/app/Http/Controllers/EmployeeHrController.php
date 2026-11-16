@@ -12,18 +12,21 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Modules\Companies\Models\Company;
 use Modules\Employees\Models\Employee;
+use Modules\Employees\Models\MedicalLeave;
 use Modules\Employees\Models\VacationRequest;
 use Modules\Employees\Services\EmploymentContractService;
+use Modules\Employees\Services\MedicalLeaveService;
 use Modules\Employees\Services\VacationService;
 
 /**
- * Recursos Humanos sobre la ficha del colaborador: anexos de contrato y vacaciones.
+ * Recursos Humanos sobre la ficha del colaborador: anexos de contrato, vacaciones y licencias médicas.
  */
 class EmployeeHrController extends Controller
 {
     public function __construct(
         private readonly EmploymentContractService $contracts,
         private readonly VacationService $vacations,
+        private readonly MedicalLeaveService $leaves,
     ) {}
 
     /**
@@ -144,14 +147,96 @@ class EmployeeHrController extends Controller
         return back()->with('active_tab', 'vacaciones')->with('success', 'Configuración de vacaciones actualizada.');
     }
 
-    private function resolve(callable $action, string $message): RedirectResponse
+    /**
+     * Registra una licencia médica: marca sus días en la asistencia y estima el subsidio.
+     */
+    public function storeMedicalLeave(Request $request, Company $company, Employee $employee): RedirectResponse
+    {
+        Gate::authorize('manageEmployees', $company);
+
+        $data = $request->validateWithBag('leave', [
+            'folio' => 'required|string|max:30',
+            'type' => 'required|in:'.implode(',', array_keys(MedicalLeave::TYPE_LABELS)),
+            'start_date' => 'required|date',
+            'days' => 'required|integer|min:1|max:365',
+            'is_continuation' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:500',
+        ], [], [
+            'type' => 'tipo de licencia',
+            'start_date' => 'fecha de inicio',
+            'days' => 'días de reposo',
+        ]);
+
+        try {
+            $this->leaves->register($employee, $data, $request->user());
+        } catch (ValidationException $e) {
+            return back()->with('active_tab', 'licencias')->withErrors($e->errors(), 'leave')->withInput();
+        }
+
+        return back()->with('active_tab', 'licencias')->with('success', 'Licencia médica registrada.');
+    }
+
+    public function resolveMedicalLeave(Request $request, Company $company, Employee $employee, MedicalLeave $medicalLeave): RedirectResponse
+    {
+        Gate::authorize('manageEmployees', $company);
+
+        $input = collect($request->all())->map(fn ($value) => $value === '' ? null : $value)->all();
+        $data = validator($input, [
+            'status' => 'required|in:'.implode(',', MedicalLeave::RESOLUTION_STATUSES),
+            'authorized_days' => 'nullable|integer|min:1|required_if:status,'.MedicalLeave::STATUS_REDUCED,
+            'resolution_date' => 'nullable|date|before_or_equal:today',
+            'resolution_notes' => 'nullable|string|max:500',
+        ], [], [
+            'status' => 'resolución',
+            'authorized_days' => 'días autorizados',
+            'resolution_date' => 'fecha de la resolución',
+        ])->validateWithBag('leave');
+
+        return $this->resolve(
+            fn () => $this->leaves->resolve(
+                $medicalLeave,
+                $data['status'],
+                isset($data['authorized_days']) ? (int) $data['authorized_days'] : null,
+                $data['resolution_date'] ?? null,
+                $data['resolution_notes'] ?? null,
+                $request->user()
+            ),
+            'Resolución de la licencia registrada.',
+            'licencias',
+            'leave'
+        );
+    }
+
+    public function refreshMedicalLeaveSubsidy(Request $request, Company $company, Employee $employee, MedicalLeave $medicalLeave): RedirectResponse
+    {
+        Gate::authorize('manageEmployees', $company);
+        abort_if($medicalLeave->status === MedicalLeave::STATUS_CANCELLED, 422);
+
+        $this->leaves->refreshSubsidy($medicalLeave);
+
+        return back()->with('active_tab', 'licencias')->with('success', 'Subsidio estimado nuevamente con las liquidaciones disponibles.');
+    }
+
+    public function cancelMedicalLeave(Request $request, Company $company, Employee $employee, MedicalLeave $medicalLeave): RedirectResponse
+    {
+        Gate::authorize('manageEmployees', $company);
+
+        return $this->resolve(
+            fn () => $this->leaves->cancel($medicalLeave, $request->user()),
+            'Licencia médica anulada.',
+            'licencias',
+            'leave'
+        );
+    }
+
+    private function resolve(callable $action, string $message, string $tab = 'vacaciones', string $bag = 'vacation'): RedirectResponse
     {
         try {
             $action();
         } catch (ValidationException $e) {
-            return back()->with('active_tab', 'vacaciones')->withErrors($e->errors(), 'vacation');
+            return back()->with('active_tab', $tab)->withErrors($e->errors(), $bag);
         }
 
-        return back()->with('active_tab', 'vacaciones')->with('success', $message);
+        return back()->with('active_tab', $tab)->with('success', $message);
     }
 }

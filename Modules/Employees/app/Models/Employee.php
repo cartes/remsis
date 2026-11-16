@@ -212,6 +212,14 @@ class Employee extends Model
     }
 
     /**
+     * Licencias médicas del colaborador.
+     */
+    public function medicalLeaves(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MedicalLeave::class, 'employee_id');
+    }
+
+    /**
      * Sincroniza o crea el contrato activo del colaborador con sus datos laborales actuales.
      */
     public function syncActiveContract(): ?EmploymentContract

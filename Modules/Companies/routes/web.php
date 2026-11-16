@@ -61,6 +61,16 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::post('companies/{company}/employees/{employee}/vacations/{vacationRequest}/cancel', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'cancelVacation'])
         ->name('companies.employees.vacations.cancel');
 
+    // Recursos Humanos: licencias médicas
+    Route::post('companies/{company}/employees/{employee}/medical-leaves', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'storeMedicalLeave'])
+        ->name('companies.employees.medical-leaves.store');
+    Route::post('companies/{company}/employees/{employee}/medical-leaves/{medicalLeave}/resolve', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'resolveMedicalLeave'])
+        ->name('companies.employees.medical-leaves.resolve');
+    Route::post('companies/{company}/employees/{employee}/medical-leaves/{medicalLeave}/subsidy', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'refreshMedicalLeaveSubsidy'])
+        ->name('companies.employees.medical-leaves.subsidy');
+    Route::post('companies/{company}/employees/{employee}/medical-leaves/{medicalLeave}/cancel', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'cancelMedicalLeave'])
+        ->name('companies.employees.medical-leaves.cancel');
+
     // Carpeta Digital (Documentos)
     Route::post('companies/{company}/employees/{employee}/documents', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'store'])
         ->name('companies.employees.documents.store');
