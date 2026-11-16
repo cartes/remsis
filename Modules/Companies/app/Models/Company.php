@@ -99,6 +99,50 @@ class Company extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Determina si la empresa tiene al menos un administrador activo asignado.
+     * Considera administradores en company_user, vía Employee o directos en User.
+     */
+    public function hasAdmin(): bool
+    {
+        return User::query()
+            ->where(function ($query) {
+                $query->whereHas('companies', function ($q) {
+                    $q->where('companies.id', $this->id)
+                        ->where(function ($sub) {
+                            $sub->where('company_user.role', 'admin')
+                                ->orWhereNull('company_user.role');
+                        });
+                })
+                ->orWhere('company_id', $this->id)
+                ->orWhereHas('employee', fn ($eq) => $eq->where('company_id', $this->id));
+            })
+            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+            ->exists();
+    }
+
+    /**
+     * Retorna la cantidad de administradores de la empresa.
+     */
+    public function adminCount(): int
+    {
+        return User::query()
+            ->where(function ($query) {
+                $query->whereHas('companies', function ($q) {
+                    $q->where('companies.id', $this->id)
+                        ->where(function ($sub) {
+                            $sub->where('company_user.role', 'admin')
+                                ->orWhereNull('company_user.role');
+                        });
+                })
+                ->orWhere('company_id', $this->id)
+                ->orWhereHas('employee', fn ($eq) => $eq->where('company_id', $this->id));
+            })
+            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+            ->distinct()
+            ->count('users.id');
+    }
+
     public function bank()
     {
         return $this->belongsTo(Bank::class);

@@ -165,7 +165,12 @@
             <div x-show="showAdminModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
                 <form action="{{ route('companies.users.store', $company) }}" method="POST">
                     @csrf
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-6 text-center shadow-inner">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-6 text-center shadow-inner relative">
+                        @if(auth()->user() && auth()->user()->hasRole('super-admin'))
+                            <button type="button" @click="showAdminModal = false" class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors" title="Cerrar modal">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        @endif
                         <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-white/20 backdrop-blur border border-white/20 mb-4">
                             <i class="fas fa-user-shield text-2xl text-white"></i>
                         </div>
@@ -173,15 +178,22 @@
                         <p class="text-blue-100 text-sm mt-2 opacity-90 mx-auto">Para continuar utilizando el dashboard y gestionar funciones clave de la empresa, debes designar a un administrador principal.</p>
                     </div>
                     <div class="bg-white px-6 pt-5 pb-6">
+                        @if ($errors->any())
+                            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <p><i class="fas fa-exclamation-circle mr-1"></i>{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        @endif
                         <input type="hidden" name="role" value="admin">
                         <div class="space-y-4 text-sm w-full">
                             <div class="space-y-1">
                                 <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Nombre Completo</label>
-                                <input type="text" name="name" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Ej. Administrador">
+                                <input type="text" name="name" value="{{ old('name') }}" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Ej. Administrador">
                             </div>
                             <div class="space-y-1">
                                 <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Correo Electrónico (Acceso)</label>
-                                <input type="email" name="email" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="admin@empresa.com">
+                                <input type="email" name="email" value="{{ old('email') }}" required class="w-full border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="admin@empresa.com">
                             </div>
                             <div class="space-y-1">
                                 <label class="font-bold text-slate-700 text-xs uppercase tracking-widest">Contraseña</label>
@@ -189,7 +201,7 @@
                             </div>
                             <div class="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-start gap-3">
                                 <div class="flex items-center h-5">
-                                    <input id="is_in_payroll" name="is_in_payroll" type="checkbox" value="1" class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500">
+                                    <input id="is_in_payroll" name="is_in_payroll" type="checkbox" value="1" {{ old('is_in_payroll') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500">
                                 </div>
                                 <div class="ml-2 text-sm">
                                     <label for="is_in_payroll" class="font-bold text-gray-700">¿Será parte de la nómina de la empresa?</label>
@@ -198,7 +210,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-6 py-4 rounded-b-2xl border-t border-gray-100 text-right">
+                    <div class="bg-gray-50 px-6 py-4 rounded-b-2xl border-t border-gray-100 flex items-center justify-between">
+                        @if(auth()->user() && auth()->user()->hasRole('super-admin'))
+                            <button type="button" @click="showAdminModal = false" class="text-sm font-bold text-slate-500 hover:text-slate-700">
+                                Omitir por ahora
+                            </button>
+                        @else
+                            <div></div>
+                        @endif
                         <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl border border-transparent shadow-sm px-6 py-2.5 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                             Guardar Administrador <i class="fas fa-arrow-right"></i>
                         </button>

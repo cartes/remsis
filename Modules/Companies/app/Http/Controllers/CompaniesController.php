@@ -172,9 +172,7 @@ class CompaniesController extends Controller
         $costCenters = $company->costCenters()->active()->orderBy('code')->get(['id', 'code', 'name']);
 
         // Contar administradores de la empresa (rol 'admin')
-        $adminCount = \Modules\Users\Models\User::whereHas('employee', function ($q) use ($company) {
-            $q->where('company_id', $company->id);
-        })->role('admin')->count();
+        $adminCount = $company->adminCount();
 
         return view('companies::employees', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'adminCount'));
     }
@@ -416,9 +414,7 @@ class CompaniesController extends Controller
             ->avg('completion_percentage') ?? 0;
 
         // Verificar si la empresa tiene un admin
-        $hasAdmin = $company->users()->whereHas('roles', function ($q) {
-            $q->where('name', 'admin');
-        })->exists();
+        $hasAdmin = $company->hasAdmin();
 
         return view('companies::dashboard', compact('company', 'totalEmployees', 'activeEmployees', 'completionAverage', 'hasAdmin'));
     }
