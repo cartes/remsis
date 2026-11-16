@@ -35,6 +35,10 @@ class MonthlyIndicator extends Model
         'afc_indefinite_employee_rate',
         'afc_indefinite_employer_rate',
         'afc_fixed_employer_rate',
+        'afc_indefinite_11y_employer_rate',
+        'employer_afp_rate',
+        'employer_protected_return_rate',
+        'employer_life_expectancy_rate',
         'mutual_base_rate',
         'sanna_rate',
         'cesantia_pensionados_employer_rate',
@@ -64,6 +68,10 @@ class MonthlyIndicator extends Model
         'afc_indefinite_employee_rate' => 'float',
         'afc_indefinite_employer_rate' => 'float',
         'afc_fixed_employer_rate' => 'float',
+        'afc_indefinite_11y_employer_rate' => 'float',
+        'employer_afp_rate' => 'float',
+        'employer_protected_return_rate' => 'float',
+        'employer_life_expectancy_rate' => 'float',
         'mutual_base_rate' => 'float',
         'sanna_rate' => 'float',
         'cesantia_pensionados_employer_rate' => 'float',
@@ -177,23 +185,46 @@ class MonthlyIndicator extends Model
     }
 
     /**
-     * Calcula el tope imponible de AFP/Salud en CLP (ej. 84.3 UF * UF último día mes anterior), redondeado a 0 decimales.
+     * Monto en CLP por carga para un tramo de asignación familiar ya reconocido (A, B, C o D).
      */
-    public function getAfpCapClp(): float
+    public function getFamilyAllowanceForBracket(string $letter): float
     {
-        $ufForCap = $this->uf_previous_month > 0 ? $this->uf_previous_month : $this->uf_value;
+        $brackets = is_array($this->family_allowance_brackets) && ! empty($this->family_allowance_brackets)
+            ? $this->family_allowance_brackets
+            : $this->familyAllowanceBracketRecords()->get()->toArray();
 
-        return round($this->cap_afp_uf * $ufForCap, 0);
+        foreach ($brackets as $bracket) {
+            if (strtoupper((string) ($bracket['bracket_letter'] ?? '')) === strtoupper($letter)) {
+                return round((float) ($bracket['amount_per_dependent'] ?? 0.0), 0);
+            }
+        }
+
+        return 0.0;
     }
 
     /**
-     * Calcula el tope imponible de Seguro de Cesantía (AFC) en CLP (ej. 126.6 UF * UF último día mes anterior), redondeado a 0 decimales.
+     * UF con que se convierten los topes imponibles: la del último día del mes de la remuneración
+     * (es la que publica Previred; ej. noviembre 2026: 90 UF * 41.439,89 = $3.729.590).
+     */
+    private function ufForCaps(): float
+    {
+        return (float) ($this->uf_value > 0 ? $this->uf_value : $this->uf_previous_month);
+    }
+
+    /**
+     * Calcula el tope imponible de AFP/Salud en CLP, redondeado a 0 decimales.
+     */
+    public function getAfpCapClp(): float
+    {
+        return round($this->cap_afp_uf * $this->ufForCaps(), 0);
+    }
+
+    /**
+     * Calcula el tope imponible de Seguro de Cesantía (AFC) en CLP, redondeado a 0 decimales.
      */
     public function getAfcCapClp(): float
     {
-        $ufForCap = $this->uf_previous_month > 0 ? $this->uf_previous_month : $this->uf_value;
-
-        return round($this->cap_afc_uf * $ufForCap, 0);
+        return round($this->cap_afc_uf * $this->ufForCaps(), 0);
     }
 
     /**
@@ -204,4 +235,3 @@ class MonthlyIndicator extends Model
         return round(($this->imm_value * 4.75) / 12, 0);
     }
 }
-

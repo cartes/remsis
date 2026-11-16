@@ -48,6 +48,43 @@ class MindicadorSyncTest extends TestCase
         $this->assertCount(7, $indicator->afpRateRecords);
         $this->assertCount(8, $indicator->iutBracketRecords);
         $this->assertCount(4, $indicator->familyAllowanceBracketRecords);
+
+        // Los valores legales salen de la tabla de vigencias (config core.legal_indicators), no del código.
+        $legal = config('core.legal_indicators.periods.2026-11');
+        $this->assertSame((float) $legal['imm_value'], $indicator->imm_value);
+        $this->assertSame($legal['cap_afp_uf'], $indicator->cap_afp_uf);
+        $this->assertSame($legal['cap_afc_uf'], $indicator->cap_afc_uf);
+        $this->assertSame($legal['sis_rate'], $indicator->sis_rate);
+        $this->assertSame(
+            3.5,
+            round($indicator->employer_afp_rate + $indicator->employer_protected_return_rate
+                + $indicator->employer_life_expectancy_rate + $indicator->sis_rate, 2)
+        );
+        $this->assertSame(10.0 + $legal['afp_commissions']['habitat'], $indicator->getAfpRate('habitat'));
+        $this->assertSame(
+            (float) $legal['family_allowance'][0]['amount_per_dependent'],
+            $indicator->getFamilyAllowancePerDependent(500000)
+        );
+    }
+
+    public function test_sync_applies_the_legal_values_in_force_for_each_period(): void
+    {
+        config(['core.legal_indicators.periods.2027-01' => array_merge(
+            config('core.legal_indicators.periods.2026-11'),
+            ['imm_value' => 600000, 'cap_afp_uf' => 92.5]
+        )]);
+        Http::fake(['*' => Http::response([], 500)]);
+
+        $service = app(\Modules\Core\Services\MonthlyIndicatorSyncService::class);
+        $before = $service->syncPeriod('2026-12');
+        $after = $service->syncPeriod('2027-02');
+
+        $this->assertSame(553553.0, $before->imm_value);
+        $this->assertSame(90.0, $before->cap_afp_uf);
+        $this->assertSame(600000.0, $after->imm_value);
+        $this->assertSame(92.5, $after->cap_afp_uf);
+        $this->assertSame(42, $after->legal_weekly_hours);
+        $this->assertSame(44, $service->legalWeeklyHoursFor('2026-04'));
     }
 
     public function test_sync_falls_back_to_cmf_when_mindicador_date_query_fails(): void

@@ -83,6 +83,8 @@ class PayrollEngineTest extends TestCase
         $this->assertEquals(30000, $line->employer_sis_amount);  // 1,5%
         $this->assertEquals(48000, $line->employer_afc_amount);  // 2,4%
         $this->assertEquals(18600, $line->employer_mutual_amount); // 0,93%
+        $this->assertEquals(2000, $line->employer_afp_amount);   // 0,1% a la cuenta individual (Ley 21.735)
+        $this->assertEquals(32000, $line->employer_social_security_amount); // 0,9% + 0,7%
     }
 
     public function test_fixed_term_contract_pays_no_employee_unemployment_insurance(): void
@@ -114,7 +116,9 @@ class PayrollEngineTest extends TestCase
             'contract_type' => 'indefinido',
             'health_system' => 'isapre',
             'health_contribution' => 120000,
+            'health_contribution_unit' => 'CLP',
             'apv_amount' => 50000,
+            'apv_regime' => 'B',
             'num_dependents' => 2,
         ]);
 
@@ -130,6 +134,88 @@ class PayrollEngineTest extends TestCase
         $this->assertEquals(8000, $line->asignacion_familiar_amount);
         $this->assertEquals(1008000, $line->total_earnings);
         $this->assertEquals(1008000 - 276000, $line->net_salary);
+    }
+
+    public function test_indefinite_contract_with_eleven_years_stops_employee_unemployment_insurance(): void
+    {
+        $employee = $this->employee(['salary' => 1000000, 'contract_type' => 'indefinido', 'hire_date' => '2015-03-01']);
+
+        $line = $this->calculate($employee);
+
+        $this->assertEquals(0, $line->cesantia_amount);
+        $this->assertEquals(8000, $line->employer_afc_amount);   // 0,8% de cargo del empleador
+    }
+
+    public function test_ccaf_share_is_part_of_the_fonasa_contribution_not_an_extra_deduction(): void
+    {
+        app(TenantContext::class)->bypass();
+        $ccaf = \Modules\AdminPanel\Models\Ccaf::create(['nombre' => 'Caja de prueba']);
+        $this->company->update(['ccaf_id' => $ccaf->id]);
+        app(TenantContext::class)->bypass(false);
+        app(TenantContext::class)->initializeForUser($this->actor);
+
+        $fonasa = $this->employee(['salary' => 1000000, 'health_system' => 'fonasa']);
+        $isapre = $this->employee(['salary' => 1000000, 'health_system' => 'isapre', 'health_contribution' => 90000, 'health_contribution_unit' => 'CLP']);
+
+        $this->calculate($fonasa);
+
+        $this->assertEquals(70000, $this->line($fonasa)->isapre_amount);  // el trabajador sigue pagando 7%
+        $this->assertEquals(6000, $this->line($fonasa)->ccaf_amount);     // 0,6% va a la caja
+        $this->assertEquals(0, $this->line($isapre)->ccaf_amount);
+    }
+
+    public function test_voluntary_deductions_over_fifteen_percent_are_flagged(): void
+    {
+        $employee = $this->employee(['salary' => 1000000]);
+        $this->assign($employee, Item::TYPE_DESCUENTO_VARIOS, 'Convenio', 200000);
+
+        $line = $this->calculate($employee);
+
+        // Límite: 15% de 1.000.000 = 150.000. El descuento se aplica completo y se informa el exceso.
+        $this->assertEquals(200000, $line->descuentos_items_amount);
+        $this->assertEquals(50000, $line->descuentos_exceso_amount);
+    }
+
+    public function test_isapre_plan_in_uf_and_in_percentage(): void
+    {
+        $inUf = $this->employee(['salary' => 1000000, 'health_system' => 'isapre', 'health_contribution' => 3.25]);
+        $inPercentage = $this->employee([
+            'salary' => 1000000, 'health_system' => 'isapre',
+            'health_contribution' => 8.5, 'health_contribution_unit' => 'PERCENTAGE',
+        ]);
+        $belowLegal = $this->employee(['salary' => 1000000, 'health_system' => 'isapre', 'health_contribution' => 1]);
+
+        $this->calculate($inUf);
+
+        $this->assertEquals(130000, $this->line($inUf)->isapre_amount);          // 3,25 UF * 40.000 (unidad por defecto)
+        $this->assertEquals(85000, $this->line($inPercentage)->isapre_amount);   // 8,5% del imponible
+        $this->assertEquals(70000, $this->line($belowLegal)->isapre_amount);     // 1 UF < 7% legal
+    }
+
+    public function test_apv_regime_a_is_deducted_but_does_not_lower_the_tax_base(): void
+    {
+        $regimeA = $this->employee(['salary' => 2000000, 'apv_amount' => 100000]);
+        $regimeB = $this->employee(['salary' => 2000000, 'apv_amount' => 100000, 'apv_regime' => 'B']);
+
+        $this->calculate($regimeA);
+
+        $this->assertEquals(100000, $this->line($regimeA)->apv_amount);
+        $this->assertEquals(1648000, $this->line($regimeA)->tributable_base);    // 2.000.000 - 200.000 - 140.000 - 12.000
+        $this->assertEquals(1548000, $this->line($regimeB)->tributable_base);
+        $this->assertGreaterThan($this->line($regimeB)->impuesto_unico_amount, $this->line($regimeA)->impuesto_unico_amount);
+        $this->assertEquals($this->line($regimeA)->total_deductions - $this->line($regimeA)->impuesto_unico_amount,
+            $this->line($regimeB)->total_deductions - $this->line($regimeB)->impuesto_unico_amount);
+    }
+
+    public function test_family_allowance_uses_the_recognized_bracket_when_informed(): void
+    {
+        $recognized = $this->employee(['salary' => 1000000, 'num_dependents' => 1, 'family_allowance_bracket' => 'A']);
+        $estimated = $this->employee(['salary' => 1000000, 'num_dependents' => 1]);
+
+        $this->calculate($recognized);
+
+        $this->assertEquals(20000, $this->line($recognized)->asignacion_familiar_amount); // tramo A informado
+        $this->assertEquals(4000, $this->line($estimated)->asignacion_familiar_amount);   // tramo C por renta del mes
     }
 
     public function test_overtime_uses_the_weekly_hours_of_the_company(): void

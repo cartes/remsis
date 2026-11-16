@@ -39,6 +39,17 @@ class EmploymentContract extends Model
 
     public const STATUS_DRAFT = 'draft';
 
+    public const VERSION_CONTRACT = 'contrato';
+
+    public const VERSION_AMENDMENT = 'anexo';
+
+    public const TYPE_LABELS = [
+        self::TYPE_INDEFINITE => 'Indefinido',
+        self::TYPE_FIXED_TERM => 'Plazo fijo',
+        self::TYPE_PROJECT => 'Por obra o faena',
+        self::TYPE_FREELANCE => 'Honorarios',
+    ];
+
     public const SCHEDULE_FULL_TIME = 'full_time';
 
     public const SCHEDULE_PART_TIME = 'part_time';
@@ -68,12 +79,18 @@ class EmploymentContract extends Model
         'termination_date',
         'termination_cause_article',
         'notes',
+        'valid_from',
+        'valid_until',
+        'version_type',
+        'change_reason',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'termination_date' => 'date',
+        'valid_from' => 'date',
+        'valid_until' => 'date',
         'base_salary' => 'float',
         'weekly_hours' => 'integer',
         'distribution_days' => 'integer',
@@ -93,6 +110,38 @@ class EmploymentContract extends Model
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id');
+    }
+
+    /**
+     * Versiones cuyas condiciones rigen en la fecha indicada.
+     */
+    public function scopeInForceOn($query, \DateTimeInterface|string $date)
+    {
+        $date = \Illuminate\Support\Carbon::parse($date)->toDateString();
+
+        return $query
+            ->where(fn ($q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', $date))
+            ->where(fn ($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', $date));
+    }
+
+    /**
+     * Versión del contrato de un colaborador que rige en una fecha. Si hay más de una, la más reciente.
+     */
+    public static function inForceFor(int $employeeId, \DateTimeInterface|string $date): ?self
+    {
+        return static::query()
+            ->withoutGlobalScopes()
+            ->whereNull('deleted_at')
+            ->where('employee_id', $employeeId)
+            ->inForceOn($date)
+            ->orderByDesc('valid_from')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return self::TYPE_LABELS[$this->contract_type] ?? (string) $this->contract_type;
     }
 
     public function isIndefinite(): bool

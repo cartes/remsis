@@ -66,6 +66,9 @@ class EmployeeLog extends Model
         'health_system' => 'Sistema de salud',
         'health_contribution' => 'Valor plan de salud',
         'apv_amount' => 'Monto APV',
+        'health_contribution_unit' => 'Unidad del plan de salud',
+        'apv_regime' => 'Régimen APV',
+        'family_allowance_bracket' => 'Tramo de asignación familiar',
         'cost_center_id' => 'Área / Departamento',
         'is_in_payroll' => 'En nómina de pago',
         'payment_method' => 'Método de pago',
@@ -80,6 +83,12 @@ class EmployeeLog extends Model
         'ccaf_id' => 'CCAF',
         'emergency_contact_name' => 'Contacto de emergencia',
         'emergency_contact_phone' => 'Teléfono emergencia',
+        'base_salary' => 'Sueldo base',
+        'end_date' => 'Fecha de término del plazo',
+        'weekly_hours' => 'Jornada semanal (horas)',
+        'vacation_initial_balance' => 'Saldo de apertura de vacaciones',
+        'vacation_initial_balance_date' => 'Fecha del saldo de apertura',
+        'previous_employment_months' => 'Meses con otros empleadores',
     ];
 
     // ── Etiquetas legibles para el tipo de evento ─────────────

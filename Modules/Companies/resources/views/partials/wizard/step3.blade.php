@@ -63,9 +63,16 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Monto plan (UF)</label>
-                            <input type="number" x-model="form.health_contribution" placeholder="Ej: 3.25" step="0.01" min="0"
-                                class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Plan pactado</label>
+                            <div class="flex gap-2">
+                                <input type="number" x-model="form.health_contribution" placeholder="Ej: 3.25" step="0.001" min="0"
+                                    class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                                <select x-model="form.health_contribution_unit" class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                                    <option value="UF">UF</option>
+                                    <option value="CLP">Pesos ($)</option>
+                                    <option value="PERCENTAGE">% renta imponible</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -75,6 +82,13 @@
                         <input type="number" x-model="form.apv_amount" placeholder="0" min="0"
                             class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                         <p class="mt-1 text-[10px] text-slate-400">Ahorro Previsional Voluntario</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Régimen APV</label>
+                        <select x-model="form.apv_regime" class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                            <option value="A">Régimen A · bonificación fiscal, no rebaja impuesto</option>
+                            <option value="B">Régimen B · rebaja la base del impuesto único</option>
+                        </select>
                     </div>
 
                 </div>

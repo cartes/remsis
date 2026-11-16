@@ -234,8 +234,8 @@
                         "first_name", "last_name", "rut", "email", "phone", "birth_date", "nationality",
                         "marital_status", "address", "position", "hire_date", "contract_type", "work_schedule",
                         "work_schedule_type", "part_time_hours", "part_time_schedule",
-                        "cost_center_id", "afp_id", "isapre_id", "ccaf_id", "health_contribution", "apv_amount",
-                        "salary", "salary_type", "num_dependents", "bank_id", "bank_account_number",
+                        "cost_center_id", "afp_id", "isapre_id", "ccaf_id", "health_contribution", "health_contribution_unit", "apv_amount", "apv_regime",
+                        "salary", "salary_type", "num_dependents", "family_allowance_bracket", "bank_id", "bank_account_number",
                         "bank_account_type", "emergency_contact_name", "emergency_contact_phone", "status", "is_in_payroll"
                     ],
                     afps: @json($afps),
@@ -284,7 +284,10 @@
                         isapre_id: "",
                         ccaf_id: "",
                         health_contribution: "",
+                        health_contribution_unit: "UF",
                         apv_amount: "",
+                        apv_regime: "A",
+                        family_allowance_bracket: "",
                         salary: "",
                         salary_type: "",
                         contract_type: "",
@@ -525,8 +528,8 @@
                     sectionFields: {
                         personal: ['first_name', 'last_name', 'rut', 'birth_date', 'email', 'phone', 'nationality', 'marital_status', 'address', 'profile_photo'],
                         laboral: ['position', 'hire_date', 'contract_type', 'work_schedule_type', 'part_time_hours', 'cost_center_id'],
-                        prevision: ['afp_id', 'isapre_id', 'ccaf_id', 'health_contribution', 'apv_amount'],
-                        remuneracion: ['salary', 'salary_type', 'num_dependents'],
+                        prevision: ['afp_id', 'isapre_id', 'ccaf_id', 'health_contribution', 'health_contribution_unit', 'apv_amount', 'apv_regime'],
+                        remuneracion: ['salary', 'salary_type', 'num_dependents', 'family_allowance_bracket'],
                         banco: ['bank_id', 'bank_account_number', 'bank_account_type'],
                         emergencia: ['emergency_contact_name', 'emergency_contact_phone']
                     },

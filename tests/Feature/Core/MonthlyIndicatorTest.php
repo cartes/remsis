@@ -26,8 +26,8 @@ class MonthlyIndicatorTest extends TestCase
 
         // AFP Habitat: 10% obligatorio + 1.27% comisión = 11.27%
         $this->assertSame(11.27, $indicator->getAfpRate('habitat'));
-        // AFP Uno: 10% obligatorio + 0.49% comisión = 10.49%
-        $this->assertSame(10.49, $indicator->getAfpRate('uno'));
+        // AFP Uno: 10% obligatorio + 0.46% comisión = 10.46%
+        $this->assertSame(10.46, $indicator->getAfpRate('uno'));
     }
 
     public function test_monthly_indicator_calculates_caps_and_taxes_rounded_to_zero_decimals(): void
@@ -42,11 +42,11 @@ class MonthlyIndicatorTest extends TestCase
             'imm_value' => 510636,
         ]);
 
-        // Tope AFP: 84.3 UF * 38.400 = 3.237.120 CLP
-        $this->assertSame(3237120.0, $indicator->getAfpCapClp());
+        // Tope AFP: 90 UF * 38.500 (UF del último día del mes) = 3.465.000 CLP
+        $this->assertSame(3465000.0, $indicator->getAfpCapClp());
 
-        // Tope AFC: 126.6 UF * 38.400 = 4.861.440 CLP
-        $this->assertSame(4861440.0, $indicator->getAfcCapClp());
+        // Tope AFC: 135,2 UF * 38.500 = 5.205.200 CLP
+        $this->assertSame(5205200.0, $indicator->getAfcCapClp());
 
         // Tope Gratificación Art. 50: (510.636 * 4.75) / 12 = 202.127 CLP
         $this->assertSame(202127.0, $indicator->getGratificationCapClp());
@@ -58,9 +58,9 @@ class MonthlyIndicatorTest extends TestCase
         $this->assertSame(17680.0, $indicator->calculateIut(1360000));
 
         // Asignación familiar Tramo A, B, C, D
-        $this->assertSame(21243.0, $indicator->getFamilyAllowancePerDependent(510636));
-        $this->assertSame(13036.0, $indicator->getFamilyAllowancePerDependent(750000));
-        $this->assertSame(4119.0, $indicator->getFamilyAllowancePerDependent(1100000));
+        $this->assertSame(22601.0, $indicator->getFamilyAllowancePerDependent(510636));
+        $this->assertSame(13870.0, $indicator->getFamilyAllowancePerDependent(750000));
+        $this->assertSame(4382.0, $indicator->getFamilyAllowancePerDependent(1100000));
         $this->assertSame(0.0, $indicator->getFamilyAllowancePerDependent(2000000));
     }
 }

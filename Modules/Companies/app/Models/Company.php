@@ -68,6 +68,7 @@ class Company extends Model
         'slug',
         'economic_activity_id',
         'payment_frequency',
+        'vacation_days_per_year',
     ];
 
     protected $casts = [
@@ -151,6 +152,11 @@ class Company extends Model
     public function dayRequests()
     {
         return $this->hasMany(AdministrativeDayRequest::class);
+    }
+
+    public function vacationRequests()
+    {
+        return $this->hasMany(\Modules\Employees\Models\VacationRequest::class);
     }
 
     public function taxableItems()

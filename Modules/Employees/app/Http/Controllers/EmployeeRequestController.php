@@ -126,14 +126,18 @@ class EmployeeRequestController extends Controller
     /**
      * Cancel a pending administrative day request.
      */
-    public function cancel(Request $request, AdministrativeDayRequest $dayRequest)
+    public function cancel(Request $request, int $dayRequest)
     {
         $user = auth()->user();
         $employee = $user->employee;
 
-        if (!$employee || $dayRequest->employee_id !== $employee->id) {
+        if (! $employee) {
             abort(403, 'No autorizado.');
         }
+
+        // Se busca dentro de las solicitudes propias: el enlace implícito de ruta se resuelve
+        // antes de que el portal fije el contexto de la empresa del colaborador.
+        $dayRequest = AdministrativeDayRequest::where('employee_id', $employee->id)->findOrFail($dayRequest);
 
         if ($dayRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'Solo se pueden cancelar solicitudes en estado pendiente.');

@@ -4,6 +4,61 @@
 @endphp
 
 <div class="space-y-8">
+    {{-- Vacaciones pendientes --}}
+    <div>
+        <div class="mb-4">
+            <h3 class="text-lg font-bold text-gray-800">Vacaciones por aprobar</h3>
+            <p class="text-sm text-gray-500">Solicitudes de feriado ingresadas por los colaboradores desde su portal.</p>
+        </div>
+
+        @if (($pendingVacations ?? collect())->isEmpty())
+            <div class="text-center py-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                <p class="text-sm font-semibold text-slate-500">No hay vacaciones pendientes de aprobación</p>
+            </div>
+        @else
+            <div class="overflow-x-auto border border-slate-150 rounded-xl bg-white shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="px-6 py-3.5">Colaborador</th>
+                            <th class="px-6 py-3.5">Período</th>
+                            <th class="px-6 py-3.5">Días hábiles</th>
+                            <th class="px-6 py-3.5">Comentarios</th>
+                            <th class="px-6 py-3.5 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        @foreach ($pendingVacations as $vacation)
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-slate-800">{{ $vacation->employee->full_name }}</div>
+                                    <div class="text-xs text-slate-400 font-mono">{{ $vacation->employee->rut }}</div>
+                                </td>
+                                <td class="px-6 py-4 font-semibold text-slate-700 whitespace-nowrap">
+                                    {{ $vacation->start_date->format('d/m/Y') }} – {{ $vacation->end_date->format('d/m/Y') }}
+                                </td>
+                                <td class="px-6 py-4 text-slate-700">{{ \Modules\Employees\Services\VacationService::formatDays($vacation->working_days) }}</td>
+                                <td class="px-6 py-4 text-xs text-slate-600 max-w-sm truncate" title="{{ $vacation->notes }}">{{ $vacation->notes ?? '—' }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="inline-flex items-center gap-2">
+                                        <form action="{{ route('companies.employees.vacations.approve', [$company, $vacation->employee, $vacation]) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Aprobar</button>
+                                        </form>
+                                        <a href="{{ route('companies.employees.edit', [$company, $vacation->employee]) }}"
+                                            class="inline-flex items-center bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Ver saldo o rechazar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    <hr class="border-slate-100">
+
     {{-- Solicitudes Pendientes --}}
     <div>
         <div class="mb-4">

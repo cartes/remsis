@@ -512,9 +512,39 @@
                                             </select>
                                         </div>
                                         <div x-show="healthSystem === 'isapre'" class="col-span-1" x-transition>
-                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Monto Plan ($)</label>
-                                            <input type="number" name="health_contribution" value="{{ old('health_contribution', $employee->health_contribution) }}"
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Plan pactado</label>
+                                            <div class="flex gap-2">
+                                                <input type="number" step="0.001" min="0" name="health_contribution" value="{{ old('health_contribution', $employee->health_contribution) }}"
+                                                    class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <select name="health_contribution_unit" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                    @foreach (\Modules\Employees\Models\Employee::HEALTH_UNITS as $unit => $unitLabel)
+                                                        <option value="{{ $unit }}" @selected(old('health_contribution_unit', $employee->health_contribution_unit ?? 'UF') === $unit)>{{ $unitLabel }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <p class="mt-1 text-[11px] text-slate-400">Se descuenta el mayor valor entre el plan y el 7% legal.</p>
+                                        </div>
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">APV mensual ($)</label>
+                                            <input type="number" min="0" name="apv_amount" value="{{ old('apv_amount', $employee->apv_amount) }}"
                                                 class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                        </div>
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Régimen APV</label>
+                                            <select name="apv_regime" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                @foreach (\Modules\Employees\Models\Employee::APV_REGIMES as $regime => $regimeLabel)
+                                                    <option value="{{ $regime }}" @selected(old('apv_regime', $employee->apv_regime ?? 'A') === $regime)>{{ $regimeLabel }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-span-1">
+                                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tramo asignación familiar</label>
+                                            <select name="family_allowance_bracket" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900/5 transition-all">
+                                                <option value="">Automático (según renta del mes)</option>
+                                                @foreach (\Modules\Employees\Models\Employee::FAMILY_ALLOWANCE_BRACKETS as $bracket)
+                                                    <option value="{{ $bracket }}" @selected(old('family_allowance_bracket', $employee->family_allowance_bracket) === $bracket)>Tramo {{ $bracket }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
 
@@ -813,26 +843,50 @@
                                     <div class="space-y-2">
                                         <p class="text-[9px] font-bold text-slate-300 uppercase italic">Descuentos
                                             Previsionales</p>
-                                        <div class="flex justify-between text-sm">
-                                            <span class="text-slate-600">Cotización AFP
-                                                ({{ $employee->afp?->nombre ?? 'AFP' }})</span>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.afp_amount > 0">
+                                            <span class="text-slate-600">Cotización AFP ({{ $employee->afp?->nombre ?? 'AFP' }})</span>
                                             <span class="font-mono font-bold text-red-600"
-                                                x-text="formatCLP(selectedPayslip?.total_deductions * 0.7)"></span>
+                                                x-text="formatCLP(selectedPayslip?.afp_amount)"></span>
                                         </div>
-                                        <div class="flex justify-between text-sm">
-                                            <span class="text-slate-600">Cotización Salud
-                                                ({{ $employee->health_system === 'fonasa' ? 'FONASA' : 'ISAPRE' }})</span>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.isapre_amount > 0">
+                                            <span class="text-slate-600">Cotización Salud ({{ $employee->health_system === 'isapre' ? 'ISAPRE' : 'FONASA' }})</span>
                                             <span class="font-mono font-bold text-red-600"
-                                                x-text="formatCLP(selectedPayslip?.total_deductions * 0.3)"></span>
+                                                x-text="formatCLP(selectedPayslip?.isapre_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.cesantia_amount > 0">
+                                            <span class="text-slate-600">Seguro de cesantía</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(selectedPayslip?.cesantia_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.impuesto_unico_amount > 0">
+                                            <span class="text-slate-600">Impuesto único</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(selectedPayslip?.impuesto_unico_amount)"></span>
                                         </div>
                                     </div>
                                     {{-- Otros --}}
                                     <div class="space-y-2 pt-2">
                                         <p class="text-[9px] font-bold text-slate-300 uppercase italic">Otros
                                             Descuentos</p>
-                                        <div class="flex justify-between text-sm">
-                                            <span class="text-slate-600">Préstamos / Otros</span>
-                                            <span class="font-mono text-slate-400 italic">$ 0</span>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.apv_amount > 0">
+                                            <span class="text-slate-600">APV</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(selectedPayslip?.apv_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.anticipos_amount > 0">
+                                            <span class="text-slate-600">Anticipos</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(selectedPayslip?.anticipos_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm" x-show="selectedPayslip?.creditos_amount > 0">
+                                            <span class="text-slate-600">Créditos</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(selectedPayslip?.creditos_amount)"></span>
+                                        </div>
+                                        <div class="flex justify-between text-sm" x-show="((selectedPayslip?.total_deductions || 0) - (selectedPayslip?.afp_amount || 0) - (selectedPayslip?.isapre_amount || 0) - (selectedPayslip?.cesantia_amount || 0) - (selectedPayslip?.impuesto_unico_amount || 0) - (selectedPayslip?.apv_amount || 0) - (selectedPayslip?.anticipos_amount || 0) - (selectedPayslip?.creditos_amount || 0)) > 0">
+                                            <span class="text-slate-600">Otros descuentos</span>
+                                            <span class="font-mono font-bold text-red-600"
+                                                x-text="formatCLP(((selectedPayslip?.total_deductions || 0) - (selectedPayslip?.afp_amount || 0) - (selectedPayslip?.isapre_amount || 0) - (selectedPayslip?.cesantia_amount || 0) - (selectedPayslip?.impuesto_unico_amount || 0) - (selectedPayslip?.apv_amount || 0) - (selectedPayslip?.anticipos_amount || 0) - (selectedPayslip?.creditos_amount || 0)))"></span>
                                         </div>
                                     </div>
                                 </div>

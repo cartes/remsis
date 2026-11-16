@@ -22,9 +22,7 @@ use Throwable;
  */
 class MonthlyIndicatorSyncService
 {
-    public function __construct(private MindicadorApiService $mindicadorApi)
-    {
-    }
+    public function __construct(private MindicadorApiService $mindicadorApi) {}
 
     /**
      * Sincroniza los indicadores para un período mensual en formato YYYY-MM.
@@ -35,7 +33,7 @@ class MonthlyIndicatorSyncService
             ? CarbonImmutable::createFromFormat('Y-m', $period, 'America/Santiago')->startOfMonth()
             : CarbonImmutable::now('America/Santiago')->startOfMonth();
 
-        if (!$targetDate) {
+        if (! $targetDate) {
             throw new RuntimeException('El período especificado no es válido. Use el formato YYYY-MM.');
         }
 
@@ -49,18 +47,16 @@ class MonthlyIndicatorSyncService
             $endOfPreviousMonth
         );
 
-        $afpRates = $this->buildAfpRatesPayload();
+        $afpRates = $this->buildAfpRatesPayload($periodKey);
         $iutBrackets = $this->buildDefaultIutBrackets();
-        $familyBrackets = $this->buildDefaultFamilyAllowanceBrackets();
+        $familyBrackets = $this->buildDefaultFamilyAllowanceBrackets($periodKey);
+        $legalRates = $this->legalRatesFor($periodKey);
+        $legalWeeklyHours = $this->legalWeeklyHoursFor($periodKey);
 
-        $legalWeeklyHours = (int) $targetDate->format('Y') >= 2028
-            ? 40
-            : ((int) $targetDate->format('Y') >= 2026 ? 42 : 44);
-
-        return DB::transaction(function () use ($periodKey, $targetDate, $ufValue, $ufPreviousMonth, $utmValue, $ipcValue, $legalWeeklyHours, $afpRates, $iutBrackets, $familyBrackets, $source): MonthlyIndicator {
+        return DB::transaction(function () use ($periodKey, $targetDate, $ufValue, $ufPreviousMonth, $utmValue, $ipcValue, $legalRates, $legalWeeklyHours, $afpRates, $iutBrackets, $familyBrackets, $source): MonthlyIndicator {
             $indicator = MonthlyIndicator::query()->updateOrCreate(
                 ['period' => $periodKey],
-                [
+                $legalRates + [
                     'year' => (int) $targetDate->format('Y'),
                     'month' => (int) $targetDate->format('n'),
                     'uf_value' => round($ufValue, 2),
@@ -68,19 +64,6 @@ class MonthlyIndicatorSyncService
                     'utm_value' => round($utmValue, 2),
                     'uta_value' => round($utmValue * 12, 2),
                     'ipc_value' => round($ipcValue, 2),
-                    'imm_value' => 510636,
-                    'imm_under_18_over_65' => 380923,
-                    'imm_non_remunerational' => 329151,
-                    'cap_afp_uf' => 84.30,
-                    'cap_ips_uf' => 60.00,
-                    'cap_afc_uf' => 126.60,
-                    'sis_rate' => 1.49,
-                    'afc_indefinite_employee_rate' => 0.60,
-                    'afc_indefinite_employer_rate' => 2.40,
-                    'afc_fixed_employer_rate' => 3.00,
-                    'mutual_base_rate' => 0.90,
-                    'sanna_rate' => 0.03,
-                    'cesantia_pensionados_employer_rate' => 0.10,
                     'legal_weekly_hours' => $legalWeeklyHours,
                     'afp_rates' => $afpRates,
                     'iut_brackets' => $iutBrackets,
@@ -178,49 +161,111 @@ class MonthlyIndicatorSyncService
     }
 
     /**
-     * Construye el catálogo de tasas AFP del período (10% obligatorio + comisión de cada AFP).
+     * Entrada de la tabla de vigencias (config core.legal_indicators) que rige para el período:
+     * la más reciente cuyo inicio no es posterior a él. Los períodos anteriores a la primera
+     * entrada usan esa primera entrada.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
-    public function buildAfpRatesPayload(): array
+    public function legalValuesFor(?string $periodKey = null): array
     {
-        $defaultAfps = [
-            ['afp_code' => 'capital', 'afp_name' => 'AFP Capital', 'mandatory_rate' => 10.00, 'commission_rate' => 1.44],
-            ['afp_code' => 'cuprum', 'afp_name' => 'AFP Cuprum', 'mandatory_rate' => 10.00, 'commission_rate' => 1.44],
-            ['afp_code' => 'habitat', 'afp_name' => 'AFP Habitat', 'mandatory_rate' => 10.00, 'commission_rate' => 1.27],
-            ['afp_code' => 'modelo', 'afp_name' => 'AFP Modelo', 'mandatory_rate' => 10.00, 'commission_rate' => 0.58],
-            ['afp_code' => 'planvital', 'afp_name' => 'AFP PlanVital', 'mandatory_rate' => 10.00, 'commission_rate' => 1.16],
-            ['afp_code' => 'provida', 'afp_name' => 'AFP ProVida', 'mandatory_rate' => 10.00, 'commission_rate' => 1.45],
-            ['afp_code' => 'uno', 'afp_name' => 'AFP Uno', 'mandatory_rate' => 10.00, 'commission_rate' => 0.49],
-        ];
+        $periods = (array) config('core.legal_indicators.periods', []);
+        if ($periods === []) {
+            throw new RuntimeException('No hay parámetros previsionales configurados en core.legal_indicators.');
+        }
 
-        if (Schema::hasTable('afps') && Afp::query()->exists()) {
-            $dbAfps = Afp::query()->get();
-            if ($dbAfps->isNotEmpty()) {
-                return $dbAfps->map(static function (Afp $afp): array {
-                    $mandatory = (float) ($afp->rate > 0 ? $afp->rate : 10.00);
-                    $commission = (float) ($afp->commission ?? 0.00);
-                    $total = round($mandatory + $commission, 2);
+        ksort($periods);
+        $periodKey ??= CarbonImmutable::now('America/Santiago')->format('Y-m');
 
-                    return [
-                        'afp_code' => (string) ($afp->code ?: mb_strtolower(str_replace(' ', '_', $afp->nombre))),
-                        'afp_name' => (string) $afp->nombre,
-                        'mandatory_rate' => $mandatory,
-                        'commission_rate' => $commission,
-                        'total_rate' => $total,
-                        'independent_rate' => round($total + 1.49, 2),
-                    ];
-                })->values()->all();
+        $applicable = reset($periods);
+        foreach ($periods as $from => $values) {
+            if ($from <= $periodKey) {
+                $applicable = $values;
             }
         }
 
-        return array_map(static function (array $item): array {
-            $total = round($item['mandatory_rate'] + $item['commission_rate'], 2);
-            $item['total_rate'] = $total;
-            $item['independent_rate'] = round($total + 1.49, 2);
+        return $applicable;
+    }
 
-            return $item;
-        }, $defaultAfps);
+    /**
+     * Rentas mínimas, topes y tasas del período, listos para guardar en `monthly_indicators`.
+     *
+     * @return array<string, float|int>
+     */
+    public function legalRatesFor(?string $periodKey = null): array
+    {
+        return array_filter(
+            $this->legalValuesFor($periodKey),
+            static fn ($value): bool => is_int($value) || is_float($value)
+        );
+    }
+
+    /**
+     * Jornada ordinaria máxima semanal (Ley 21.561): 44 h desde el 26-04-2024,
+     * 42 h desde el 26-04-2026 y 40 h desde el 26-04-2028. Se aplica desde el mes siguiente al cambio.
+     */
+    public function legalWeeklyHoursFor(string $periodKey): int
+    {
+        return match (true) {
+            $periodKey >= '2028-05' => 40,
+            $periodKey >= '2026-05' => 42,
+            $periodKey >= '2024-05' => 44,
+            default => 45,
+        };
+    }
+
+    /**
+     * Clave comparable de una AFP: "AFP PlanVital" y "planvital" producen "planvital".
+     */
+    public static function afpKey(?string $codeOrName): string
+    {
+        $key = mb_strtolower(trim((string) $codeOrName));
+        $key = (string) preg_replace('/^afp[\s_-]*/', '', $key);
+
+        return (string) preg_replace('/[^a-z0-9]/', '', $key);
+    }
+
+    /**
+     * Construye el catálogo de tasas AFP del período (10% obligatorio + comisión de cada AFP).
+     * La comisión sale del catálogo de AFP si está informada; si no, de la tabla de vigencias.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function buildAfpRatesPayload(?string $periodKey = null): array
+    {
+        $legal = $this->legalValuesFor($periodKey);
+        $commissions = (array) ($legal['afp_commissions'] ?? []);
+        $sisRate = (float) ($legal['sis_rate'] ?? 0);
+
+        $build = static function (string $code, string $name, float $mandatory, float $commission) use ($sisRate): array {
+            $total = round($mandatory + $commission, 2);
+
+            return [
+                'afp_code' => $code,
+                'afp_name' => $name,
+                'mandatory_rate' => $mandatory,
+                'commission_rate' => $commission,
+                'total_rate' => $total,
+                'independent_rate' => round($total + $sisRate, 2),
+            ];
+        };
+
+        $dbAfps = Schema::hasTable('afps') ? Afp::query()->get() : collect();
+        if ($dbAfps->isNotEmpty()) {
+            return $dbAfps->map(static function (Afp $afp) use ($build, $commissions): array {
+                $key = self::afpKey($afp->code ?: $afp->nombre);
+                $commission = $afp->commission > 0 ? (float) $afp->commission : (float) ($commissions[$key] ?? 0.0);
+
+                return $build($key, (string) $afp->nombre, (float) ($afp->rate > 0 ? $afp->rate : 10.00), $commission);
+            })->unique('afp_code')->values()->all();
+        }
+
+        $rates = [];
+        foreach ($commissions as $key => $commission) {
+            $rates[] = $build((string) $key, 'AFP '.ucfirst((string) $key), 10.00, (float) $commission);
+        }
+
+        return $rates;
     }
 
     /**
@@ -299,38 +344,13 @@ class MonthlyIndicatorSyncService
     }
 
     /**
-     * Tabla oficial de 4 tramos de Asignación Familiar (DFL N° 150) en CLP.
+     * Tramos de Asignación Familiar (DFL N° 150) en CLP vigentes en el período.
      *
      * @return array<int, array<string, mixed>>
      */
-    public function buildDefaultFamilyAllowanceBrackets(): array
+    public function buildDefaultFamilyAllowanceBrackets(?string $periodKey = null): array
     {
-        return [
-            [
-                'bracket_letter' => 'A',
-                'income_from' => 0,
-                'income_to' => 598698,
-                'amount_per_dependent' => 21243,
-            ],
-            [
-                'bracket_letter' => 'B',
-                'income_from' => 598699,
-                'income_to' => 874460,
-                'amount_per_dependent' => 13036,
-            ],
-            [
-                'bracket_letter' => 'C',
-                'income_from' => 874461,
-                'income_to' => 1363858,
-                'amount_per_dependent' => 4119,
-            ],
-            [
-                'bracket_letter' => 'D',
-                'income_from' => 1363859,
-                'income_to' => null,
-                'amount_per_dependent' => 0,
-            ],
-        ];
+        return array_values((array) ($this->legalValuesFor($periodKey)['family_allowance'] ?? []));
     }
 
     /**
@@ -342,6 +362,9 @@ class MonthlyIndicatorSyncService
         array $iutBrackets,
         array $familyBrackets
     ): void {
+        // Elimina tasas de AFP guardadas con un código que ya no se usa.
+        $indicator->afpRateRecords()->whereNotIn('afp_code', array_column($afpRates, 'afp_code'))->delete();
+
         foreach ($afpRates as $rate) {
             $indicator->afpRateRecords()->updateOrCreate(
                 ['afp_code' => $rate['afp_code']],
@@ -369,7 +392,7 @@ class MonthlyIndicatorSyncService
      */
     protected function syncLegacyLegalParameters(MonthlyIndicator $indicator): void
     {
-        if (!Schema::hasTable('legal_parameters')) {
+        if (! Schema::hasTable('legal_parameters')) {
             return;
         }
 

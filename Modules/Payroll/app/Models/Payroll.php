@@ -67,6 +67,9 @@ class Payroll extends Model
         'employer_sis_amount',
         'employer_afc_amount',
         'employer_mutual_amount',
+        'employer_afp_amount',
+        'employer_social_security_amount',
+        'descuentos_exceso_amount',
         'total_deductions',
         'net_salary',
         'payment_date',
@@ -75,6 +78,19 @@ class Payroll extends Model
         'processed_by',
         'notes',
     ];
+
+    /**
+     * Una liquidación queda emitida —y visible para el colaborador— cuando su período está cerrado o pagado.
+     * Antes de eso los montos todavía pueden cambiar con un recálculo.
+     */
+    public const ISSUED_PERIOD_STATUSES = [PayrollPeriod::STATUS_CLOSED, PayrollPeriod::STATUS_PAID];
+
+    public function scopeIssued($query)
+    {
+        return $query->whereHas('period', fn ($period) => $period
+            ->withoutGlobalScopes()
+            ->whereIn('status', self::ISSUED_PERIOD_STATUSES));
+    }
 
     public function employee()
     {

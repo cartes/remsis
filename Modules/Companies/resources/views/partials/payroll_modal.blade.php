@@ -413,8 +413,7 @@
                     </template>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Monto Adicional
-                        Salud</label>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Plan Isapre pactado</label>
                     <input type="number" step="0.01" x-model="selectedEmployee.health_contribution"
                         :class="errors.health_contribution ? 'border-red-500 ring-red-100' : 'border-gray-200'"
                         class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
@@ -422,6 +421,14 @@
                     <template x-if="errors.health_contribution">
                         <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.health_contribution[0]"></p>
                     </template>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Unidad del plan</label>
+                    <select x-model="selectedEmployee.health_contribution_unit" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="UF">UF</option>
+                        <option value="CLP">Pesos ($)</option>
+                        <option value="PERCENTAGE">% de la renta imponible</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Caja de Compensación
@@ -448,6 +455,13 @@
                     <template x-if="errors.apv_amount">
                         <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.apv_amount[0]"></p>
                     </template>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Régimen APV</label>
+                    <select x-model="selectedEmployee.apv_regime" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="A">A · bonificación fiscal</option>
+                        <option value="B">B · rebaja impuesto único</option>
+                    </select>
                 </div>
             </div>
 
@@ -486,6 +500,16 @@
                     <template x-if="errors.num_dependents">
                         <p class="text-[10px] text-red-500 font-bold mt-1" x-text="errors.num_dependents[0]"></p>
                     </template>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tramo Asignación Familiar</label>
+                    <select x-model="selectedEmployee.family_allowance_bracket" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="">Automático (renta del mes)</option>
+                        <option value="A">Tramo A</option>
+                        <option value="B">Tramo B</option>
+                        <option value="C">Tramo C</option>
+                        <option value="D">Tramo D</option>
+                    </select>
                 </div>
             </div>
 

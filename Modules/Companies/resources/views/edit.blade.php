@@ -647,6 +647,18 @@
                                             class="fas fa-exclamation-circle"></i>{{ $message }}</p>
                                 @enderror
                             </div>
+                            {{-- Feriado anual --}}
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Días de vacaciones por año</label>
+                                <input type="number" name="vacation_days_per_year" min="15" max="30" step="0.5" required
+                                    value="{{ old('vacation_days_per_year', (float) ($company->vacation_days_per_year ?? 15)) }}"
+                                    class="w-full border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                                <p class="text-xs text-gray-500 mt-1">Días hábiles por año de servicio. El mínimo legal es 15; son 20 en
+                                    Magallanes, Aysén y Palena (Art. 67 del Código del Trabajo).</p>
+                                @error('vacation_days_per_year')
+                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                             <div x-show="hoursDiscrepancy" x-transition
                                 class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
                                 <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>

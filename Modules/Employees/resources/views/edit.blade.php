@@ -536,15 +536,19 @@
 
                         <div x-show="healthSystem === 'isapre'" x-transition>
                             <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
-                                Valor Plan de Salud <span class="text-slate-400 font-medium normal-case">(CLP)</span>
+                                Valor Plan de Salud
                             </label>
+                            <select name="health_contribution_unit"
+                                class="w-full mb-2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
+                                @foreach (\Modules\Employees\Models\Employee::HEALTH_UNITS as $unit => $unitLabel)
+                                    <option value="{{ $unit }}" @selected(old('health_contribution_unit', $employee->health_contribution_unit ?? 'UF') === $unit)>{{ $unitLabel }}</option>
+                                @endforeach
+                            </select>
                             <div class="relative">
-                                <span
-                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">$</span>
-                                <input type="number" name="health_contribution"
+                                <input type="number" step="0.001" name="health_contribution"
                                     value="{{ old('health_contribution', $employee->health_contribution) }}"
                                     placeholder="0" min="0"
-                                    class="w-full pl-7 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('health_contribution') border-red-400 bg-red-50 @enderror">
+                                    class="w-full pl-3.5 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all @error('health_contribution') border-red-400 bg-red-50 @enderror">
                             </div>
                             @error('health_contribution')
                                 <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
@@ -618,6 +622,18 @@
                             @error('apv_amount')
                                 <p class="text-xs text-red-500 mt-1 font-semibold">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 uppercase tracking-wider mb-1.5">
+                                Régimen APV
+                            </label>
+                            <select name="apv_regime"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
+                                @foreach (\Modules\Employees\Models\Employee::APV_REGIMES as $regime => $regimeLabel)
+                                    <option value="{{ $regime }}" @selected(old('apv_regime', $employee->apv_regime ?? 'A') === $regime)>{{ $regimeLabel }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                     </div>{{-- /grid --}}

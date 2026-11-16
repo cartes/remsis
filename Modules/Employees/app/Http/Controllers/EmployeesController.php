@@ -110,6 +110,8 @@ class EmployeesController extends Controller
             'afp_id'              => ['nullable', 'exists:afps,id'],
             'contract_type'       => ['nullable', Rule::in(['indefinido', 'plazo_fijo', 'obra_faena', 'honorarios'])],
             'apv_amount'          => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'health_contribution_unit' => ['nullable', Rule::in(['UF', 'CLP', 'PERCENTAGE'])],
+            'apv_regime'          => ['nullable', Rule::in(['A', 'B'])],
         ], [], [
             'health_system'       => 'sistema de salud',
             'isapre_id'           => 'Isapre',

@@ -564,6 +564,12 @@
                                                                     <span class="text-red-500"
                                                                         x-text="'-$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.creditos_amount))"></span>
                                                                 </div>
+                                                                <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 mt-2"
+                                                                    x-show="Number(selectedLine.descuentos_exceso_amount) > 0">
+                                                                    Los descuentos voluntarios superan el 15% de la remuneración (Art. 58 del Código del Trabajo) en
+                                                                    <span class="font-bold" x-text="'$' + new Intl.NumberFormat('es-CL').format(Math.round(selectedLine.descuentos_exceso_amount))"></span>.
+                                                                    Revisa que cada uno tenga respaldo legal o acuerdo escrito.
+                                                                </p>
                                                             </div>
 
                                                             <!-- Final Payment Summary -->

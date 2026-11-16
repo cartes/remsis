@@ -61,6 +61,9 @@ class CompanyEmployeeController extends Controller
             'health_contribution' => 'nullable|numeric|min:0',
             'ccaf_id'             => 'nullable|exists:ccafs,id',
             'apv_amount'          => 'nullable|numeric|min:0',
+            'health_contribution_unit' => 'nullable|in:UF,CLP,PERCENTAGE',
+            'apv_regime' => 'nullable|in:A,B',
+            'family_allowance_bracket' => 'nullable|in:A,B,C,D',
             // Remuneraciones
             'salary'              => 'nullable|numeric|min:0',
             'salary_type'         => 'nullable|in:mensual,quincenal,semanal',
@@ -199,6 +202,9 @@ class CompanyEmployeeController extends Controller
             'ccaf_id' => 'nullable|exists:ccafs,id',
             'health_contribution' => 'nullable|numeric|min:0',
             'apv_amount' => 'nullable|numeric|min:0',
+            'health_contribution_unit' => 'nullable|in:UF,CLP,PERCENTAGE',
+            'apv_regime' => 'nullable|in:A,B',
+            'family_allowance_bracket' => 'nullable|in:A,B,C,D',
 
             // Remuneración
             'salary' => 'nullable|numeric|min:0',
@@ -309,14 +315,22 @@ class CompanyEmployeeController extends Controller
             $employee->syncActiveContract();
         }
 
+        // Un anexo con vigencia futura se refleja en la ficha cuando llega su fecha.
+        app(\Modules\Employees\Services\EmploymentContractService::class)->applyVersionInForce($employee);
+
         $employee->load([
-            'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'activeContract', 'contracts', 'employeeItems.item.lreConcept',
+            'user', 'afp', 'isapre', 'bank', 'ccaf', 'costCenter', 'activeContract', 'employeeItems.item.lreConcept',
             'payrolls'    => fn ($q) => $q->orderByDesc('period_year')->orderByDesc('period_month'),
             'documents'   => fn ($q) => $q->latest(),
             'logs'        => fn ($q) => $q->latest(),
             'logs.user',
             'attendances' => fn ($q) => $q->orderBy('date', 'desc'),
+            'contracts' => fn ($q) => $q->orderByDesc('valid_from')->orderByDesc('id'),
+            'vacationRequests' => fn ($q) => $q->orderByDesc('start_date'),
+            'vacationRequests.resolver',
         ]);
+
+        $vacationBalance = app(\Modules\Employees\Services\VacationService::class)->balance($employee);
 
         $afps        = \Modules\AdminPanel\Models\Afp::orderBy('nombre')->get();
         $isapres     = \Modules\AdminPanel\Models\Isapre::orderBy('nombre')->get();
@@ -334,7 +348,7 @@ class CompanyEmployeeController extends Controller
         }
 
         return view('companies::employees.edit', compact(
-            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels', 'administrativeDayBalance'
+            'company', 'employee', 'afps', 'isapres', 'ccafs', 'bancos', 'costCenters', 'catalogItems', 'fieldLabels', 'administrativeDayBalance', 'vacationBalance'
         ));
     }
 
@@ -375,6 +389,9 @@ class CompanyEmployeeController extends Controller
                 'health_contribution' => 'nullable|numeric|min:0',
                 'ccaf_id'             => 'nullable|exists:ccafs,id',
                 'apv_amount'          => 'nullable|numeric|min:0',
+                'health_contribution_unit' => 'nullable|in:UF,CLP,PERCENTAGE',
+                'apv_regime'          => 'nullable|in:A,B',
+                'family_allowance_bracket' => 'nullable|in:A,B,C,D',
             ],
             'remuneraciones' => [
                 'salary'              => 'nullable|numeric|min:0',
@@ -403,14 +420,26 @@ class CompanyEmployeeController extends Controller
     /**
      * Descarga la liquidación de sueldo del empleado.
      */
-    public function downloadPayroll(Company $company, Employee $employee, \Modules\Payroll\Models\Payroll $payroll)
-    {
+    public function downloadPayroll(
+        Request $request,
+        Company $company,
+        Employee $employee,
+        \Modules\Payroll\Models\Payroll $payroll,
+        \Modules\Payroll\Services\PayslipService $payslips
+    ) {
         $this->authorizeCompanyAccess($company, 'viewPayroll');
 
-        abort_unless($payroll->employee_id === $employee->id, 404);
+        abort_unless(
+            (int) $payroll->employee_id === (int) $employee->id
+                && (int) $employee->company_id === (int) $company->id
+                && (int) $payroll->company_id === (int) $company->id,
+            404
+        );
 
-        // POR HACER: integrar librería PDF (ej. barryvdh/laravel-dompdf) y renderizar la liquidación
-        abort(501, 'Generación de PDF pendiente de implementación.');
+        $pdf = $payslips->pdf($payroll);
+        $filename = $payslips->filename($payroll);
+
+        return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }
 
     // -------------------------------------------------------------------------

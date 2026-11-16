@@ -20,13 +20,13 @@ class MonthlyIndicatorSeeder extends Seeder
         $now = CarbonImmutable::now('America/Santiago');
         $period = $now->format('Y-m');
 
-        $afpRates = $service->buildAfpRatesPayload();
+        $afpRates = $service->buildAfpRatesPayload($period);
         $iutBrackets = $service->buildDefaultIutBrackets();
-        $familyBrackets = $service->buildDefaultFamilyAllowanceBrackets();
+        $familyBrackets = $service->buildDefaultFamilyAllowanceBrackets($period);
 
         $indicator = MonthlyIndicator::query()->updateOrCreate(
             ['period' => $period],
-            [
+            $service->legalRatesFor($period) + [
                 'year' => (int) $now->format('Y'),
                 'month' => (int) $now->format('n'),
                 'uf_value' => 38500.00,
@@ -34,20 +34,7 @@ class MonthlyIndicatorSeeder extends Seeder
                 'utm_value' => 68034.00,
                 'uta_value' => 816408.00,
                 'ipc_value' => 0.40,
-                'imm_value' => 510636,
-                'imm_under_18_over_65' => 380923,
-                'imm_non_remunerational' => 329151,
-                'cap_afp_uf' => 84.30,
-                'cap_ips_uf' => 60.00,
-                'cap_afc_uf' => 126.60,
-                'sis_rate' => 1.49,
-                'afc_indefinite_employee_rate' => 0.60,
-                'afc_indefinite_employer_rate' => 2.40,
-                'afc_fixed_employer_rate' => 3.00,
-                'mutual_base_rate' => 0.90,
-                'sanna_rate' => 0.03,
-                'cesantia_pensionados_employer_rate' => 0.10,
-                'legal_weekly_hours' => 42,
+                'legal_weekly_hours' => $service->legalWeeklyHoursFor($period),
                 'afp_rates' => $afpRates,
                 'iut_brackets' => $iutBrackets,
                 'family_allowance_brackets' => $familyBrackets,

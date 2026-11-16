@@ -74,10 +74,10 @@ window.createEmployeeWizard = function () {
                 work_schedule_type: 'full_time', cost_center_id: '',
                 // Paso 3 — Previsión
                 afp_id: '', health_system: 'fonasa', isapre_id: '',
-                health_contribution: '', ccaf_id: '', apv_amount: '',
+                health_contribution: '', health_contribution_unit: 'UF', ccaf_id: '', apv_amount: '', apv_regime: 'A',
                 // Paso 4 — Sueldo
                 salary: '', salary_type: 'mensual',
-                num_dependents: 0,
+                num_dependents: 0, family_allowance_bracket: '',
                 // Paso 5 — Pago
                 payment_method: 'efectivo',
                 bank_id: '', bank_account_type: 'corriente', bank_account_number: '',

@@ -30,7 +30,7 @@
             $aniosEmpresa = $emp?->hire_date ? $emp->hire_date->diffInYears(now()) : null;
         @endphp
 
-        <div x-data="{ activeTab: '{{ session('success') || $errors->any() ? 'asistencia' : 'resumen' }}', dropdownItemsOpen: false, showRequestModal: {{ $errors->any() ? 'true' : 'false' }} }" @click.away="dropdownItemsOpen = false" class="min-h-screen bg-slate-50">
+        <div x-data="{ activeTab: '{{ session('portal_tab') ?? (session('success') || $errors->any() ? 'asistencia' : 'resumen') }}', dropdownItemsOpen: false, showRequestModal: {{ $errors->any() ? 'true' : 'false' }} }" @click.away="dropdownItemsOpen = false" class="min-h-screen bg-slate-50">
 
             {{-- ══════════════ HEADER ══════════════ --}}
             <div class="bg-white border-b border-slate-200">
@@ -203,6 +203,20 @@
                                         d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 Liquidaciones
+                            </button>
+
+                            {{-- Vacaciones --}}
+                            <button @click="activeTab = 'vacaciones'; dropdownItemsOpen = false"
+                                class="flex items-center gap-1.5 px-4 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors duration-150 focus:outline-none"
+                                :class="activeTab === 'vacaciones'
+                                    ?
+                                    'text-blue-600 border-blue-600' :
+                                    'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                        d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                Vacaciones
                             </button>
 
                             {{-- Asistencia --}}
@@ -428,8 +442,11 @@
                                                 @if ($emp?->health_system === 'isapre')
                                                     {{ optional($emp->isapre)->nombre ?? 'ISAPRE' }}
                                                     @if ($emp->health_contribution)
-                                                        <span class="text-xs font-normal">({{ $emp->health_contribution }}
-                                                            UF)</span>
+                                                        <span class="text-xs font-normal">({{ match ($emp->health_contribution_unit) {
+                                                            'CLP' => '$'.number_format((float) $emp->health_contribution, 0, ',', '.'),
+                                                            'PERCENTAGE' => rtrim(rtrim(number_format((float) $emp->health_contribution, 2, ',', '.'), '0'), ',').'%',
+                                                            default => rtrim(rtrim(number_format((float) $emp->health_contribution, 3, ',', '.'), '0'), ',').' UF',
+                                                        } }})</span>
                                                     @endif
                                                 @else
                                                     {{ $healthLabels[$emp?->health_system ?? ''] ?? '—' }}
@@ -465,116 +482,85 @@
                         </div>
                     </div>
 
-                    {{-- ════ HABERES ════ --}}
-                    <div x-show="activeTab === 'haberes'" x-cloak>
-                        <div class="bg-white rounded-lg shadow-sm p-4 border border-slate-100">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-sm font-bold text-slate-700">Haberes Fijos</h3>
-                                <span
-                                    class="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full font-medium">Próximamente</span>
-                            </div>
-                            <div class="py-12 flex flex-col items-center text-center">
-                                <div class="w-14 h-14 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
-                                    <svg class="w-7 h-7 text-emerald-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm font-semibold text-slate-500">Sin haberes configurados</p>
-                                <p class="text-xs text-slate-400 mt-1 max-w-xs">Aquí aparecerán los bonos fijos,
-                                    asignaciones especiales y otros haberes pactados.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ════ DESCUENTOS ════ --}}
-                    <div x-show="activeTab === 'descuentos'" x-cloak>
-                        <div class="bg-white rounded-lg shadow-sm p-4 border border-slate-100">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-sm font-bold text-slate-700">Descuentos Fijos</h3>
-                                <span
-                                    class="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full font-medium">Próximamente</span>
-                            </div>
-                            <div class="py-12 flex flex-col items-center text-center">
-                                <div class="w-14 h-14 rounded-xl bg-red-50 flex items-center justify-center mb-3">
-                                    <svg class="w-7 h-7 text-red-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm font-semibold text-slate-500">Sin descuentos configurados</p>
-                                <p class="text-xs text-slate-400 mt-1 max-w-xs">Aquí aparecerán los descuentos fijos y
-                                    retenciones pactadas con el colaborador.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ════ CRÉDITOS ════ --}}
-                    <div x-show="activeTab === 'creditos'" x-cloak>
-                        <div class="bg-white rounded-lg shadow-sm p-4 border border-slate-100">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-sm font-bold text-slate-700">Créditos</h3>
-                                <span
-                                    class="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded-full font-medium">Próximamente</span>
-                            </div>
-                            <div class="py-12 flex flex-col items-center text-center">
-                                <div class="w-14 h-14 rounded-xl bg-violet-50 flex items-center justify-center mb-3">
-                                    <svg class="w-7 h-7 text-violet-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                    </svg>
-                                </div>
-                                <p class="text-sm font-semibold text-slate-500">Sin créditos registrados</p>
-                                <p class="text-xs text-slate-400 mt-1 max-w-xs">Aquí aparecerán los créditos sociales,
-                                    préstamos de empresa y cuotas por descontar.</p>
-                            </div>
-                        </div>
-                    </div>
+                    {{-- ════ HABERES / DESCUENTOS / CRÉDITOS ════ --}}
+                    @include('employees::profile._items_tab', [
+                        'tab' => 'haberes',
+                        'title' => 'Haberes Fijos',
+                        'rows' => $itemsByTab['haberes'],
+                        'emptyTitle' => 'Sin haberes configurados',
+                        'emptyText' => 'Aquí aparecerán los bonos fijos, asignaciones especiales y otros haberes pactados.',
+                    ])
+                    @include('employees::profile._items_tab', [
+                        'tab' => 'descuentos',
+                        'title' => 'Descuentos Fijos',
+                        'rows' => $itemsByTab['descuentos'],
+                        'emptyTitle' => 'Sin descuentos configurados',
+                        'emptyText' => 'Aquí aparecerán los descuentos fijos y retenciones pactadas contigo.',
+                    ])
+                    @include('employees::profile._items_tab', [
+                        'tab' => 'creditos',
+                        'title' => 'Créditos',
+                        'rows' => $itemsByTab['creditos'],
+                        'emptyTitle' => 'Sin créditos registrados',
+                        'emptyText' => 'Aquí aparecerán los créditos sociales, préstamos de empresa y cuotas por descontar.',
+                    ])
 
                     {{-- ════ LIQUIDACIONES ════ --}}
                     <div x-show="activeTab === 'liquidaciones'" x-cloak>
                         <div class="bg-white rounded-lg shadow-sm border border-slate-100">
-                            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                            <div class="px-5 py-4 border-b border-slate-100">
                                 <h3 class="text-sm font-bold text-slate-700">Historial de Liquidaciones</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Se publican cuando la empresa cierra el período de remuneraciones.</p>
                             </div>
-                            {{-- Rows mockup --}}
-                            <div class="divide-y divide-slate-50">
-                                @foreach ([['Marzo 2025', '$ 987.340', 'Pagada', 'bg-emerald-100 text-emerald-700'], ['Febrero 2025', '$ 987.340', 'Pagada', 'bg-emerald-100 text-emerald-700'], ['Enero 2025', '$ 982.100', 'Pagada', 'bg-emerald-100 text-emerald-700']] as [$mes, $monto, $estado, $badge])
-                                    <div class="flex items-center gap-4 px-5 py-4 opacity-40">
-                                        <div
-                                            class="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
-                                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-semibold text-slate-700">Liquidación
-                                                {{ $mes }}</p>
-                                            <p class="text-xs text-slate-400">Líquido: {{ $monto }}</p>
-                                        </div>
-                                        <span
-                                            class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $badge }}">{{ $estado }}</span>
-                                        <button class="text-slate-300">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                            </svg>
-                                        </button>
+                            @forelse ($payslips as $slip)
+                                @php
+                                    $paid = $slip->period?->status === \Modules\Payroll\Models\PayrollPeriod::STATUS_PAID;
+                                @endphp
+                                <div class="flex flex-wrap items-center gap-4 px-5 py-4 border-b border-slate-50 last:border-b-0">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
                                     </div>
-                                @endforeach
-                            </div>
-                            <div class="px-5 py-5 text-center">
-                                <p class="text-xs text-slate-400">Las liquidaciones reales estarán disponibles al procesar
-                                    la primera nómina.</p>
-                            </div>
+                                    <div class="flex-1 min-w-[10rem]">
+                                        <p class="text-sm font-semibold text-slate-700">Liquidación
+                                            {{ \Modules\Payroll\Models\PayrollPeriod::MONTH_NAMES[$slip->period_month] ?? '' }}
+                                            {{ $slip->period_year }}</p>
+                                        <p class="text-xs text-slate-400">
+                                            Haberes $ {{ number_format((int) $slip->total_earnings, 0, ',', '.') }}
+                                            · Descuentos $ {{ number_format((int) $slip->total_deductions, 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] font-semibold text-slate-400 uppercase">Líquido</p>
+                                        <p class="text-sm font-black text-slate-900">$
+                                            {{ number_format((int) $slip->net_salary, 0, ',', '.') }}</p>
+                                    </div>
+                                    <span
+                                        class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $paid ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }}">{{ $paid ? 'Pagada' : 'Emitida' }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('employee.payslips.pdf', ['payroll' => $slip->id, 'inline' => 1]) }}"
+                                            target="_blank" rel="noopener"
+                                            class="text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-slate-400 transition-colors">Ver</a>
+                                        <a href="{{ route('employee.payslips.pdf', $slip->id) }}"
+                                            class="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">Descargar
+                                            PDF</a>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="py-12 text-center">
+                                    <p class="text-sm font-semibold text-slate-500">Sin liquidaciones publicadas</p>
+                                    <p class="text-xs text-slate-400 mt-1">Tus liquidaciones aparecerán aquí cuando la empresa cierre
+                                        el período de remuneraciones.</p>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
+
+                    @include('employees::profile._vacations_tab')
 
                     {{-- ════ ASISTENCIA ════ --}}
                     <div x-show="activeTab === 'asistencia'" x-cloak>
@@ -820,34 +806,37 @@
 
                     {{-- ════ DOCUMENTOS ════ --}}
                     <div x-show="activeTab === 'documentos'" x-cloak>
-                        <div class="bg-white rounded-lg shadow-sm p-4 border border-slate-100">
-                            <div class="flex items-center justify-between mb-5">
+                        <div class="bg-white rounded-lg shadow-sm border border-slate-100">
+                            <div class="px-5 py-4 border-b border-slate-100">
                                 <h3 class="text-sm font-bold text-slate-700">Carpeta Digital</h3>
-                                <button
-                                    class="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Subir documento
-                                </button>
+                                <p class="text-xs text-slate-400 mt-0.5">Documentos que la empresa ha cargado en tu ficha.</p>
                             </div>
-                            <div class="grid grid-cols-4 md:grid-cols-6 gap-4 opacity-40">
-                                @foreach (['Contrato.pdf', 'Anexo 1.pdf', 'CI Frente.jpg', 'CI Reverso.jpg', 'AFP Cert.pdf'] as $doc)
+                            @forelse ($documents as $doc)
+                                <div class="flex items-center gap-4 px-5 py-4 border-b border-slate-50 last:border-b-0">
                                     <div
-                                        class="flex flex-col items-center gap-2 p-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 cursor-not-allowed">
-                                        <svg class="w-9 h-9 text-red-300" fill="none" stroke="currentColor"
+                                        class="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                                                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                         </svg>
-                                        <span
-                                            class="text-[10px] text-slate-500 font-medium text-center leading-tight">{{ $doc }}</span>
                                     </div>
-                                @endforeach
-                            </div>
-                            <p class="text-center text-xs text-slate-400 mt-6">La gestión de documentos estará disponible
-                                próximamente.</p>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-slate-700 truncate">{{ $doc->title }}</p>
+                                        <p class="text-xs text-slate-400">{{ $doc->type_label }} ·
+                                            {{ $doc->created_at?->format('d/m/Y') }} · {{ $doc->signature_label }}</p>
+                                    </div>
+                                    <a href="{{ route('employee.documents.download', $doc->id) }}"
+                                        class="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                                        Descargar
+                                    </a>
+                                </div>
+                            @empty
+                                <div class="py-12 text-center">
+                                    <p class="text-sm font-semibold text-slate-500">Sin documentos</p>
+                                    <p class="text-xs text-slate-400 mt-1">Aún no hay documentos cargados en tu carpeta digital.</p>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
 
@@ -859,31 +848,41 @@
                                 <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-100 rounded-full"></div>
                                 <div class="space-y-0">
                                     @php
-                                        $events = [
-                                            [
-                                                'Hoy',
-                                                'Perfil actualizado',
-                                                'Se actualizó la información del colaborador.',
+                                        $iconDoc = 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z';
+                                        $events = collect();
+                                        foreach ($payslips as $slip) {
+                                            $events->push([
+                                                $slip->period?->updated_at,
+                                                'Liquidación '.(\Modules\Payroll\Models\PayrollPeriod::MONTH_NAMES[$slip->period_month] ?? '').' '.$slip->period_year,
+                                                'Líquido a pago: $ '.number_format((int) $slip->net_salary, 0, ',', '.'),
                                                 'bg-blue-500',
-                                                'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-                                            ],
-                                            [
-                                                $emp?->hire_date?->format('d M Y') ?? '—',
+                                                $iconDoc,
+                                            ]);
+                                        }
+                                        foreach ($documents as $doc) {
+                                            $events->push([$doc->created_at, 'Documento cargado', $doc->title, 'bg-amber-500', $iconDoc]);
+                                        }
+                                        if ($emp?->hire_date) {
+                                            $events->push([
+                                                $emp->hire_date,
                                                 'Ingreso a la empresa',
-                                                optional($emp?->company)->name ?? 'Empresa',
+                                                optional($emp->company)->name ?? 'Empresa',
                                                 'bg-emerald-500',
                                                 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745',
-                                            ],
-                                            [
-                                                $emp?->created_at?->format('d M Y') ?? '—',
+                                            ]);
+                                        }
+                                        if ($emp?->created_at) {
+                                            $events->push([
+                                                $emp->created_at,
                                                 'Ficha creada en Remsis',
                                                 'Registro inicial del colaborador.',
                                                 'bg-violet-500',
                                                 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944',
-                                            ],
-                                        ];
+                                            ]);
+                                        }
+                                        $events = $events->filter(fn ($event) => $event[0] !== null)->sortByDesc(fn ($event) => $event[0])->values();
                                     @endphp
-                                    @foreach ($events as [$date, $title, $desc, $color, $icon])
+                                    @forelse ($events as [$date, $title, $desc, $color, $icon])
                                         <div class="relative flex gap-4 pb-7">
                                             <div
                                                 class="absolute -left-6 top-0.5 w-8 h-8 rounded-full {{ $color }} flex items-center justify-center flex-shrink-0 z-10 ring-2 ring-white">
@@ -897,12 +896,14 @@
                                                 <div class="flex items-center gap-2 flex-wrap">
                                                     <p class="text-sm font-semibold text-slate-800">{{ $title }}
                                                     </p>
-                                                    <span class="text-xs text-slate-400">{{ $date }}</span>
+                                                    <span class="text-xs text-slate-400">{{ $date->format('d/m/Y') }}</span>
                                                 </div>
                                                 <p class="text-xs text-slate-500 mt-0.5">{{ $desc }}</p>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <p class="text-xs text-slate-400 pb-4">Aún no hay eventos registrados.</p>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>

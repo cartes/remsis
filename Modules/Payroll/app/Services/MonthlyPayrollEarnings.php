@@ -30,6 +30,12 @@ final class MonthlyPayrollEarnings
         'unjustified',
     ];
 
+    /** Sueldo base pactado que regía en el período (versión del contrato vigente al cierre del mes). */
+    public readonly int $baseSalary;
+
+    /** Tipo de contrato que regía en el período. */
+    public readonly string $contractType;
+
     public readonly int $workedDays;
 
     public readonly int $salary;
@@ -59,15 +65,23 @@ final class MonthlyPayrollEarnings
         $company = $period->company;
         $contract = $this->latestContract($employee);
 
+        // Condiciones vigentes en el mes liquidado, no las actuales de la ficha: un anexo posterior
+        // no altera la liquidación de un mes anterior. Sin historial aplicable se usa la ficha.
+        $terms = EmploymentContract::inForceFor($employee->id, $period->end_date);
+        $this->baseSalary = $terms && (float) $terms->base_salary > 0
+            ? (int) round((float) $terms->base_salary)
+            : (int) round((float) $employee->salary);
+        $this->contractType = ($terms?->contract_type ?: $employee->contract_type) ?: EmploymentContract::TYPE_INDEFINITE;
+
         $this->uf = (object) ['value' => (float) $indicator->uf_value];
         $this->utm = (object) ['value' => (float) $indicator->utm_value];
 
         $this->workedDays = $this->paidDays($employee, $period, $contract);
-        $this->salary = (int) round($employee->salary * $this->workedDays / 30);
+        $this->salary = (int) round($this->baseSalary * $this->workedDays / 30);
 
         $this->overtimeHours = $company->allows_overtime ? (float) ($line?->overtime_hours ?? 0) : 0;
         $this->overtimeAmount = (int) round(
-            $employee->salary * $this->overtimeFactor($employee, $company, $contract, $indicator) * $this->overtimeHours
+            $this->baseSalary * $this->overtimeFactor($employee, $company, $contract, $indicator) * $this->overtimeHours
         );
         $this->variables = $this->overtimeAmount + (int) $line?->comisiones_amount
             + (int) $line?->semana_corrida_amount + (int) $line?->bonos_imponibles_amount + (int) $line?->aguinaldos_amount;
@@ -101,6 +115,7 @@ final class MonthlyPayrollEarnings
     {
         return EmploymentContract::query()
             ->where('employee_id', $employee->id)
+            ->orderByDesc('valid_from')
             ->orderByDesc('id')
             ->first();
     }

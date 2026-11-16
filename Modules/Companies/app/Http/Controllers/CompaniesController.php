@@ -137,7 +137,13 @@ class CompaniesController extends Controller
             ->orderBy('requested_date', 'desc')
             ->get();
 
-        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales', 'taxableItems', 'enabledTaxableItemIds', 'isPolicyLocked', 'dayRequests'));
+        $pendingVacations = \Modules\Employees\Models\VacationRequest::where('company_id', $company->id)
+            ->where('status', \Modules\Employees\Models\VacationRequest::STATUS_PENDING)
+            ->with('employee')
+            ->orderBy('start_date')
+            ->get();
+
+        return view('companies::edit', compact('company', 'ccafs', 'bancos', 'afps', 'isapres', 'employees', 'costCenters', 'mutuales', 'taxableItems', 'enabledTaxableItemIds', 'isPolicyLocked', 'dayRequests', 'pendingVacations'));
     }
 
     public function employees(Company $company)
@@ -198,6 +204,8 @@ class CompaniesController extends Controller
             'representante_email' => ['nullable', 'email', 'max:255'],
             'notes' => ['nullable', 'string'],
             'weekly_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
+            // Art. 67 CT: mínimo legal de 15 días hábiles; 20 en zonas extremas o por pacto más favorable.
+            'vacation_days_per_year' => ['sometimes', 'required', 'numeric', 'min:15', 'max:30'],
             'work_schedule' => ['nullable', 'array'],
             'allows_overtime' => ['nullable', 'boolean'],
             'economic_activity_id' => ['nullable', 'exists:economic_activities,id'],

@@ -16,8 +16,8 @@ class EmployeeObserver
      * Campos cuyo cambio clasifica el evento como "remuneracion".
      */
     private array $remuneracionFields = [
-        'salary', 'salary_type', 'apv_amount',
-        'health_contribution', 'afp_id', 'isapre_id', 'health_system',
+        'salary', 'salary_type', 'apv_amount', 'apv_regime', 'family_allowance_bracket',
+        'health_contribution', 'health_contribution_unit', 'afp_id', 'isapre_id', 'health_system',
     ];
 
     /**

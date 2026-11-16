@@ -47,6 +47,20 @@ Route::middleware(['auth'])->scopeBindings()->group(function () {
     Route::post('companies/{company}/requests/{dayRequest}/reject', [\Modules\Companies\Http\Controllers\CompanyRequestController::class, 'reject'])
         ->name('companies.requests.reject');
 
+    // Recursos Humanos: anexos de contrato y vacaciones
+    Route::post('companies/{company}/employees/{employee}/contracts/amendments', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'storeAmendment'])
+        ->name('companies.employees.contracts.amend');
+    Route::post('companies/{company}/employees/{employee}/vacations', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'storeVacation'])
+        ->name('companies.employees.vacations.store');
+    Route::patch('companies/{company}/employees/{employee}/vacations/settings', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'updateVacationSettings'])
+        ->name('companies.employees.vacations.settings');
+    Route::post('companies/{company}/employees/{employee}/vacations/{vacationRequest}/approve', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'approveVacation'])
+        ->name('companies.employees.vacations.approve');
+    Route::post('companies/{company}/employees/{employee}/vacations/{vacationRequest}/reject', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'rejectVacation'])
+        ->name('companies.employees.vacations.reject');
+    Route::post('companies/{company}/employees/{employee}/vacations/{vacationRequest}/cancel', [\Modules\Companies\Http\Controllers\EmployeeHrController::class, 'cancelVacation'])
+        ->name('companies.employees.vacations.cancel');
+
     // Carpeta Digital (Documentos)
     Route::post('companies/{company}/employees/{employee}/documents', [Modules\Companies\Http\Controllers\EmployeeDocumentController::class, 'store'])
         ->name('companies.employees.documents.store');

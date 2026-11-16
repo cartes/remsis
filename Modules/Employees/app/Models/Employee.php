@@ -21,6 +21,18 @@ class Employee extends Model
 
     protected $table = 'employees';
 
+    /** Unidades en que se pacta el plan de Isapre. */
+    public const HEALTH_UNITS = ['UF' => 'UF', 'CLP' => 'Pesos ($)', 'PERCENTAGE' => '% de la renta imponible'];
+
+    /** Regímenes tributarios del APV (Art. 20 L DL 3.500). */
+    public const APV_REGIMES = [
+        'A' => 'Régimen A (bonificación fiscal, no rebaja impuesto)',
+        'B' => 'Régimen B (rebaja la base del impuesto único)',
+    ];
+
+    /** Tramos de asignación familiar. */
+    public const FAMILY_ALLOWANCE_BRACKETS = ['A', 'B', 'C', 'D'];
+
     /**
      * The attributes that are mass assignable.
      */
@@ -52,7 +64,10 @@ class Employee extends Model
         'isapre_id',
         'afp_id',
         'health_contribution',
+        'health_contribution_unit',
         'apv_amount',
+        'apv_regime',
+        'family_allowance_bracket',
         'salary',
         'salary_type',
         'contract_type',
@@ -63,6 +78,9 @@ class Employee extends Model
         'gender',
         'health_system',
         'payment_method',
+        'vacation_initial_balance',
+        'vacation_initial_balance_date',
+        'previous_employment_months',
     ];
 
     protected $casts = [
@@ -70,6 +88,9 @@ class Employee extends Model
         'birth_date' => 'date',
         'part_time_schedule' => 'array',
         'is_in_payroll' => 'boolean',
+        'vacation_initial_balance' => 'float',
+        'vacation_initial_balance_date' => 'date',
+        'previous_employment_months' => 'integer',
     ];
 
     /**
@@ -172,9 +193,22 @@ class Employee extends Model
      */
     public function activeContract(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
+        $today = now()->toDateString();
+
+        // Con historial de anexos puede haber varias versiones activas: rige la que cubre el día de hoy.
         return $this->hasOne(EmploymentContract::class, 'employee_id')
-            ->where('status', EmploymentContract::STATUS_ACTIVE)
-            ->latestOfMany('start_date');
+            ->ofMany(['valid_from' => 'max', 'id' => 'max'], fn ($query) => $query
+                ->where('status', EmploymentContract::STATUS_ACTIVE)
+                ->where(fn ($q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', $today))
+                ->where(fn ($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', $today)));
+    }
+
+    /**
+     * Solicitudes y registros de vacaciones del colaborador.
+     */
+    public function vacationRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VacationRequest::class, 'employee_id');
     }
 
     /**
@@ -195,12 +229,14 @@ class Employee extends Model
             $weeklyHours = 42;
         }
 
-        $contract = EmploymentContract::query()
+        // La ficha refleja las condiciones vigentes hoy: se sincroniza esa versión y no las de
+        // anexos futuros ni las ya cerradas. Sin ninguna vigente, la más reciente.
+        $versions = fn () => EmploymentContract::query()
             ->withoutGlobalScopes()
             ->where('employee_id', $this->id)
-            ->where('company_id', $this->company_id)
-            ->orderByDesc('id')
-            ->first();
+            ->where('company_id', $this->company_id);
+        $contract = $versions()->inForceOn(now())->orderByDesc('valid_from')->orderByDesc('id')->first()
+            ?? $versions()->orderByDesc('valid_from')->orderByDesc('id')->first();
 
         $attributes = [
             'tenant_id' => $this->tenant_id ?? $company?->tenant_id,
@@ -222,12 +258,19 @@ class Employee extends Model
         ];
 
         if ($contract) {
+            // El contrato original rige desde el ingreso; un anexo conserva su propia fecha de vigencia.
+            if ($contract->version_type !== EmploymentContract::VERSION_AMENDMENT) {
+                $attributes['valid_from'] = $attributes['start_date'];
+            }
             $contract->fill($attributes)->save();
 
             return $contract;
         }
 
-        return EmploymentContract::query()->withoutGlobalScopes()->create($attributes);
+        return EmploymentContract::query()->withoutGlobalScopes()->create($attributes + [
+            'valid_from' => $attributes['start_date'],
+            'version_type' => EmploymentContract::VERSION_CONTRACT,
+        ]);
     }
 
     protected $appends = ['full_name', 'completion_percentage'];

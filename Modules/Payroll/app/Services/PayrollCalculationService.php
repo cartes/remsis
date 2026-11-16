@@ -5,6 +5,7 @@ namespace Modules\Payroll\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\Core\Models\MonthlyIndicator;
+use Modules\Core\Services\MonthlyIndicatorSyncService;
 use Modules\Employees\Models\Employee;
 use Modules\Employees\Models\EmploymentContract;
 use Modules\Payroll\Exceptions\PayrollException;
@@ -33,6 +34,15 @@ class PayrollCalculationService
 
     /** Tope mensual del APV que rebaja la base tributable (Art. 42 bis LIR). */
     private const APV_MONTHLY_CAP_UF = 50;
+
+    /** Parte del 7% de salud de afiliados a Fonasa que recauda la CCAF de la empresa. */
+    private const CCAF_SHARE_OF_HEALTH = 0.006;
+
+    /** Límite de los descuentos voluntarios sobre la remuneración total (Art. 58 inc. 3° CT). */
+    private const VOLUNTARY_DEDUCTIONS_LIMIT = 0.15;
+
+    /** Años de vínculo indefinido tras los cuales el trabajador deja de cotizar al seguro de cesantía. */
+    private const AFC_EMPLOYEE_EXEMPTION_YEARS = 11;
 
     /**
      * Calcula la nómina de toda la dotación vigente en el período.
@@ -121,13 +131,13 @@ class PayrollCalculationService
                             ->where('termination_date', '>=', $period->start_date->toDateString());
                     });
             })
-            ->with(['employeeItems.item', 'afp'])
+            ->with(['employeeItems.item', 'afp', 'company'])
             ->get();
     }
 
     private function compute(Employee $employee, PayrollPeriod $period, MonthlyIndicator $indicator): Payroll
     {
-        $employee->loadMissing(['employeeItems.item', 'afp']);
+        $employee->loadMissing(['employeeItems.item', 'afp', 'company']);
 
         $line = Payroll::where('employee_id', $employee->id)
             ->where('payroll_period_id', $period->id)
@@ -164,34 +174,54 @@ class PayrollCalculationService
         $afpAmount = (int) round($pensionBase * $this->afpRate($employee, $indicator) / 100);
 
         $legalHealth = (int) round($pensionBase * self::HEALTH_RATE);
-        $healthAmount = max($legalHealth, $this->isaprePlan($employee));
+        $isIsapre = $this->isIsapre($employee);
+        $healthAmount = $isIsapre ? max($legalHealth, $this->isaprePlan($employee, $indicator, $pensionBase)) : $legalHealth;
 
-        $contractType = $employee->contract_type ?: EmploymentContract::TYPE_INDEFINITE;
+        // Empresa afiliada a una CCAF: del 7% de sus trabajadores de Fonasa, 0,6% se paga a la caja
+        // y 6,4% a Fonasa. Es una distribución de la misma cotización, no un descuento adicional.
+        $ccafAmount = (! $isIsapre && $employee->company?->ccaf_id)
+            ? min($healthAmount, (int) round($pensionBase * self::CCAF_SHARE_OF_HEALTH))
+            : 0;
+
+        $contractType = $earnings->contractType;
         $isIndefinite = $contractType === EmploymentContract::TYPE_INDEFINITE;
         $afcExempt = (bool) EmploymentContract::query()
             ->where('employee_id', $employee->id)
             ->orderByDesc('id')
             ->value('is_afc_exempt');
 
-        // Seguro de cesantía: el trabajador sólo cotiza con contrato indefinido (Ley 19.728).
-        $afcEmployee = (! $afcExempt && $isIndefinite)
+        // Seguro de cesantía (Ley 19.728): el trabajador sólo cotiza con contrato indefinido y
+        // durante los primeros 11 años; después el empleador paga una tasa reducida.
+        $longTenure = $isIndefinite && $employee->hire_date
+            && $employee->hire_date->lte($period->end_date->copy()->subYears(self::AFC_EMPLOYEE_EXEMPTION_YEARS));
+        $afcEmployee = (! $afcExempt && $isIndefinite && ! $longTenure)
             ? (int) round($afcBase * (float) $indicator->afc_indefinite_employee_rate / 100)
             : 0;
-        $afcEmployer = $afcExempt ? 0 : (int) round(
-            $afcBase * (float) ($isIndefinite ? $indicator->afc_indefinite_employer_rate : $indicator->afc_fixed_employer_rate) / 100
-        );
+        $afcEmployerRate = match (true) {
+            $afcExempt => 0.0,
+            ! $isIndefinite => (float) $indicator->afc_fixed_employer_rate,
+            $longTenure && $indicator->afc_indefinite_11y_employer_rate > 0 => (float) $indicator->afc_indefinite_11y_employer_rate,
+            default => (float) $indicator->afc_indefinite_employer_rate,
+        };
+        $afcEmployer = (int) round($afcBase * $afcEmployerRate / 100);
 
         // ── APV e impuesto único ──
         $apvAmount = (int) round(min((float) $employee->apv_amount, self::APV_MONTHLY_CAP_UF * (float) $indicator->uf_value));
 
         // La salud rebaja la base tributable hasta el 7% del tope imponible.
         $deductibleHealth = $pensionCap > 0 ? min($healthAmount, (int) round($pensionCap * self::HEALTH_RATE)) : $healthAmount;
-        $tributableBase = max(0, $taxable - $afpAmount - $deductibleHealth - $afcEmployee - $apvAmount);
+        // Sólo el APV en régimen B rebaja la base del impuesto; el régimen A recibe bonificación fiscal.
+        $apvTaxRelief = strtoupper((string) $employee->apv_regime) === 'B' ? $apvAmount : 0;
+        $tributableBase = max(0, $taxable - $afpAmount - $deductibleHealth - $afcEmployee - $apvTaxRelief);
         $taxAmount = (int) $indicator->calculateIut((float) $tributableBase);
 
         // ── Asignación familiar (no imponible ni tributable) ──
+        // Usa el tramo reconocido al trabajador; si no está informado, lo estima con la renta del mes.
+        $perDependent = $employee->family_allowance_bracket
+            ? $indicator->getFamilyAllowanceForBracket($employee->family_allowance_bracket)
+            : $indicator->getFamilyAllowancePerDependent((float) $taxable);
         $familyAllowance = (int) $employee->num_dependents > 0
-            ? (int) round((int) $employee->num_dependents * $indicator->getFamilyAllowancePerDependent((float) $taxable))
+            ? (int) round((int) $employee->num_dependents * $perDependent)
             : 0;
 
         // ── Totales ──
@@ -199,6 +229,12 @@ class PayrollCalculationService
         $totalEarnings = $taxable + $nonTaxableEarnings;
         $totalDeductions = $afpAmount + $healthAmount + $afcEmployee + $taxAmount + $apvAmount
             + $anticipos + $otrosDescuentos + $totalItemDeductions + $totalCredits;
+
+        // Descuentos voluntarios sobre el 15% de la remuneración total. El motor no los recorta,
+        // porque algunos (cuotas sindicales, crédito social, retenciones judiciales) tienen su
+        // propio fundamento legal; deja el exceso a la vista para que se revise antes de cerrar.
+        $voluntaryDeductions = $otrosDescuentos + $totalItemDeductions + $totalCredits;
+        $voluntaryExcess = max(0, $voluntaryDeductions - (int) round($totalEarnings * self::VOLUNTARY_DEDUCTIONS_LIMIT));
 
         $payroll = Payroll::updateOrCreate(
             [
@@ -219,7 +255,7 @@ class PayrollCalculationService
                 'bonos_imponibles_amount' => (int) $line?->bonos_imponibles_amount,
                 'aguinaldos_amount' => (int) $line?->aguinaldos_amount,
 
-                'base_salary' => (int) $employee->salary,
+                'base_salary' => $earnings->baseSalary,
                 'gratification_amount' => $earnings->gratification,
                 'gross_salary' => $taxable,
                 'meal_allowance' => $itemsByCode('COLACION'),
@@ -233,7 +269,7 @@ class PayrollCalculationService
                 'isapre_id' => $employee->isapre_id,
                 'isapre_amount' => $healthAmount,
                 'ccaf_id' => $employee->ccaf_id,
-                'ccaf_amount' => 0,
+                'ccaf_amount' => $ccafAmount,
                 'cesantia_amount' => $afcEmployee,
                 'apv_amount' => $apvAmount,
                 'tributable_base' => $tributableBase,
@@ -243,12 +279,18 @@ class PayrollCalculationService
                 'otros_descuentos' => $otrosDescuentos,
                 'descuentos_items_amount' => $totalItemDeductions,
                 'creditos_amount' => $totalCredits,
+                'descuentos_exceso_amount' => $voluntaryExcess,
 
                 'total_deductions' => $totalDeductions,
                 'net_salary' => $totalEarnings - $totalDeductions,
 
                 'employer_sis_amount' => (int) round($pensionBase * (float) $indicator->sis_rate / 100),
                 'employer_afc_amount' => $afcEmployer,
+                // Ley 21.735: aporte del empleador a la cuenta individual y al seguro social previsional.
+                'employer_afp_amount' => (int) round($pensionBase * (float) $indicator->employer_afp_rate / 100),
+                'employer_social_security_amount' => (int) round(
+                    $pensionBase * ((float) $indicator->employer_protected_return_rate + (float) $indicator->employer_life_expectancy_rate) / 100
+                ),
                 'employer_mutual_amount' => (int) round(
                     $pensionBase * ((float) $indicator->mutual_base_rate + (float) $indicator->sanna_rate) / 100
                 ),
@@ -352,12 +394,16 @@ class PayrollCalculationService
             return 10.0;
         }
 
-        $code = mb_strtolower(trim((string) $afp->code));
-        $name = mb_strtolower(trim((string) $afp->nombre));
+        $keys = array_filter([
+            MonthlyIndicatorSyncService::afpKey($afp->code),
+            MonthlyIndicatorSyncService::afpKey($afp->nombre),
+        ]);
         foreach ((array) $indicator->afp_rates as $key => $rate) {
-            $rateCode = mb_strtolower((string) ($rate['afp_code'] ?? $key));
-            $rateName = mb_strtolower((string) ($rate['afp_name'] ?? ''));
-            if (($code !== '' && $rateCode === $code) || ($name !== '' && $rateName === $name)) {
+            $rateKeys = [
+                MonthlyIndicatorSyncService::afpKey((string) ($rate['afp_code'] ?? $key)),
+                MonthlyIndicatorSyncService::afpKey((string) ($rate['afp_name'] ?? '')),
+            ];
+            if (array_intersect($keys, $rateKeys) !== []) {
                 return (float) ($rate['total_rate'] ?? ((float) ($rate['mandatory_rate'] ?? 10.0) + (float) ($rate['commission_rate'] ?? 0.0)));
             }
         }
@@ -366,14 +412,28 @@ class PayrollCalculationService
     }
 
     /**
-     * Monto en pesos del plan pactado con la Isapre. Fonasa cotiza sólo el 7% legal.
+     * Valor en pesos del plan pactado con la Isapre, según su unidad: UF (del último día del mes),
+     * pesos o porcentaje de la renta imponible con tope.
      */
-    private function isaprePlan(Employee $employee): int
+    private function isaprePlan(Employee $employee, MonthlyIndicator $indicator, float $pensionBase): int
     {
-        $isIsapre = $employee->health_system === 'isapre'
-            || ($employee->health_system === null && $employee->isapre_id !== null);
+        $amount = (float) $employee->health_contribution;
 
-        return $isIsapre ? (int) round((float) $employee->health_contribution) : 0;
+        return (int) round(match (strtoupper((string) $employee->health_contribution_unit)) {
+            'CLP' => $amount,
+            'PERCENTAGE' => $pensionBase * $amount / 100,
+            default => $amount * (float) $indicator->uf_value,
+        });
+    }
+
+    /**
+     * Afiliado a Isapre: cotiza el mayor valor entre el 7% legal y el plan pactado.
+     * Fonasa cotiza sólo el 7% legal.
+     */
+    private function isIsapre(Employee $employee): bool
+    {
+        return $employee->health_system === 'isapre'
+            || ($employee->health_system === null && $employee->isapre_id !== null);
     }
 
     private function row(string $type, string $concept, string $description, int $amount, ?int $employeeItemId = null, ?int $installment = null): ?array

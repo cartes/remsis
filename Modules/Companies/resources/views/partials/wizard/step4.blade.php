@@ -57,6 +57,17 @@
                         <input type="number" x-model="form.num_dependents" placeholder="0" min="0"
                             class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Tramo de Asignación Familiar</label>
+                        <select x-model="form.family_allowance_bracket" class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-300 outline-none transition-all focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400">
+                            <option value="">Automático (según renta del mes)</option>
+                            <option value="A">Tramo A</option>
+                            <option value="B">Tramo B</option>
+                            <option value="C">Tramo C</option>
+                            <option value="D">Tramo D</option>
+                        </select>
+                        <p class="mt-1 text-[10px] text-slate-400">Es el tramo que informa la caja de compensación o el IPS.</p>
+                    </div>
 
                 </div>
             </div>
