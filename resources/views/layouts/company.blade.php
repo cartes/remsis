@@ -142,161 +142,74 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
 
             @php
                 $currentCompanyTab = $activeTab ?? '';
-                $isAccountingSection = in_array(
-                    $currentCompanyTab,
-                    [
-                        'accounting',
-                        'accounting-data',
-                        'accounting-remunerations',
-                        'cost-centers',
-                        'employees',
-                        'honorarios',
-                    ],
-                    true,
-                );
+                $isEmployeesActive = $currentCompanyTab === 'employees';
+                $isHonorariosActive = $currentCompanyTab === 'honorarios';
                 $isCompanyDataActive = in_array(
                     $currentCompanyTab,
-                    ['accounting', 'accounting-data', 'cost-centers'],
+                    ['accounting', 'accounting-data', 'company-data'],
                     true,
                 );
-                $isRemunerationsActive = $currentCompanyTab === 'accounting-remunerations';
-                $isEmployeesActive = $currentCompanyTab === 'employees';
+                $isRemunerationsActive = in_array(
+                    $currentCompanyTab,
+                    ['accounting-remunerations', 'remunerations'],
+                    true,
+                );
+                $isPayrollPeriodsActive = $currentCompanyTab === 'payroll-periods';
+                $isPayrollsActive = $currentCompanyTab === 'payrolls';
+                $isTransactionsActive = $currentCompanyTab === 'transactions';
+                $isUsersActive = $currentCompanyTab === 'users';
+                $isItemsActive = $currentCompanyTab === 'items';
             @endphp
 
-            {{-- Company Section --}}
+            {{-- Recursos Humanos Section --}}
             <div>
                 <p x-show="!sidebarCollapsed"
-                    class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Gestión de Empresa
+                    class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Recursos Humanos
                 </p>
-                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}', accountingOpen: @js($isAccountingSection), showBalloon: false, balloonTimeout: null }">
-                    <div class="rounded-2xl transition-all duration-200"
-                        :class="sidebarCollapsed ? '' : 'border border-slate-200/80 bg-slate-50/70 p-1'">
-                        <button type="button"
-                            @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Administración'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
-                            @mouseleave="hoveringLabel = null"
-                            @click="sidebarCollapsed ? (showBalloon = !showBalloon) : accountingOpen = !accountingOpen"
-                            class="nav-item-link flex w-full items-center rounded-xl text-left text-sm font-bold transition-all"
-                            :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-100' : 'gap-3 px-3 py-2.5 ' + ((
-                                    accountingOpen || @js($isAccountingSection)) ?
-                                'bg-white text-slate-900 shadow-sm border border-slate-200' :
-                                'text-slate-600 hover:bg-white group')">
-                            <i class="fas fa-calculator w-5 text-center transition-colors"
-                                :class="(accountingOpen || @js($isAccountingSection)) && !sidebarCollapsed ?
-                                    'text-blue-600' :
-                                    'text-slate-400 group-hover:text-blue-500'"></i>
-                            <span x-show="!sidebarCollapsed" class="flex-1">Administración</span>
-                            <i x-show="!sidebarCollapsed"
-                                class="fas fa-chevron-down text-xs text-slate-400 transition-transform"
-                                :class="{ 'rotate-180': accountingOpen }"></i>
-                        </button>
-
-                        {{-- Collapsed Floating Menu --}}
-                        <div x-show="showBalloon && sidebarCollapsed"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 translate-x-4"
-                            x-transition:enter-end="opacity-100 translate-x-0" @mouseenter="hoveringLabel = null"
-                            @click.away="showBalloon = false" x-cloak
-                            class="fixed left-20 ml-0 py-3 px-2 bg-white border border-slate-200 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] z-[100] w-64"
-                            style="margin-top: -45px;">
-                            <div class="absolute -left-4 top-0 bottom-0 w-4"></div> {{-- Invisible bridge --}}
-                            <p
-                                class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pb-2 border-b border-slate-50">
-                                Administración</p>
-                            <div class="space-y-1">
-                                <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
-                                    <i
-                                        class="fas fa-building w-4 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Organización
-                                </a>
-                                <a href="{{ route('companies.employees', $company) }}"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
-                                    <i
-                                        class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Colaboradores
-                                </a>
-                                <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isRemunerationsActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
-                                    <i
-                                        class="fas fa-money-bill-wave w-4 text-center {{ $isRemunerationsActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Remuneraciones
-                                </a>
-                                <a href="{{ route('companies.freelancers.index', $company) }}"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ ($activeTab ?? '') === 'honorarios' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600' }}">
-                                    <i
-                                        class="fas fa-file-invoice w-4 text-center {{ ($activeTab ?? '') === 'honorarios' ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                    Colaboradores a Honorarios
-                                </a>
-                            </div>
-                        </div>
-
-                        <div x-show="accountingOpen && !sidebarCollapsed" x-transition x-cloak
-                            class="mt-1 space-y-1 px-2 pb-2">
-                            <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
-                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isCompanyDataActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
-                                <i
-                                    class="fas fa-building w-4 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Organización</span>
-                            </a>
-
-                            <a href="{{ route('companies.employees', $company) }}"
-                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isEmployeesActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
-                                <i
-                                    class="fas fa-users-viewfinder w-4 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Colaboradores</span>
-                            </a>
-
-                            <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
-                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ $isRemunerationsActive ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
-                                <i
-                                    class="fas fa-money-bill-wave w-4 text-center {{ $isRemunerationsActive ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Remuneraciones</span>
-                            </a>
-
-                            <a href="{{ route('companies.freelancers.index', $company) }}"
-                                class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-all {{ ($activeTab ?? '') === 'honorarios' ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' : 'text-slate-600 hover:bg-white hover:text-blue-600' }}">
-                                <i
-                                    class="fas fa-file-invoice w-4 text-center {{ ($activeTab ?? '') === 'honorarios' ? 'text-blue-600' : 'text-slate-400' }}"></i>
-                                <span x-show="!sidebarCollapsed">Colaboradores a Honorarios</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <a href="{{ route('companies.transactions', $company) }}" title="Movimientos"
-                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Movimientos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                <div class="space-y-1">
+                    <a href="{{ route('companies.employees', $company) }}" title="Colaboradores"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Colaboradores'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
                         @mouseleave="hoveringLabel = null"
                         class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
                         :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
-                            activeTab === 'transactions' ?
-                            ' bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            ' text-slate-600 hover:bg-slate-50 group')">
-                        <i class="fas fa-money-bill-transfer w-5 text-center transition-colors"
-                            :class="activeTab === 'transactions' ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'"></i>
-                        <span x-show="!sidebarCollapsed">Movimientos</span>
+                            @js($isEmployeesActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-users-viewfinder w-5 text-center {{ $isEmployeesActive ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
+                        <span x-show="!sidebarCollapsed">Colaboradores</span>
                     </a>
 
+                    <a href="{{ route('companies.freelancers.index', $company) }}" title="Colaboradores a Honorarios"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Colaboradores a Honorarios'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isHonorariosActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-file-invoice w-5 text-center {{ $isHonorariosActive ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
+                        <span x-show="!sidebarCollapsed">Honorarios</span>
+                    </a>
                 </div>
             </div>
 
             {{-- Payroll Section --}}
             <div>
                 <p x-show="!sidebarCollapsed"
-                    class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Nómina
+                    class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Nómina y Remuneraciones
                 </p>
-                <div class="space-y-1" x-data="{ activeTab: '{{ $activeTab ?? 'employees' }}' }">
+                <div class="space-y-1">
                     <a href="{{ route('companies.payroll-periods.index', ['company' => $company]) }}"
                         title="Períodos de Nómina"
                         @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Períodos de Nómina'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
                         @mouseleave="hoveringLabel = null"
                         class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
-                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
-                                '{{ $activeTab ?? '' }}'
-                                === 'payroll-periods') ?
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isPayrollPeriodsActive) ?
                             'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            'text-slate-600 hover:text-blue-600')">
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
                         <i class="fas fa-calendar-alt w-5 text-center transition-colors"
-                            :class="'{{ $activeTab ?? '' }}'
-                            === 'payroll-periods' ? 'text-blue-600' : 'text-slate-400'"></i>
+                            :class="@js($isPayrollPeriodsActive) ? 'text-blue-600' : 'text-slate-400'"></i>
                         <span x-show="!sidebarCollapsed">Períodos de Nómina</span>
                     </a>
 
@@ -304,14 +217,61 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                         @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Historial de Nóminas'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
                         @mouseleave="hoveringLabel = null"
                         class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
-                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + ((
-                                '{{ $activeTab ?? '' }}'
-                                === 'payrolls') ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
-                            'text-slate-600 hover:text-blue-600')">
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isPayrollsActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
                         <i class="fas fa-file-invoice-dollar w-5 text-center transition-colors"
-                            :class="'{{ $activeTab ?? '' }}'
-                            === 'payrolls' ? 'text-blue-600' : 'text-slate-400'"></i>
+                            :class="@js($isPayrollsActive) ? 'text-blue-600' : 'text-slate-400'"></i>
                         <span x-show="!sidebarCollapsed">Historial de Nóminas</span>
+                    </a>
+
+                    <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'remunerations', 'tab' => 'remu']) }}"
+                        title="Configuración de Remuneraciones"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Configuración de Remuneraciones'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isRemunerationsActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-money-bill-wave w-5 text-center transition-colors"
+                            :class="@js($isRemunerationsActive) ? 'text-blue-600' : 'text-slate-400'"></i>
+                        <span x-show="!sidebarCollapsed">Parámetros Nómina</span>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Company Section --}}
+            <div>
+                <p x-show="!sidebarCollapsed"
+                    class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Empresa
+                </p>
+                <div class="space-y-1">
+                    <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
+                        title="Organización"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Organización'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isCompanyDataActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-building w-5 text-center {{ $isCompanyDataActive ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
+                        <span x-show="!sidebarCollapsed">Organización</span>
+                    </a>
+
+                    <a href="{{ route('companies.transactions', $company) }}" title="Movimientos"
+                        @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Movimientos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
+                        @mouseleave="hoveringLabel = null"
+                        class="nav-item-link flex items-center rounded-xl text-sm font-bold transition-all transition-colors"
+                        :class="sidebarCollapsed ? 'justify-center p-2.5 hover:bg-slate-50' : 'gap-3 px-3 py-2.5 ' + (
+                            @js($isTransactionsActive) ?
+                            'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' :
+                            'text-slate-600 hover:text-blue-600 hover:bg-slate-50')">
+                        <i class="fas fa-money-bill-transfer w-5 text-center transition-colors"
+                            :class="@js($isTransactionsActive) ? 'text-blue-600' : 'text-slate-400'"></i>
+                        <span x-show="!sidebarCollapsed">Movimientos</span>
                     </a>
                 </div>
             </div>
@@ -321,6 +281,7 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                 <p x-show="!sidebarCollapsed"
                     class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Configuración</p>
                 <div class="space-y-1">
+                    @if (Auth::user()->hasRole('super-admin') || Auth::user()->hasCompanyPermission($company, 'users.manage'))
                     <a href="{{ route('companies.users.index', ['company' => $company]) }}"
                         title="Usuarios y Accesos"
                         @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Usuarios y Accesos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"
@@ -334,6 +295,7 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed)
                             class="fas fa-user-shield w-5 text-center {{ ($activeTab ?? '') === 'users' ? 'text-blue-600' : 'text-slate-400' }} transition-colors"></i>
                         <span x-show="!sidebarCollapsed">Usuarios y Accesos</span>
                     </a>
+                    @endif
                     <a href="{{ route('companies.items.index', ['company' => $company]) }}"
                         title="Catálogo de Conceptos"
                         @mouseenter="if(sidebarCollapsed) { hoveringLabel = 'Catálogo de Conceptos'; tooltipTop = $el.getBoundingClientRect().top + 8 }"

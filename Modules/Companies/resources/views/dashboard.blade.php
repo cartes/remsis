@@ -102,15 +102,14 @@
                 <div
                     class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
                     <div class="relative z-10">
-                        <h4 class="text-2xl font-black mb-2 italic">Procesamiento de Payroll</h4>
-                        <p class="text-blue-100 text-sm mb-6 max-w-md">Optimiza la gestión de tu empresa asegurando que
-                            todas las fichas de colaboradores estén completas sobre el 90%.</p>
+                        <h4 class="text-2xl font-black mb-2 italic">Gestión de Personas & RRHH</h4>
+                        <p class="text-blue-100 text-sm mb-6 max-w-md">Administra fichas de colaboradores, contratos, anexos, asistencia, vacaciones y documentación laboral de tu equipo.</p>
                         <a href="{{ route('companies.employees', $company) }}"
                             class="inline-flex items-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-xl font-black text-sm hover:bg-blue-50 transition-all shadow-lg transform hover:-translate-y-0.5">
-                            Revisar Colaboradores <i class="fas fa-arrow-right"></i>
+                            <i class="fas fa-users"></i> Ir a Colaboradores (RRHH) <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
-                    <i class="fas fa-rocket absolute -right-4 -bottom-4 text-white/10 text-[180px] -rotate-12"></i>
+                    <i class="fas fa-users-gear absolute -right-4 -bottom-4 text-white/10 text-[180px] -rotate-12"></i>
                 </div>
             </div>
 
@@ -119,6 +118,14 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h4 class="text-sm font-bold text-gray-800 mb-4">Acciones Rápidas</h4>
                     <div class="space-y-3">
+                        <a href="{{ route('companies.employees', $company) }}"
+                            class="flex items-center gap-4 p-3 rounded-xl hover:bg-blue-50 transition-all group border border-transparent hover:border-blue-100">
+                            <div
+                                class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all group-hover:bg-blue-600 group-hover:text-white">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-700">Colaboradores (RRHH)</span>
+                        </a>
                         <a href="{{ route('companies.edit', ['company' => $company, 'section' => 'company-data']) }}"
                             class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-all group">
                             <div
