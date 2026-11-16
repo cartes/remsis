@@ -93,6 +93,13 @@ class CompaniesController extends Controller
         ], 201);
     }
 
+    public function show(Company $company)
+    {
+        Gate::authorize('view', $company);
+
+        return redirect()->route('companies.dashboard', $company);
+    }
+
     public function edit(Company $company)
     {
         Gate::authorize('view', $company);

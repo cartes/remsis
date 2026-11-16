@@ -87,4 +87,20 @@ class CompanySelectionTest extends TestCase
         $response->assertRedirect(route('companies.dashboard', $company));
         $this->assertEquals($company->id, session('selected_company_id'));
     }
+
+    public function test_accessing_company_base_url_redirects_to_dashboard()
+    {
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $user = User::factory()->create();
+        $user->assignRole($role);
+
+        $company = Company::create(['razon_social' => 'Show Company', 'rut' => '5-5', 'name' => 'Show Company']);
+        $user->companies()->attach($company);
+
+        $this->actingAs($user);
+
+        $response = $this->get(route('companies.show', $company));
+
+        $response->assertRedirect(route('companies.dashboard', $company));
+    }
 }
